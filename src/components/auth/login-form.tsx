@@ -48,8 +48,8 @@ export function LoginForm() {
       const loginResponse = await login(values.email, values.password);
 
       if (loginResponse && loginResponse.token) {
-          // Assuming token is stored in a cookie by the server or handled elsewhere.
-          // Now fetch the user profile.
+          // In a real app, you would store this token securely (e.g., in an httpOnly cookie)
+          // For now, we proceed assuming the server handles the session.
           const userProfile = await getProfile();
 
           toast({
@@ -60,6 +60,7 @@ export function LoginForm() {
           const encryptedUserId = btoa(userProfile.id || 'mock-user-id');
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/dashboard`);
       } else {
+        // This case should ideally not be hit if the login function throws on missing token
         throw new Error("Login response did not include a token.");
       }
     } catch (error: any) {
