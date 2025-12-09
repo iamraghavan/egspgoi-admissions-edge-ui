@@ -1,18 +1,22 @@
 'use client';
 
 import Nav from './nav';
-import { Card, CardContent } from '../ui/card';
+import { AppLogo } from '../icons';
+import Link from 'next/link';
 
 export default function AppSidebar() {
   return (
-    <aside className="hidden w-64 flex-col border-r bg-background sm:flex">
-        <Nav />
-        <div className="mt-auto p-4">
-            <Card>
-                <CardContent className="pt-6">
-                    <p className="text-sm text-center text-muted-foreground">Sidebar bottom content</p>
-                </CardContent>
-            </Card>
+    <aside className="hidden border-r bg-background md:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+              <AppLogo className="h-6 w-6" />
+              <span>Admissions Edge</span>
+            </Link>
+          </div>
+          <div className="flex-1">
+            <Nav isMobile={false} />
+          </div>
         </div>
     </aside>
   );

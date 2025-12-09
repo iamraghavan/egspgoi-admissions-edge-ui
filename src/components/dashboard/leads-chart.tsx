@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartTooltipContent, ChartContainer } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
@@ -41,8 +41,7 @@ export default function LeadsChart() {
             },
           }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                   <XAxis
                       dataKey="date"
                       tickLine={false}
@@ -56,17 +55,15 @@ export default function LeadsChart() {
                       tickMargin={8}
                   />
                   <Tooltip
-                      cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
-                      content={<ChartTooltipContent />}
+                      cursor={false}
+                      content={<ChartTooltipContent indicator='dot' />}
                   />
-                  <Line
+                  <Bar
                       dataKey="leads"
-                      type="monotone"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={true}
+                      radius={[4, 4, 0, 0]}
+                      fill="hsl(var(--primary))"
                   />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         </div>

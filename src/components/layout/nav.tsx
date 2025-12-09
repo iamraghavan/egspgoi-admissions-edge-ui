@@ -14,6 +14,7 @@ import {
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { AppLogo } from '../icons';
 
 const navItems: NavItem[] = [
   {
@@ -74,7 +75,7 @@ const roleSlugMap: Record<string, Role> = {
     'ae': 'Admission Executive',
 };
 
-export default function Nav() {
+export default function Nav({ isMobile }: { isMobile: boolean }) {
   const pathname = usePathname();
   const params = useParams();
   const { encryptedPortalId, role: roleSlug, encryptedUserId } = params as { encryptedPortalId: string; role: string; encryptedUserId: string };
@@ -84,7 +85,16 @@ export default function Nav() {
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <nav className="grid items-start gap-1 p-2 text-sm font-medium">
+    <nav className={cn("grid items-start gap-1 p-2 text-sm font-medium", isMobile && "p-4")}>
+      {isMobile && (
+         <Link
+          href="#"
+          className="mb-4 flex items-center gap-2 text-lg font-semibold"
+        >
+          <AppLogo className="h-6 w-6" />
+          <span className="sr-only">Admissions Edge</span>
+        </Link>
+      )}
       {visibleNavItems.map((item) => {
         const href = item.href(encryptedPortalId, roleSlug, encryptedUserId);
         const isActive = pathname === href;

@@ -4,14 +4,14 @@ import AppHeader from '@/components/layout/app-header';
 
 export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <AppSidebar />
+      <div className="flex flex-col">
         <AppHeader />
-        <div className="flex flex-1">
-            <AppSidebar />
-            <main className="flex-1 p-4 sm:p-6 lg:p-8">
-                {children}
-            </main>
-        </div>
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/40">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

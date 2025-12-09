@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import { AppLogo } from '@/components/icons';
 import { LoginForm } from '@/components/auth/login-form';
-import { placeholderImages } from '@/lib/placeholder-images.json';
+import placeholderImagesData from '@/lib/placeholder-images.json';
 
 export default function LoginPage() {
-  const loginImage = placeholderImages.find(p => p.id === "login-background");
+  const loginImage = placeholderImagesData.placeholderImages.find(p => p.id === "login-background");
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -13,7 +13,7 @@ export default function LoginPage() {
           <div className="grid gap-2 text-center">
             <div className="flex justify-center items-center gap-2">
                 <AppLogo className="w-8 h-8 text-primary" />
-                <h1 className="text-3xl font-bold font-headline">Admissions Edge</h1>
+                <h1 className="text-3xl font-bold">Admissions Edge</h1>
             </div>
             <p className="text-balance text-muted-foreground">
               Enter your email below to login to your account
