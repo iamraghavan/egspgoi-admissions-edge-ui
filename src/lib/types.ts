@@ -80,7 +80,7 @@ export type AdSpend = {
 
 export type NavItem = {
   title: string;
-  href: (encryptedUserId: string, role: string) => string;
+  href: (encryptedPortalId: string, role: string, encryptedUserId: string) => string;
   icon: React.ElementType;
   roles: Role[];
 };

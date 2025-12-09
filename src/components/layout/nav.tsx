@@ -21,49 +21,49 @@ import { usePathname, useParams } from 'next/navigation';
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/dashboard`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/dashboard`,
     icon: LayoutDashboard,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Leads',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/leads`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/leads`,
     icon: Users,
     roles: ['Super Admin', 'Admission Manager', 'Admission Executive'],
   },
   {
     title: 'Campaigns',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/campaigns`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/campaigns`,
     icon: Megaphone,
     roles: ['Super Admin', 'Marketing Manager'],
   },
   {
     title: 'Budget Approvals',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/budget-approvals`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/budget-approvals`,
     icon: CircleDollarSign,
     roles: ['Super Admin', 'Marketing Manager', 'Finance'],
   },
   {
     title: 'Accounting',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/accounting`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/accounting`,
     icon: Landmark,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
   },
   {
     title: 'Call Monitoring',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/call-monitoring`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/call-monitoring`,
     icon: Phone,
     roles: ['Super Admin', 'Admission Manager'],
   },
   {
     title: 'Call History',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/call-history`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/call-history`,
     icon: History,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Settings',
-    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/settings`,
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/settings`,
     icon: Settings,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
@@ -80,7 +80,7 @@ const roleSlugMap: Record<string, Role> = {
 export default function Nav() {
   const pathname = usePathname();
   const params = useParams();
-  const { encryptedUserId, role: roleSlug } = params as { encryptedUserId: string; role: string };
+  const { encryptedPortalId, role: roleSlug, encryptedUserId } = params as { encryptedPortalId: string; role: string; encryptedUserId: string };
   
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
 
@@ -92,10 +92,10 @@ export default function Nav() {
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             asChild
-            isActive={pathname === item.href(encryptedUserId, roleSlug)}
+            isActive={pathname === item.href(encryptedPortalId, roleSlug, encryptedUserId)}
             tooltip={item.title}
           >
-            <a href={item.href(encryptedUserId, roleSlug)}>
+            <a href={item.href(encryptedPortalId, roleSlug, encryptedUserId)}>
               <item.icon />
               <span>{item.title}</span>
             </a>

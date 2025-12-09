@@ -67,7 +67,9 @@ export function LoginForm() {
           const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
           // This would be encrypted in a real-world scenario
           const encryptedUserId = userProfile.id; 
-          router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/${roleSlug}/dashboard`);
+          const encryptedPortalId = "egspgoi"; // This would be dynamic in a real app
+
+          router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
 
       } else {
         throw new Error("Login response did not include an accessToken and user.");

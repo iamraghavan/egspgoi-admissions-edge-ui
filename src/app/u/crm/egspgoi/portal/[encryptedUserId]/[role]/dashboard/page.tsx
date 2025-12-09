@@ -16,8 +16,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function DashboardPage({ params }: { params: { encryptedUserId: string; role: string } }) {
+export default async function DashboardPage({ params }: { params: { encryptedPortalId: string; encryptedUserId: string; role: string } }) {
   const recentLeads = (await getLeads()).slice(0, 5);
+  const { encryptedPortalId, encryptedUserId, role } = params;
 
   return (
     <div className="flex flex-col gap-8">
@@ -32,7 +33,7 @@ export default async function DashboardPage({ params }: { params: { encryptedUse
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-base font-medium">Recent Leads</CardTitle>
                      <Button asChild variant="ghost" size="sm" className="text-sm">
-                        <Link href={`/u/crm/egspgoi/portal/${params.encryptedUserId}/${params.role}/leads`}>
+                        <Link href={`/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/leads`}>
                             View All <ArrowUpRight className="h-4 w-4 ml-1" />
                         </Link>
                     </Button>
