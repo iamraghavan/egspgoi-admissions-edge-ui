@@ -103,8 +103,8 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
             key={item.title}
             href={href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-muted text-primary"
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all hover:text-white hover:bg-gray-700/50",
+              isActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
             )}
           >
             <item.icon className="h-4 w-4" />
