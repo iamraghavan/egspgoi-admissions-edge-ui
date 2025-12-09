@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import placeholderImagesData from '@/lib/placeholder-images.json'
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getProfile, logout } from "@/lib/auth"
 import { Skeleton } from "../ui/skeleton"

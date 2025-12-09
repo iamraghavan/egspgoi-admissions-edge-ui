@@ -15,7 +15,7 @@ interface UserProfile {
 function getAuthHeaders() {
     if (typeof window === 'undefined') return {};
     const token = localStorage.getItem('accessToken');
-    if (!token) return {};
+    if (!token) return { 'Content-Type': 'application/json' };
     return {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -96,7 +96,30 @@ export async function getProfile(): Promise<UserProfile> {
         throw new Error(errorData.message || 'Failed to fetch profile');
     }
     
-    return response.json();
+    const profile = await response.json();
+    
+    // The profile endpoint returns the full user object from the DB
+    // We need to find the role name from the user object from login, which is stored in localStorage
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('userProfile');
+      if (storedUser) {
+        const parsedUser: UserProfile = JSON.parse(storedUser);
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: parsedUser.role, // Use role from stored user profile after login
+        };
+      }
+    }
+    
+    // Fallback if localStorage is not available or doesn't have the user profile
+    return {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: 'user', // default role
+    };
 }
 
 
