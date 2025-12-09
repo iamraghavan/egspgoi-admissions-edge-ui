@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { login, getProfile } from "@/lib/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -26,15 +27,6 @@ const formSchema = z.object({
     message: "Password must be at least 6 characters.",
   }),
 });
-
-// Mock user data to simulate different roles and encrypted IDs
-const mockUsers: { [email: string]: { id: string, name: string, role: string } } = {
-    "sarah@example.com": { id: "a1b2c3d4-e5f6-7890-1234-567890abcdef", name: "Sarah Johnson", role: "Admission Manager"},
-    "michael@example.com": { id: "b2c3d4e5-f6a7-8901-2345-67890abcdeff", name: "Michael Smith", role: "Admission Executive"},
-    "emily@example.com": { id: "c3d4e5f6-a7b8-9012-3456-7890abcdef01", name: "Emily Davis", role: "Marketing Manager"},
-    "david@example.com": { id: "d4e5f6a7-b8c9-0123-4567-890abcdef012", name: "David Chen", role: "Finance"},
-    "admin@example.com": { id: "e5f6a7b8-c9d0-1234-5678-90abcdef0123", name: "Admin User", role: "Super Admin"},
-};
 
 export function LoginForm() {
   const router = useRouter();
@@ -51,25 +43,28 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log("Login attempt with:", values);
+    
+    try {
+      await login(values.email, values.password);
+      const user = await getProfile();
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const user = mockUsers[values.email];
-
-    if (user && values.password) {
-        toast({
-            title: "Login Successful",
-            description: `Welcome back, ${user.name}! Redirecting...`,
-        });
-        
-        router.push(`/u/crm/egspgoi/portal/${user.id}/dashboard`);
-    } else {
+      if (user) {
+          toast({
+              title: "Login Successful",
+              description: `Welcome back, ${user.name}! Redirecting...`,
+          });
+          // Note: In a real application, the user ID from the profile would be used
+          // For now, we'll use a placeholder since the API spec doesn't define it.
+          const encryptedUserId = btoa(user.id || 'mock-user-id');
+          router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/dashboard`);
+      } else {
+        throw new Error("Could not fetch profile after login.");
+      }
+    } catch (error: any) {
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: "Invalid email or password.",
+            description: error.message || "Invalid email or password.",
         });
         setIsLoading(false);
     }
