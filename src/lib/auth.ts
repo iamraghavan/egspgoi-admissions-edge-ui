@@ -17,7 +17,7 @@ interface UserProfile {
  * @param password - The user's password.
  * @returns A promise that resolves with the login response data.
  */
-export async function login(email: string, password: string): Promise<{ token: string }> {
+export async function login(email: string, password: string): Promise<{ accessToken: string, user: UserProfile }> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -41,11 +41,10 @@ export async function login(email: string, password: string): Promise<{ token: s
     // Only parse JSON if the response was successful
     try {
         const responseData = await response.json();
-        // The token is nested inside a 'data' object in the successful response
-        if (responseData && responseData.data && responseData.data.token) {
-            return { token: responseData.data.token };
+        if (responseData && responseData.accessToken && responseData.user) {
+            return { accessToken: responseData.accessToken, user: responseData.user };
         } else {
-             throw new Error('Login response did not include a token.');
+             throw new Error('Login response did not include an accessToken or user object.');
         }
     } catch (error) {
         throw new Error('Failed to parse successful login response.');

@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { login, getProfile } from "@/lib/auth";
+import { login } from "@/lib/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -47,10 +47,10 @@ export function LoginForm() {
     try {
       const loginResponse = await login(values.email, values.password);
 
-      if (loginResponse && loginResponse.token) {
+      if (loginResponse && loginResponse.accessToken && loginResponse.user) {
           // In a real app, you would store this token securely (e.g., in an httpOnly cookie)
           // For now, we proceed assuming the server handles the session.
-          const userProfile = await getProfile();
+          const userProfile = loginResponse.user;
 
           toast({
               title: "Login Successful",
@@ -61,7 +61,7 @@ export function LoginForm() {
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/dashboard`);
       } else {
         // This case should ideally not be hit if the login function throws on missing token
-        throw new Error("Login response did not include a token.");
+        throw new Error("Login response did not include a token and user.");
       }
     } catch (error: any) {
         toast({
