@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,15 +60,18 @@ export function LoginForm() {
       if (loginResponse && loginResponse.accessToken && loginResponse.user) {
           const userProfile = loginResponse.user;
 
+          // Store the token and user info
+          localStorage.setItem('accessToken', loginResponse.accessToken);
+          localStorage.setItem('userProfile', JSON.stringify(userProfile));
+
           toast({
               title: "Login Successful",
               description: `Welcome back, ${userProfile.name}! Redirecting...`,
           });
           
           const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
-          // This would be encrypted in a real-world scenario
           const encryptedUserId = userProfile.id; 
-          const encryptedPortalId = "egspgoi"; // This would be dynamic in a real app
+          const encryptedPortalId = "egspgoi"; 
 
           router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
 

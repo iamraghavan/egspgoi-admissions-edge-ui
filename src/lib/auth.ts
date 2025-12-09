@@ -1,3 +1,4 @@
+
 // This is a placeholder for actual authentication logic.
 // In a real application, this would interact with a backend API.
 
@@ -10,6 +11,17 @@ interface UserProfile {
     email: string;
     role: string;
 }
+
+function getAuthHeaders() {
+    if (typeof window === 'undefined') return {};
+    const token = localStorage.getItem('accessToken');
+    if (!token) return {};
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    };
+}
+
 
 /**
  * Logs in a user.
@@ -76,9 +88,7 @@ export async function refreshToken(): Promise<void> {
 export async function getProfile(): Promise<UserProfile> {
      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -87,4 +97,11 @@ export async function getProfile(): Promise<UserProfile> {
     }
     
     return response.json();
+}
+
+
+export function logout() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userProfile');
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Nav from './nav';
@@ -7,17 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import placeholderImagesData from '@/lib/placeholder-images.json';
 import { Separator } from '../ui/separator';
 import { useEffect, useState } from 'react';
-import { getProfile } from '@/lib/auth';
+import { getProfile, logout } from '@/lib/auth';
 import { Skeleton } from '../ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 interface UserProfile {
   name: string;
 }
 
 export default function AppSidebar() {
+  const router = useRouter();
   const { placeholderImages } = placeholderImagesData;
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
-  // In a real app, you'd get this from package.json
   const appVersion = "0.1.0"; 
   const [user, setUser] = useState<UserProfile | null>(null);
 
@@ -28,10 +30,13 @@ export default function AppSidebar() {
         setUser(profile);
       } catch (error) {
         console.error("Failed to fetch user profile for sidebar", error);
+        // If fetching fails, token might be invalid, log out user
+        logout();
+        router.push('/');
       }
     }
     fetchProfile();
-  }, []);
+  }, [router]);
 
   return (
     <aside className="hidden border-r bg-[#161d26] md:block text-white">

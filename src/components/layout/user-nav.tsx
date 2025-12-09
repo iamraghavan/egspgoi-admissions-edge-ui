@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,8 +15,9 @@ import {
 import placeholderImagesData from '@/lib/placeholder-images.json'
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { getProfile } from "@/lib/auth"
+import { getProfile, logout } from "@/lib/auth"
 import { Skeleton } from "../ui/skeleton"
+import { useRouter } from "next/navigation"
 
 interface UserProfile {
   name: string;
@@ -23,6 +25,7 @@ interface UserProfile {
 }
 
 export function UserNav() {
+  const router = useRouter();
   const { placeholderImages } = placeholderImagesData;
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -34,10 +37,17 @@ export function UserNav() {
         setUser(profile);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
+        // If fetching fails, token might be invalid, log out user
+        handleLogout();
       }
     }
     fetchProfile();
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   return (
     <DropdownMenu>
@@ -80,8 +90,8 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/">Log out</Link>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+          Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
