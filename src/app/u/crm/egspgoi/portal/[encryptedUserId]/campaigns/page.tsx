@@ -5,12 +5,13 @@ import { getCampaigns } from "@/lib/data";
 import { PlusCircle, Calendar, DollarSign, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import placeholderImages from "@/lib/placeholder-images.json";
+import placeholderImagesData from "@/lib/placeholder-images.json";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default async function CampaignsPage() {
     const campaigns = await getCampaigns();
+    const { placeholderImages } = placeholderImagesData;
 
     const getCampaignImage = (campaignId: string) => {
         const campaignImageMap: { [key: string]: string } = {
@@ -21,7 +22,7 @@ export default async function CampaignsPage() {
             'camp-5': 'campaign-data-science'
         };
         const imageId = campaignImageMap[campaignId] || 'campaign-fall-2024';
-        return placeholderImages.placeholderImages.find(p => p.id === imageId);
+        return placeholderImages.find(p => p.id === imageId);
     }
 
     const getStatusVariant = (status: string) => {

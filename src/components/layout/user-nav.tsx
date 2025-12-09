@@ -11,10 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import placeholderImages from '@/lib/placeholder-images.json'
+import placeholderImagesData from '@/lib/placeholder-images.json'
 import Link from "next/link"
 
 export function UserNav() {
+  const { placeholderImages } = placeholderImagesData;
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
 
   return (
