@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { login, getProfile } from "@/lib/auth";
+import { login } from "@/lib/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -45,17 +45,15 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      await login(values.email, values.password);
-      const user = await getProfile();
+      const loginResponse = await login(values.email, values.password);
 
-      if (user) {
+      if (loginResponse && loginResponse.user) {
           toast({
               title: "Login Successful",
-              description: `Welcome back, ${user.name}! Redirecting...`,
+              description: `Welcome back, ${loginResponse.user.name}! Redirecting...`,
           });
-          // Note: In a real application, the user ID from the profile would be used
-          // For now, we'll use a placeholder since the API spec doesn't define it.
-          const encryptedUserId = btoa(user.id || 'mock-user-id');
+          // In a real application, the user ID from the profile would be used
+          const encryptedUserId = btoa(loginResponse.user.id || 'mock-user-id');
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/dashboard`);
       } else {
         throw new Error("Could not fetch profile after login.");

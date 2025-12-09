@@ -17,7 +17,7 @@ interface UserProfile {
  * @param password - The user's password.
  * @returns A promise that resolves when login is successful.
  */
-export async function login(email: string, password: string): Promise<void> {
+export async function login(email: string, password: string): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -26,11 +26,13 @@ export async function login(email: string, password: string): Promise<void> {
         body: JSON.stringify({ email, password }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(data.message || 'Login failed');
     }
-    // Assuming the server sets a cookie for session management.
+    
+    return data;
 }
 
 /**
@@ -55,16 +57,17 @@ export async function refreshToken(): Promise<void> {
  * @returns A promise that resolves with the user's profile.
  */
 export async function getProfile(): Promise<UserProfile> {
-    // In a real app, this would be a real API call.
-    // We'll mock it for now to follow the structure.
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-                name: 'Sarah Johnson',
-                email: 'sarah@example.com',
-                role: 'Admission Manager'
-            });
-        }, 500);
+     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Failed to fetch profile');
+    }
+    
+    return response.json();
 }
