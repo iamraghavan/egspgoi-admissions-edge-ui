@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { login } from "@/lib/auth";
+import { login, getProfile } from "@/lib/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -47,16 +47,20 @@ export function LoginForm() {
     try {
       const loginResponse = await login(values.email, values.password);
 
-      if (loginResponse && loginResponse.user) {
+      if (loginResponse && loginResponse.token) {
+          // Assuming token is stored in a cookie by the server or handled elsewhere.
+          // Now fetch the user profile.
+          const userProfile = await getProfile();
+
           toast({
               title: "Login Successful",
-              description: `Welcome back, ${loginResponse.user.name}! Redirecting...`,
+              description: `Welcome back, ${userProfile.name}! Redirecting...`,
           });
-          // In a real application, the user ID from the profile would be used
-          const encryptedUserId = btoa(loginResponse.user.id || 'mock-user-id');
+          
+          const encryptedUserId = btoa(userProfile.id || 'mock-user-id');
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/dashboard`);
       } else {
-        throw new Error("Could not fetch profile after login.");
+        throw new Error("Login response did not include a token.");
       }
     } catch (error: any) {
         toast({

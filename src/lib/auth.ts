@@ -26,14 +26,27 @@ export async function login(email: string, password: string): Promise<any> {
         body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        // Attempt to get a more specific error message from the response body
+        const errorText = await response.text();
+        try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || 'Login failed');
+        } catch (e) {
+            // If the error response is not JSON, use the text content
+            throw new Error(errorText || 'An unknown error occurred');
+        }
     }
-    
-    return data;
+
+    // Only parse JSON if the response was successful
+    try {
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error('Failed to parse successful login response.');
+    }
 }
+
 
 /**
  * Refreshes the authentication token.
