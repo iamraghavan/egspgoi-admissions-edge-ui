@@ -85,7 +85,7 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <nav className={cn("grid items-start gap-1 p-2 text-sm font-medium", isMobile && "p-4")}>
+    <nav className={cn("grid items-start gap-2 p-2 text-sm font-medium", isMobile && "p-4")}>
       {isMobile && (
          <Link
           href="#"
@@ -103,7 +103,7 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
             key={item.title}
             href={href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all hover:text-white hover:bg-gray-700/50",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all duration-200 ease-in-out hover:text-white hover:bg-gray-700/50",
               isActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
             )}
           >
