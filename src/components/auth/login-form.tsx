@@ -65,12 +65,12 @@ export function LoginForm() {
           });
           
           const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
-          // Using a placeholder for encryptedUserId
+          // Using a placeholder for encryptedUserId, as the API provides a different one
           const encryptedUserId = "egspgoi"; 
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/${roleSlug}/dashboard`);
 
       } else {
-        throw new Error("Login response did not include a token and user.");
+        throw new Error("Login response did not include an accessToken and user.");
       }
     } catch (error: any) {
         toast({
