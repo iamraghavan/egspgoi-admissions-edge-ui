@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   LayoutDashboard,
   Users,
@@ -10,13 +11,9 @@ import {
   Settings,
   Landmark
 } from 'lucide-react';
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from '@/components/ui/sidebar';
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const navItems: NavItem[] = [
   {
@@ -87,21 +84,24 @@ export default function Nav() {
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <SidebarMenu>
-      {visibleNavItems.map((item) => (
-        <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === item.href(encryptedPortalId, roleSlug, encryptedUserId)}
-            tooltip={item.title}
+    <nav className="grid items-start gap-1 p-2 text-sm font-medium">
+      {visibleNavItems.map((item) => {
+        const href = item.href(encryptedPortalId, roleSlug, encryptedUserId);
+        const isActive = pathname === href;
+        return (
+          <Link
+            key={item.title}
+            href={href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+              isActive && "bg-muted text-primary"
+            )}
           >
-            <a href={item.href(encryptedPortalId, roleSlug, encryptedUserId)}>
-              <item.icon />
-              <span>{item.title}</span>
-            </a>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+            <item.icon className="h-4 w-4" />
+            {item.title}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

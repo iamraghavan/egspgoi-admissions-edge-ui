@@ -1,75 +1,68 @@
 import PageHeader from '@/components/page-header';
-import ResourceChart from '@/components/dashboard/inventory/resource-chart';
-import ResourceList from '@/components/dashboard/inventory/resource-list';
-import { getInventoryResources } from '@/lib/data';
-import ResourceCard from '@/components/dashboard/inventory/resource-card';
+import StatsGrid from '@/components/dashboard/stats-grid';
+import LeadsChart from '@/components/dashboard/leads-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getLeads } from '@/lib/data';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function DashboardPage() {
-  const resources = await getInventoryResources();
-  const totalResources = resources.reduce((sum, resource) => sum + resource.count, 0);
-
-  const awsAccounts = [
-    { name: 'AWS Dev1', status: 'ok' },
-    { name: 'AWS project 2', status: 'ok' },
-    { name: 'AWS Prod 1', status: 'ok' },
-  ];
-
-  const resourceDetails = [
-    { name: "Elastic Compute Cloud (EC2)", count: 9, details: [ { label: "Running Instances", value: "1" }, { label: "Across 1 Region(s) in 3 Account(s)", value: ""}, { label: "EBS Volumes", value: "1" }, { label: "Total Storage 8 GB", value: "" } ] },
-    { name: "Relational Database Service (RDS)", count: 3, details: [ { label: "DB Engines Used", value: "1" }, { label: "MySQL", value: ""}, { label: "Database Connections", value: "0" } ] },
-    { name: "Simple Notification Service (SNS)", count: 6, details: [ { label: "Messages Published", value: "0" }, { label: "Notifications Delivered", value: "0" }, { label: "Notifications Failed", value: "0" } ] },
-    { name: "DynamoDB", count: 3, details: [ { label: "Provisioned Read Capacity Units", value: "1" }, { label: "Provisioned Write Capacity Units", value: "1" } ] },
-    { name: "Elastic Load Balancer (ELB)", count: 6, details: [ { label: "Healthy Hosts", value: "4" }, { label: "Across 1 Region(s)", value: "" }, { label: "Unhealthy Hosts", value: "0" }, { label: "Across 0 Region(s)", value: "" } ] },
-    { name: "Simple Storage Service (S3)", count: 33, details: [ { label: "Buckets", value: "33" } ] },
-  ]
+export default async function DashboardPage({ params }: { params: { encryptedPortalId: string; encryptedUserId: string; role: string } }) {
+  const recentLeads = (await getLeads()).slice(0, 5);
+  const { encryptedPortalId, encryptedUserId, role } = params;
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Inventory Dashboard - All Accounts" />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>AWS Resources</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-1 flex flex-col items-center justify-center">
-              <ResourceChart total={totalResources} />
-            </div>
-            <div className="md:col-span-2">
-              <ResourceList resources={resources} />
-            </div>
-            <div className="md:col-span-1">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium">AWS Account</CardTitle>
+    <div className="flex flex-col gap-8">
+      <PageHeader title="Dashboard" />
+      <StatsGrid />
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3">
+            <LeadsChart />
+        </div>
+        <div className="lg:col-span-2">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-base font-medium">Recent Leads</CardTitle>
+                     <Button asChild variant="link" size="sm" className="text-sm">
+                        <Link href={`/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/leads`}>
+                            View All <ArrowUpRight className="h-4 w-4 ml-1" />
+                        </Link>
+                    </Button>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
-                    {awsAccounts.map(account => (
-                      <li key={account.name} className="flex items-center text-sm">
-                        <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
-                        {account.name}
-                      </li>
-                    ))}
-                  </ul>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {recentLeads.map((lead) => (
+                                <TableRow key={lead.id}>
+                                    <TableCell>
+                                        <div className="font-medium">{lead.name}</div>
+                                        <div className="text-sm text-muted-foreground">{lead.email}</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">{lead.status}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {resourceDetails.map(resource => (
-          <ResourceCard 
-            key={resource.name}
-            title={resource.name}
-            count={resource.count}
-            details={resource.details}
-          />
-        ))}
+            </Card>
+        </div>
       </div>
     </div>
   );
