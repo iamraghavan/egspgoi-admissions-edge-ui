@@ -1,7 +1,7 @@
 // This is a placeholder for actual authentication logic.
 // In a real application, this would interact with a backend API.
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
 
 // Mock implementation of a profile object you might get from an API
 interface UserProfile {
