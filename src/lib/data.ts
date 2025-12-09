@@ -1,4 +1,4 @@
-import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend } from './types';
+import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
 
@@ -65,6 +65,14 @@ const adSpends: AdSpend[] = [
     { id: 'ad-4', campaignId: 'camp-1', platform: 'Google', amount: 520, date: subDays(new Date(), 2).toISOString() },
 ];
 
+const inventoryResources: InventoryResource[] = [
+    { name: 'Elastic Compute Cloud (EC2)', count: 9 },
+    { name: 'Relational Database Service (RDS)', count: 3 },
+    { name: 'Simple Notification Service (SNS)', count: 6 },
+    { name: 'Elastic Load Balancer (ELB)', count: 6 },
+    { name: 'DynamoDB', count: 3 },
+];
+
 // --- Data access functions ---
 
 export const getLeads = async (): Promise<Lead[]> => Promise.resolve(leads);
@@ -110,3 +118,5 @@ export const getLeadsOverTime = async () => {
     ];
     return Promise.resolve(data);
 }
+
+export const getInventoryResources = async (): Promise<InventoryResource[]> => Promise.resolve(inventoryResources);

@@ -84,3 +84,8 @@ export type NavItem = {
   icon: React.ElementType;
   roles: Role[];
 };
+
+export type InventoryResource = {
+  name: string;
+  count: number;
+};
