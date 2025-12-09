@@ -22,69 +22,68 @@ import { usePathname, useParams } from 'next/navigation';
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    href: (role) => `/${role}/dashboard`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/dashboard`,
     icon: LayoutDashboard,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Leads',
-    href: (role) => `/${role}/leads`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/leads`,
     icon: Users,
     roles: ['Super Admin', 'Admission Manager', 'Admission Executive'],
   },
   {
     title: 'Campaigns',
-    href: (role) => `/${role}/campaigns`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/campaigns`,
     icon: Megaphone,
     roles: ['Super Admin', 'Marketing Manager'],
   },
   {
     title: 'Budget Approvals',
-    href: (role) => `/${role}/budget-approvals`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/budget-approvals`,
     icon: CircleDollarSign,
     roles: ['Super Admin', 'Marketing Manager', 'Finance'],
   },
   {
     title: 'Accounting',
-    href: (role) => `/${role}/accounting`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/accounting`,
     icon: Landmark,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
   },
   {
     title: 'Call Monitoring',
-    href: (role) => `/${role}/call-monitoring`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/call-monitoring`,
     icon: Phone,
     roles: ['Super Admin', 'Admission Manager'],
   },
   {
     title: 'Call History',
-    href: (role) => `/${role}/call-history`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/call-history`,
     icon: History,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Settings',
-    href: (role) => `/${role}/settings`,
+    href: (encryptedUserId, role) => `/u/crm/egspgoi/portal/${encryptedUserId}/${role}/settings`,
     icon: Settings,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
 ];
 
-const roleMap: Record<string, Role> = {
-    'super-admin': 'Super Admin',
-    'marketing-manager': 'Marketing Manager',
-    'admission-manager': 'Admission Manager',
-    'finance': 'Finance',
-    'admission-executive': 'Admission Executive',
-    'admin': 'Super Admin' // Default/fallback role
+const roleSlugMap: Record<string, Role> = {
+    'sa': 'Super Admin',
+    'mm': 'Marketing Manager',
+    'am': 'Admission Manager',
+    'fin': 'Finance',
+    'ae': 'Admission Executive',
 };
 
 export default function Nav() {
   const pathname = usePathname();
   const params = useParams();
-  const roleSlug = params.role as string;
+  const { encryptedUserId, role: roleSlug } = params as { encryptedUserId: string; role: string };
   
-  const userRole = roleMap[roleSlug] || 'Super Admin';
+  const userRole = roleSlugMap[roleSlug] || 'Super Admin';
 
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
@@ -94,10 +93,10 @@ export default function Nav() {
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             asChild
-            isActive={pathname === item.href(roleSlug)}
+            isActive={pathname === item.href(encryptedUserId, roleSlug)}
             tooltip={item.title}
           >
-            <a href={item.href(roleSlug)}>
+            <a href={item.href(encryptedUserId, roleSlug)}>
               <item.icon />
               <span>{item.title}</span>
             </a>

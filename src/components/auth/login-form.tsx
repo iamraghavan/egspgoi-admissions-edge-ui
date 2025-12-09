@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { login } from "@/lib/auth";
+import type { Role } from "@/lib/types";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -27,6 +28,14 @@ const formSchema = z.object({
     message: "Password must be at least 6 characters.",
   }),
 });
+
+const roleToSlug: Record<Role, string> = {
+    'Super Admin': 'sa',
+    'Marketing Manager': 'mm',
+    'Admission Manager': 'am',
+    'Finance': 'fin',
+    'Admission Executive': 'ae',
+};
 
 export function LoginForm() {
   const router = useRouter();
@@ -55,8 +64,10 @@ export function LoginForm() {
               description: `Welcome back, ${userProfile.name}! Redirecting...`,
           });
           
-          const role = userProfile.role.toLowerCase().replace(' ', '-');
-          router.push(`/${role}/dashboard`);
+          const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
+          // Using a placeholder for encryptedUserId
+          const encryptedUserId = "egspgoi"; 
+          router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/${roleSlug}/dashboard`);
 
       } else {
         throw new Error("Login response did not include a token and user.");
