@@ -65,8 +65,8 @@ export function LoginForm() {
           });
           
           const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
-          // Using a placeholder for encryptedUserId, as the API provides a different one
-          const encryptedUserId = "egspgoi"; 
+          // This would be encrypted in a real-world scenario
+          const encryptedUserId = userProfile.id; 
           router.push(`/u/crm/egspgoi/portal/${encryptedUserId}/${roleSlug}/dashboard`);
 
       } else {
