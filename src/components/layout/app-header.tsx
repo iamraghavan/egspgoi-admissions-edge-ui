@@ -107,7 +107,7 @@ export default function AppHeader() {
       <div className="w-full flex-1">
         <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
           <PopoverTrigger asChild>
-            <form className="w-full md:w-2/3 lg:w-1/3">
+            <form className="w-full">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
