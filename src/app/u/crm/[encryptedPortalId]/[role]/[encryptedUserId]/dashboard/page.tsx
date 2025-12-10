@@ -1,6 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import StatsGrid from '@/components/dashboard/stats-grid';
 import LeadsChart from '@/components/dashboard/leads-chart';
@@ -21,10 +23,11 @@ import { ArrowUpRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function DashboardPage({ params }: { params: { encryptedPortalId: string; encryptedUserId: string; role: string } }) {
+export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const { encryptedPortalId, encryptedUserId, role } = params;
+  const params = useParams();
+  const { encryptedPortalId, encryptedUserId, role } = params as { encryptedPortalId: string; encryptedUserId: string; role: string };
 
   useEffect(() => {
     const fetchRecentLeads = async () => {
