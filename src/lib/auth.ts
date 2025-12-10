@@ -15,7 +15,9 @@ interface UserProfile {
 export function getAuthHeaders() {
     if (typeof window === 'undefined') return {};
     const token = localStorage.getItem('accessToken');
-    if (!token) return { 'Content-Type': 'application/json' };
+    if (!token) {
+        throw new Error('Authentication token not found');
+    }
     return {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -39,21 +41,23 @@ export async function login(email: string, password: string): Promise<{ accessTo
     });
 
     if (!response.ok) {
-        // Attempt to get a more specific error message from the response body
         const errorText = await response.text();
         try {
             const errorJson = JSON.parse(errorText);
             throw new Error(errorJson.message || 'Login failed');
         } catch (e) {
-            // If the error response is not JSON, use the text content
             throw new Error(errorText || 'An unknown error occurred');
         }
     }
 
-    // Only parse JSON if the response was successful
     try {
         const responseData = await response.json();
         if (responseData && responseData.accessToken && responseData.user) {
+            // Store the token and user info
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('accessToken', responseData.accessToken);
+                localStorage.setItem('userProfile', JSON.stringify(responseData.user));
+            }
             return { accessToken: responseData.accessToken, user: responseData.user };
         } else {
              throw new Error('Login response did not include an accessToken or user object.');
@@ -82,10 +86,10 @@ export async function refreshToken(): Promise<void> {
 }
 
 /**
- * Fetches the current user's profile.
- * @returns A promise that resolves with the user's profile.
+ * Fetches the current user's profile from localStorage.
+ * @returns The user's profile or null if not found.
  */
-export async function getProfile(): Promise<UserProfile | null> {
+export function getProfile(): UserProfile | null {
     if (typeof window !== 'undefined') {
         const storedUser = localStorage.getItem('userProfile');
         if (storedUser) {

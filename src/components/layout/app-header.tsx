@@ -21,6 +21,7 @@ import { globalSearch } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '../ui/command';
 import { useRouter } from 'next/navigation';
+import { logout } from '@/lib/auth';
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -37,6 +38,11 @@ export default function AppHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 1) {
@@ -47,6 +53,9 @@ export default function AppHeader() {
         setIsSearchOpen(true);
       } catch (error) {
         console.error("Search failed:", error);
+        if ((error as Error).message === 'Authentication token not found' || (error as Error).message === 'Invalid or expired token.') {
+            handleLogout();
+        }
         setSearchResults([]);
       } finally {
         setIsLoading(false);
