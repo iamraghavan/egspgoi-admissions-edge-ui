@@ -1,78 +1,177 @@
-import { getLeadsByStatus, getLeadStatuses, getUserById } from "@/lib/data";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MessageSquare } from "lucide-react";
-import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
+'use client';
 
-async function KanbanColumn({ status }: { status: string }) {
-  const leads = await getLeadsByStatus(status as any);
+import * as React from 'react';
+import { getLeads, getUserById } from "@/lib/data";
+import { Lead, User } from "@/lib/types";
+import { GripVertical } from 'lucide-react';
+
+import {
+  Kanban,
+  KanbanBoard,
+  KanbanColumn,
+  KanbanColumnContent,
+  KanbanColumnHandle,
+  KanbanItem,
+  KanbanItemHandle,
+  KanbanOverlay,
+} from '@/components/ui/kanban';
+import { Button } from '@/components/ui/button-1';
+import { Badge } from '@/components/ui/badge-2';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '../ui/skeleton';
+
+interface KanbanLead extends Lead {
+    priority: 'low' | 'medium' | 'high';
+    assigneeAvatar?: string;
+    assigneeName?: string;
+}
+
+const COLUMN_TITLES: Record<string, string> = {
+  "New": 'New',
+  "Contacted": 'Contacted',
+  "Qualified": 'Qualified',
+  "Proposal": 'Proposal',
+  "Won": 'Won',
+  "Lost": 'Lost',
+};
+
+interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
+  lead: KanbanLead;
+  asHandle?: boolean;
+}
+
+function LeadCard({ lead, asHandle, ...props }: LeadCardProps) {
+  const cardContent = (
+    <div className="rounded-md border bg-card p-3 shadow-xs">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="line-clamp-1 font-medium text-sm">{lead.name}</span>
+          <Badge
+            variant={lead.priority === 'high' ? 'destructive' : lead.priority === 'medium' ? 'primary' : 'warning'}
+            appearance="outline"
+            className="pointer-events-none h-5 rounded-sm px-1.5 text-[11px] capitalize shrink-0"
+          >
+            {lead.priority}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between text-muted-foreground text-xs">
+          {lead.assigneeName && (
+            <div className="flex items-center gap-1">
+              <Avatar className="size-4">
+                {lead.assigneeAvatar && <AvatarImage src={lead.assigneeAvatar} />}
+                <AvatarFallback>{lead.assigneeName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="line-clamp-1">{lead.assigneeName}</span>
+            </div>
+          )}
+          {lead.lastContacted && <time className="text-[10px] tabular-nums whitespace-nowrap">{new Date(lead.lastContacted).toLocaleDateString()}</time>}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col flex-shrink-0 w-80">
-      <div className="flex items-center justify-between px-3 py-2">
-        <h3 className="font-semibold text-lg">{status}</h3>
-        <span className="text-sm font-semibold text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-          {leads.length}
-        </span>
-      </div>
-      <ScrollArea className="h-[calc(100vh-220px)]">
-        <div className="flex flex-col gap-4 p-3">
-          {leads.map(async (lead) => {
-            const assignedUser = await getUserById(lead.assignedTo);
-            return (
-              <Card key={lead.id} className="bg-card shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <p className="font-semibold text-base">{lead.name}</p>
-                    {assignedUser && (
-                        <Avatar className="w-8 h-8">
-                          {assignedUser.avatarUrl && <AvatarImage src={assignedUser.avatarUrl} alt={assignedUser.name} />}
-                          <AvatarFallback>
-                            {assignedUser?.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(lead.lastContacted), { addSuffix: true })}
-                  </p>
-                  <div className="flex justify-start items-center mt-4 gap-2 border-t pt-3">
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}>
-                        <Phone className="w-4 h-4" />
-                      </a>
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <a href={`mailto:${lead.email}`} aria-label={`Email ${lead.name}`}>
-                        <Mail className="w-4 h-4" />
-                      </a>
-                    </Button>
-                     <Button variant="outline" size="icon" className="h-8 w-8">
-                      <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${lead.name}`}>
-                        <MessageSquare className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </ScrollArea>
-    </div>
+    <KanbanItem value={lead.id} {...props}>
+      {asHandle ? <KanbanItemHandle>{cardContent}</KanbanItemHandle> : cardContent}
+    </KanbanItem>
   );
 }
 
-export default async function KanbanBoard() {
-  const statuses = await getLeadStatuses();
+interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
+  leads: KanbanLead[];
+  isOverlay?: boolean;
+}
+
+function LeadColumn({ value, leads, isOverlay, ...props }: LeadColumnProps) {
+  return (
+        <KanbanColumn value={value} {...props} className="rounded-md border bg-card p-2.5 shadow-xs">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="font-semibold text-sm">{COLUMN_TITLES[value]}</span>
+              <Badge variant="secondary">{leads.length}</Badge>
+            </div>
+            <KanbanColumnHandle asChild>
+              <Button variant="dim" size="sm" mode="icon">
+                <GripVertical />
+              </Button>
+            </KanbanColumnHandle>
+          </div>
+          <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-0.5">
+            {leads.map((lead) => (
+              <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} />
+            ))}
+          </KanbanColumnContent>
+        </KanbanColumn>
+  );
+}
+
+export default function KanbanBoardComponent() {
+  const [columns, setColumns] = React.useState<Record<string, KanbanLead[]>>({});
+  const [loading, setLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    async function fetchData() {
+        setLoading(true);
+        const leadsData = await getLeads();
+        
+        const leadsWithPriority: KanbanLead[] = await Promise.all(leadsData.map(async (lead) => {
+            const user = await getUserById(lead.assignedTo);
+            const priorities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+            return {
+                ...lead,
+                priority: priorities[Math.floor(Math.random() * priorities.length)], // Assign random priority
+                assigneeName: user?.name,
+                assigneeAvatar: user?.avatarUrl,
+            }
+        }));
+
+        const groupedByStatus: Record<string, KanbanLead[]> = {
+            "New": [],
+            "Contacted": [],
+            "Qualified": [],
+            "Proposal": [],
+            "Won": [],
+            "Lost": [],
+        };
+        
+        leadsWithPriority.forEach(lead => {
+            if(groupedByStatus[lead.status]) {
+                groupedByStatus[lead.status].push(lead);
+            }
+        });
+        
+        setColumns(groupedByStatus);
+        setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Object.keys(COLUMN_TITLES).map(title => (
+                 <div key={title} className="p-4">
+                    <Skeleton className="h-6 w-3/4 mb-4" />
+                    <Skeleton className="h-24 w-full mb-2" />
+                    <Skeleton className="h-24 w-full" />
+                 </div>
+            ))}
+        </div>
+    );
+  }
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4">
-      {statuses.map((status) => (
-        <KanbanColumn key={status} status={status} />
-      ))}
+    <div className="overflow-x-auto">
+      <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id}>
+        <KanbanBoard className="grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5">
+          {Object.entries(columns).map(([columnValue, leads]) => (
+            <LeadColumn key={columnValue} value={columnValue} leads={leads} />
+          ))}
+        </KanbanBoard>
+        <KanbanOverlay>
+          <div className="rounded-md bg-muted/60 size-full" />
+        </KanbanOverlay>
+      </Kanban>
     </div>
   );
 }
