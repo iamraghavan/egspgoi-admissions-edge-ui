@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { getLeads, getUserById } from "@/lib/data";
-import { Lead, User } from "@/lib/types";
+import { Lead, User, LeadStatus } from "@/lib/types";
 import { GripVertical } from 'lucide-react';
 
 import {
@@ -26,13 +26,13 @@ interface KanbanLead extends Lead {
     assigneeName?: string;
 }
 
-const COLUMN_TITLES: Record<string, string> = {
+type KanbanColumnKey = "New" | "Contacted" | "On Board" | "Failed";
+
+const COLUMN_TITLES: Record<KanbanColumnKey, string> = {
   "New": 'New',
   "Contacted": 'Contacted',
-  "Qualified": 'Qualified',
-  "Proposal": 'Proposal',
-  "Won": 'Won',
-  "Lost": 'Lost',
+  "On Board": 'On Board',
+  "Failed": 'Failed',
 };
 
 interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
@@ -87,7 +87,7 @@ function LeadColumn({ value, leads, isOverlay, ...props }: LeadColumnProps) {
         <KanbanColumn value={value} {...props} className="rounded-md border bg-card p-2.5 shadow-xs">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2.5">
-              <span className="font-semibold text-sm">{COLUMN_TITLES[value]}</span>
+              <span className="font-semibold text-sm">{COLUMN_TITLES[value as KanbanColumnKey]}</span>
               <Badge variant="secondary">{leads.length}</Badge>
             </div>
             <KanbanColumnHandle asChild>
@@ -125,18 +125,35 @@ export default function KanbanBoardComponent() {
             }
         }));
 
-        const groupedByStatus: Record<string, KanbanLead[]> = {
+        const groupedByStatus: Record<KanbanColumnKey, KanbanLead[]> = {
             "New": [],
             "Contacted": [],
-            "Qualified": [],
-            "Proposal": [],
-            "Won": [],
-            "Lost": [],
+            "On Board": [],
+            "Failed": [],
         };
         
         leadsWithPriority.forEach(lead => {
-            if(groupedByStatus[lead.status]) {
-                groupedByStatus[lead.status].push(lead);
+            switch (lead.status) {
+                case "Won":
+                    groupedByStatus["On Board"].push(lead);
+                    break;
+                case "Lost":
+                    groupedByStatus["Failed"].push(lead);
+                    break;
+                case "Qualified":
+                case "Proposal":
+                case "Contacted":
+                    groupedByStatus["Contacted"].push(lead);
+                    break;
+                case "New":
+                    groupedByStatus["New"].push(lead);
+                    break;
+                default:
+                    // This can be a fallback, maybe for new unhandled statuses
+                    if (groupedByStatus[lead.status as KanbanColumnKey]) {
+                        groupedByStatus[lead.status as KanbanColumnKey].push(lead);
+                    }
+                    break;
             }
         });
         
@@ -148,7 +165,7 @@ export default function KanbanBoardComponent() {
 
   if (loading) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Object.keys(COLUMN_TITLES).map(title => (
                  <div key={title} className="p-4">
                     <Skeleton className="h-6 w-3/4 mb-4" />
@@ -163,7 +180,7 @@ export default function KanbanBoardComponent() {
   return (
     <div className="overflow-x-auto">
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id}>
-        <KanbanBoard className="grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5">
+        <KanbanBoard className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {Object.entries(columns).map(([columnValue, leads]) => (
             <LeadColumn key={columnValue} value={columnValue} leads={leads} />
           ))}
