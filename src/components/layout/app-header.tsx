@@ -1,11 +1,17 @@
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Search, Menu, Settings, Shield } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
 import Link from 'next/link';
 import { AppLogo } from '../icons';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function AppHeader() {
   return (
@@ -46,13 +52,44 @@ export default function AppHeader() {
           </div>
         </form>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-          <Bell className="h-5 w-5" />
-           <span className="sr-only">Toggle notifications</span>
-        </Button>
-        <UserNav />
-      </div>
+      <TooltipProvider>
+        <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
+                  <Bell className="h-5 w-5" />
+                  <span className="sr-only">Toggle notifications</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Notifications</p>
+              </TooltipContent>
+            </Tooltip>
+             <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
+                  <Settings className="h-5 w-5" />
+                   <span className="sr-only">Settings</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
+             <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
+                  <Shield className="h-5 w-5" />
+                   <span className="sr-only">Admin Panel</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Admin Panel</p>
+              </TooltipContent>
+            </Tooltip>
+          <UserNav />
+        </div>
+      </TooltipProvider>
     </header>
   );
 }
