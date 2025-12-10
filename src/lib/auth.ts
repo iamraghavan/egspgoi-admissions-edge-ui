@@ -86,7 +86,14 @@ export async function refreshToken(): Promise<void> {
  * @returns A promise that resolves with the user's profile.
  */
 export async function getProfile(): Promise<UserProfile> {
-     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'GET',
         headers: getAuthHeaders(),
     });

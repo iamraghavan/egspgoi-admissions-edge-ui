@@ -19,6 +19,11 @@ export default function AppSidebar() {
   const appVersion = "0.1.0"; 
   const [user, setUser] = useState<User | null>(null);
 
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -31,11 +36,6 @@ export default function AppSidebar() {
     }
     fetchProfile();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   return (
     <aside className="hidden border-r border-gray-700 bg-[#232f3e] md:block text-white">

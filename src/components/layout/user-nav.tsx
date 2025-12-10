@@ -29,6 +29,11 @@ export function UserNav() {
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
   const [user, setUser] = useState<UserProfile | null>(null);
 
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -42,11 +47,6 @@ export function UserNav() {
     }
     fetchProfile();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   return (
     <DropdownMenu>
