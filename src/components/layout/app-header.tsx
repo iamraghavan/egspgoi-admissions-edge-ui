@@ -17,13 +17,13 @@ export default function AppHeader() {
             <Button
               variant="outline"
               size="icon"
-              className="shrink-0 bg-transparent text-white hover:bg-gray-700/50 hover:text-white"
+              className="shrink-0 bg-transparent text-white hover:bg-gray-700/50 hover:text-white border-gray-600"
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col p-0 bg-[#161d26] text-white border-r-0">
+          <SheetContent side="left" className="flex flex-col p-0 bg-[#232f3e] text-white border-r-0">
              <div className="flex h-16 items-center border-b border-gray-700 px-6">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                   <AppLogo className="h-6 w-6" />

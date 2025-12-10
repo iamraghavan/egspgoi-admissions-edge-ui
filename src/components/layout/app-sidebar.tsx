@@ -39,7 +39,7 @@ export default function AppSidebar() {
   };
 
   return (
-    <aside className="hidden border-r bg-[#161d26] md:block text-white">
+    <aside className="hidden border-r border-gray-700 bg-[#232f3e] md:block text-white">
         <div className="flex h-full max-h-screen flex-col">
           <div className="flex h-16 items-center border-b border-gray-700 px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
