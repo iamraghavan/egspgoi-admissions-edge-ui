@@ -12,7 +12,7 @@ interface UserProfile {
     role: string;
 }
 
-function getAuthHeaders() {
+export function getAuthHeaders() {
     if (typeof window === 'undefined') return {};
     const token = localStorage.getItem('accessToken');
     if (!token) return { 'Content-Type': 'application/json' };

@@ -1,6 +1,10 @@
+
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
+import { getAuthHeaders } from './auth';
+
+const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
 
 const users: User[] = [
   { id: 'user-1', name: 'Sarah Johnson', email: 'sarah@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-1')?.imageUrl || '', role: 'Admission Manager' },
@@ -120,3 +124,22 @@ export const getLeadsOverTime = async () => {
 }
 
 export const getInventoryResources = async (): Promise<InventoryResource[]> => Promise.resolve(inventoryResources);
+
+/**
+ * Performs a global search across different types of data.
+ * @param query - The search query string.
+ * @returns A promise that resolves with an array of search results.
+ */
+export async function globalSearch(query: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred during search' }));
+        throw new Error(errorData.message || 'Failed to perform search');
+    }
+    
+    return response.json();
+}
