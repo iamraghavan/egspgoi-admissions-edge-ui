@@ -45,7 +45,7 @@ export default function AppHeader() {
   };
 
   const handleSearch = async (query: string) => {
-    if (query.trim().length > 1) {
+    if (query.trim().length > 2) {
       setIsLoading(true);
       try {
         const results = await globalSearch(query);
