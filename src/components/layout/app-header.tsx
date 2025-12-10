@@ -3,7 +3,7 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings } from 'lucide-react';
+import { Bell, Search, Menu, Settings, User as UserIcon, Megaphone, FileText } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
@@ -19,7 +19,7 @@ import { Separator } from '../ui/separator';
 import { useState, useEffect, useCallback } from 'react';
 import { globalSearch } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '../ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/auth';
 
@@ -30,6 +30,19 @@ const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => 
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };
+};
+
+const getIconForType = (type: string) => {
+    switch (type) {
+      case 'lead':
+        return <UserIcon className="mr-3 h-5 w-5 text-muted-foreground" />;
+      case 'campaign':
+        return <Megaphone className="mr-3 h-5 w-5 text-muted-foreground" />;
+      case 'user':
+        return <UserIcon className="mr-3 h-5 w-5 text-muted-foreground" />;
+      default:
+        return <FileText className="mr-3 h-5 w-5 text-muted-foreground" />;
+    }
 };
 
 export default function AppHeader() {
@@ -127,17 +140,25 @@ export default function AppHeader() {
                 {!isLoading && searchResults.length === 0 && searchQuery.length > 2 && <CommandEmpty>No results found.</CommandEmpty>}
                 {searchResults.length > 0 && !isLoading && (
                    <CommandGroup heading="Results">
-                    {searchResults.map((item) => (
-                      <CommandItem
-                        key={item.id}
-                        onSelect={() => handleSelect(item.url)}
-                        value={`${item.name}-${item.type}`}
-                      >
-                        <div className="flex justify-between w-full">
-                           <span>{item.name}</span>
-                           <span className="text-xs capitalize bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{item.type}</span>
-                        </div>
-                      </CommandItem>
+                    {searchResults.map((item, index) => (
+                      <>
+                        <CommandItem
+                          key={item.id}
+                          onSelect={() => handleSelect(item.url)}
+                          value={`${item.name}-${item.type}`}
+                        >
+                          <div className="flex items-center w-full">
+                            {getIconForType(item.type)}
+                            <div className="flex flex-col">
+                                <span className="font-medium">{item.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {item.type === 'lead' || item.type === 'user' ? item.email : item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                </span>
+                            </div>
+                          </div>
+                        </CommandItem>
+                        {index < searchResults.length - 1 && <CommandSeparator />}
+                      </>
                     ))}
                   </CommandGroup>
                 )}
