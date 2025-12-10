@@ -1,4 +1,3 @@
-
 'use client';
 
 import Nav from './nav';
@@ -43,8 +42,8 @@ export default function AppSidebar() {
         <div className="flex h-full max-h-screen flex-col">
           <div className="flex h-16 items-center border-b border-gray-700 px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <AppLogo className="h-6 w-6" />
-              <span>Admissions Edge</span>
+              <AppLogo className="h-6 w-6 text-primary" />
+              <span className='text-white'>Admissions Edge</span>
             </Link>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -62,7 +61,7 @@ export default function AppSidebar() {
               <div className='flex flex-col'>
                 {user ? (
                   <>
-                    <span className='text-sm font-medium leading-none'>{user.name}</span>
+                    <span className='text-sm font-medium leading-none text-white'>{user.name}</span>
                     <span className='text-xs text-gray-400'>v{appVersion}</span>
                   </>
                 ) : (

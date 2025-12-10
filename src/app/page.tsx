@@ -20,12 +20,6 @@ export default function LoginPage() {
             </p>
           </div>
           <LoginForm />
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <a href="#" className="underline">
-              Sign up
-            </a>
-          </div>
         </div>
       </div>
       <div className="hidden bg-muted lg:block">
@@ -35,7 +29,7 @@ export default function LoginPage() {
             alt={loginImage.description}
             width="1920"
             height="1080"
-            className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            className="h-full w-full object-cover"
             data-ai-hint={loginImage.imageHint}
           />
         )}

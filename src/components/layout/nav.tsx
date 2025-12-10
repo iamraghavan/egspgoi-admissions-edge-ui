@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -90,10 +89,10 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
       {isMobile && (
          <Link
           href="#"
-          className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
+          className="mb-4 flex items-center gap-2 text-lg font-semibold text-white"
         >
-          <AppLogo className="h-6 w-6" />
-          <span className="sr-only">Admissions Edge</span>
+          <AppLogo className="h-6 w-6 text-primary" />
+          <span>Admissions Edge</span>
         </Link>
       )}
       {visibleNavItems.map((item) => {
@@ -105,8 +104,8 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
             href={href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all duration-200 ease-in-out hover:text-white hover:bg-gray-700/50",
-              isActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
-              isMobile && "text-foreground hover:text-foreground hover:bg-muted"
+              isActive ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "text-gray-300 hover:text-white",
+              isMobile && "text-base text-white hover:bg-gray-700/50"
             )}
           >
             <item.icon className="h-4 w-4" />

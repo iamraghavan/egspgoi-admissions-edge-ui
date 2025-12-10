@@ -1,4 +1,3 @@
-
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
 import { Bell, Search, Menu } from 'lucide-react';
@@ -26,8 +25,8 @@ export default function AppHeader() {
           <SheetContent side="left" className="flex flex-col p-0 bg-[#232f3e] text-white border-r-0">
              <div className="flex h-16 items-center border-b border-gray-700 px-6">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
-                  <AppLogo className="h-6 w-6" />
-                  <span>Admissions Edge</span>
+                  <AppLogo className="h-6 w-6 text-primary" />
+                  <span className='text-white'>Admissions Edge</span>
                 </Link>
               </div>
             <Nav isMobile={true} />
@@ -42,7 +41,7 @@ export default function AppHeader() {
             <Input
               type="search"
               placeholder="Search..."
-              className="w-full appearance-none bg-[#37475a] border-gray-600 text-white placeholder-gray-400 pl-8 shadow-none md:w-2/3 lg:w-1/3 focus:ring-accent"
+              className="w-full appearance-none bg-[#161d26] border-gray-700 text-white placeholder-gray-400 pl-8 shadow-none md:w-2/3 lg:w-1/3 focus:ring-primary"
             />
           </div>
         </form>
