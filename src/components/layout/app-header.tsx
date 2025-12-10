@@ -54,10 +54,10 @@ export default function AppHeader() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     router.push('/');
-  };
+  }, [router]);
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 2) {
@@ -81,7 +81,7 @@ export default function AppHeader() {
     }
   };
 
-  const debouncedSearch = useCallback(debounce(handleSearch, 300), []);
+  const debouncedSearch = useCallback(debounce(handleSearch, 300), [handleLogout]);
 
   useEffect(() => {
     debouncedSearch(searchQuery);
@@ -153,7 +153,7 @@ export default function AppHeader() {
                             <div className="flex flex-col">
                                 <span className="font-medium">{item.name}</span>
                                 <span className="text-xs text-muted-foreground">
-                                    {item.type === 'lead' || item.type === 'user' ? item.email : item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                    {item.type === 'lead' || item.type === 'user' ? item.email : (item.type?.charAt(0).toUpperCase() + item.type?.slice(1))}
                                 </span>
                             </div>
                           </div>
@@ -193,7 +193,7 @@ export default function AppHeader() {
                 <p>Settings</p>
               </TooltipContent>
             </Tooltip>
-          <Separator orientation='vertical' className='h-8 bg-gray-600' />
+          <Separator orientation='vertical' className='h-8 bg-gray-600 mx-2' />
           <UserNav />
         </div>
       </TooltipProvider>
