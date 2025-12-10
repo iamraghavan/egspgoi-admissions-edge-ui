@@ -18,6 +18,8 @@ export type Lead = {
   status: LeadStatus;
   agent_id: string; // agent_id
   last_contacted_at: string; // last_contacted_at
+  college?: string;
+  course?: string;
   // These are from the API but we will use the snake_case versions for now
   assignedTo: string; 
   lastContacted: string; 

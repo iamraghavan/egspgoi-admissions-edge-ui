@@ -78,7 +78,6 @@ export const getLeads = async (): Promise<Lead[]> => {
 
     const data = await response.json();
     
-    // The API returns an object with a 'leads' property, which is an array
     if (data && Array.isArray(data.leads)) {
         return data.leads.map((lead: any) => ({
             ...lead,
@@ -91,7 +90,7 @@ export const getLeads = async (): Promise<Lead[]> => {
     return [];
 };
 
-export const createLead = async (leadData: { name: string; email: string; phone: string }): Promise<Lead> => {
+export const createLead = async (leadData: { name: string; email: string; phone: string; college: string; course: string; }): Promise<Lead> => {
     const response = await fetch(`${API_BASE_URL}/leads`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -215,5 +214,6 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 
 
