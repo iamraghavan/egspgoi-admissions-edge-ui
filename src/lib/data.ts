@@ -144,16 +144,16 @@ export async function globalSearch(query: string): Promise<any[]> {
     const results = await response.json();
 
     // The backend returns an object with keys for each type of result.
-    // We need to flatten this into a single array for the UI.
+    // We need to flatten this into a single array for the UI and add a 'type' property.
     const flattenedResults = [];
-    if (results.leads && results.leads.length > 0) {
-        flattenedResults.push(...results.leads);
+    if (results.leads && Array.isArray(results.leads)) {
+        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead' })));
     }
-    if (results.campaigns && results.campaigns.length > 0) {
-        flattenedResults.push(...results.campaigns);
+    if (results.campaigns && Array.isArray(results.campaigns)) {
+        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign' })));
     }
-    if (results.users && results.users.length > 0) {
-        flattenedResults.push(...results.users);
+    if (results.users && Array.isArray(results.users)) {
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user' })));
     }
 
     return flattenedResults;
