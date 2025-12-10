@@ -16,8 +16,8 @@ export type Lead = {
   email: string;
   phone: string;
   status: LeadStatus;
-  assignedTo: string; // User ID
-  lastContacted: string; // ISO 8601 date string
+  assignedTo: string; // agent_id
+  lastContacted: string; // last_contacted_at
 };
 
 export type CampaignStatus = "Planning" | "Active" | "Completed" | "Archived";

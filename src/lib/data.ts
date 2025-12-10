@@ -1,4 +1,5 @@
 
+
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
@@ -13,21 +14,6 @@ const users: User[] = [
   { id: 'user-4', name: 'David Chen', email: 'david@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-4')?.imageUrl || '', role: 'Finance' },
   { id: 'user-5', name: 'Admin User', email: 'admin@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-1')?.imageUrl || '', role: 'Super Admin' },
 ];
-
-const leads: Lead[] = [
-  { id: 'lead-1', name: 'James Carter', email: 'james.carter@email.com', phone: '555-0101', status: 'New', assignedTo: 'user-2', lastContacted: subDays(new Date(), 2).toISOString() },
-  { id: 'lead-2', name: 'Sophia Miller', email: 'sophia.miller@email.com', phone: '555-0102', status: 'Contacted', assignedTo: 'user-2', lastContacted: subDays(new Date(), 3).toISOString() },
-  { id: 'lead-3', name: 'Liam Garcia', email: 'liam.garcia@email.com', phone: '555-0103', status: 'Qualified', assignedTo: 'user-2', lastContacted: subDays(new Date(), 4).toISOString() },
-  { id: 'lead-4', name: 'Olivia Martinez', email: 'olivia.martinez@email.com', phone: '555-0104', status: 'Proposal', assignedTo: 'user-2', lastContacted: subDays(new Date(), 5).toISOString() },
-  { id: 'lead-5', name: 'Noah Rodriguez', email: 'noah.rodriguez@email.com', phone: '555-0105', status: 'Won', assignedTo: 'user-2', lastContacted: subDays(new Date(), 6).toISOString() },
-  { id: 'lead-6', name: 'Emma Wilson', email: 'emma.wilson@email.com', phone: '555-0106', status: 'Lost', assignedTo: 'user-2', lastContacted: subDays(new Date(), 7).toISOString() },
-  { id: 'lead-7', name: 'Aiden Anderson', email: 'aiden.anderson@email.com', phone: '555-0107', status: 'New', assignedTo: 'user-2', lastContacted: subDays(new Date(), 1).toISOString()},
-  { id: 'lead-8', name: 'Isabella Thomas', email: 'isabella.thomas@email.com', phone: '555-0108', status: 'Contacted', assignedTo: 'user-2', lastContacted: subDays(new Date(), 1).toISOString()},
-  { id: 'lead-9', name: 'Mason Jackson', email: 'mason.jackson@email.com', phone: '555-0109', status: 'Qualified', assignedTo: 'user-1', lastContacted: subDays(new Date(), 2).toISOString()},
-  { id: 'lead-10', name: 'Harper White', email: 'harper.white@email.com', phone: '555-0110', status: 'Proposal', assignedTo: 'user-1', lastContacted: subDays(new Date(), 3).toISOString()},
-];
-
-export const leadStatuses: LeadStatus[] = ["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"];
 
 const campaigns: Campaign[] = [
   { id: 'camp-1', name: 'Fall 2024 Undergrad', startDate: '2024-08-01T00:00:00Z', endDate: '2024-11-30T00:00:00Z', budget: 50000, status: 'Active', manager: 'user-3' },
@@ -79,10 +65,69 @@ const inventoryResources: InventoryResource[] = [
 
 // --- Data access functions ---
 
-export const getLeads = async (): Promise<Lead[]> => Promise.resolve(leads);
-export const getLeadById = async (id: string): Promise<Lead | undefined> => Promise.resolve(leads.find(lead => lead.id === id));
-export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(leadStatuses);
-export const getLeadsByStatus = async (status: LeadStatus): Promise<Lead[]> => Promise.resolve(leads.filter(lead => lead.status === status));
+export const getLeads = async (): Promise<Lead[]> => {
+    const response = await fetch(`${API_BASE_URL}/leads`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while fetching leads' }));
+        throw new Error(errorData.message || 'Failed to fetch leads');
+    }
+
+    const data = await response.json();
+    
+    // The API returns an object with a 'leads' property, which is an array
+    if (data && Array.isArray(data.leads)) {
+        return data.leads.map((lead: any) => ({
+            ...lead,
+            lastContacted: lead.last_contacted_at || new Date().toISOString(),
+            assignedTo: lead.agent_id || 'user-2' // fallback for now
+        }));
+    }
+    
+    return [];
+};
+
+export const createLead = async (leadData: { name: string; email: string; phone: string }): Promise<Lead> => {
+    const response = await fetch(`${API_BASE_URL}/leads`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(leadData),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while creating the lead' }));
+        throw new Error(errorData.message || 'Failed to create lead');
+    }
+
+    return response.json();
+};
+
+export const addLeadNote = async (leadId: string, content: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}/notes`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while adding the note' }));
+        throw new Error(errorData.message || 'Failed to add note');
+    }
+};
+
+
+export const getLeadById = async (id: string): Promise<Lead | undefined> => {
+    const leads = await getLeads();
+    return leads.find(lead => lead.id === id)
+};
+export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"]);
+export const getLeadsByStatus = async (status: LeadStatus): Promise<Lead[]> => {
+    const leads = await getLeads();
+    return leads.filter(lead => lead.status === status)
+};
 
 export const getCampaigns = async (): Promise<Campaign[]> => Promise.resolve(campaigns);
 export const getCampaignById = async (id: string): Promise<Campaign | undefined> => Promise.resolve(campaigns.find(c => c.id === id));
@@ -95,13 +140,20 @@ export const getBudgetRequests = async (): Promise<BudgetRequest[]> => Promise.r
 export const getPaymentRecords = async (): Promise<PaymentRecord[]> => Promise.resolve(paymentRecords);
 export const getAdSpends = async (): Promise<AdSpend[]> => Promise.resolve(adSpends);
 
-export const getUserById = async (id: string): Promise<User | undefined> => Promise.resolve(users.find(user => user.id === id));
-export const getUsers = async (): Promise<User[]> => Promise.resolve(users);
+export const getUserById = async (id: string): Promise<User | undefined> => {
+    // In a real app, this would fetch from /api/v1/users/:id
+    return Promise.resolve(users.find(user => user.id === id))
+};
+export const getUsers = async (): Promise<User[]> => {
+    // In a real app, this would fetch from /api/v1/users
+    return Promise.resolve(users);
+}
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
 export const getDashboardStats = async () => {
   // Simulate some variability
+  const leads = await getLeads();
   const newLeadsCount = leads.filter(l => new Date(l.lastContacted) > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
@@ -131,6 +183,9 @@ export const getInventoryResources = async (): Promise<InventoryResource[]> => P
  * @returns A promise that resolves with an array of search results.
  */
 export async function globalSearch(query: string): Promise<any[]> {
+    if (query.trim().length < 3) {
+        return [];
+    }
     const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: getAuthHeaders(),
@@ -142,19 +197,21 @@ export async function globalSearch(query: string): Promise<any[]> {
     }
     
     const results = await response.json();
-
-    // The backend returns an object with keys for each type of result.
-    // We need to flatten this into a single array for the UI and add a 'type' property.
     const flattenedResults = [];
     if (results.leads && Array.isArray(results.leads)) {
-        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead' })));
+        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/egspgoi/portal/sa/${item.id}/leads` })));
     }
     if (results.campaigns && Array.isArray(results.campaigns)) {
-        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign' })));
+        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/egspgoi/portal/sa/${item.id}/campaigns` })));
     }
     if (results.users && Array.isArray(results.users)) {
-        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user' })));
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/egspgoi/portal/sa/${item.id}/users` })));
+    }
+
+    if (flattenedResults.length === 0 && (results.leads?.length === 0 && results.campaigns?.length === 0 && results.users?.length === 0)) {
+        return [];
     }
 
     return flattenedResults;
 }
+
