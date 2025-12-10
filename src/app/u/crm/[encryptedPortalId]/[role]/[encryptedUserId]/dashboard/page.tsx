@@ -1,8 +1,12 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import StatsGrid from '@/components/dashboard/stats-grid';
 import LeadsChart from '@/components/dashboard/leads-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getLeads } from '@/lib/data';
+import type { Lead } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -13,12 +17,30 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function DashboardPage({ params }: { params: { encryptedPortalId: string; encryptedUserId: string; role: string } }) {
-  const recentLeads = (await getLeads()).slice(0, 5);
+export default function DashboardPage({ params }: { params: { encryptedPortalId: string; encryptedUserId: string; role: string } }) {
+  const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const { encryptedPortalId, encryptedUserId, role } = params;
+
+  useEffect(() => {
+    const fetchRecentLeads = async () => {
+      try {
+        setLoading(true);
+        const allLeads = await getLeads();
+        setRecentLeads(allLeads.slice(0, 5));
+      } catch (error) {
+        console.error("Failed to fetch recent leads", error);
+        // Optionally, show a toast notification
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecentLeads();
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,17 +68,37 @@ export default async function DashboardPage({ params }: { params: { encryptedPor
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {recentLeads.map((lead) => (
-                            <TableRow key={lead.id}>
-                                <TableCell>
-                                    <div className="font-medium">{lead.name}</div>
-                                    <div className="text-sm text-muted-foreground">{lead.email}</div>
-                                </TableCell>
-                                <TableCell className='text-right'>
-                                    <Badge variant="outline" className='capitalize'>{lead.status}</Badge>
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>
+                                        <Skeleton className="h-5 w-24 mb-1" />
+                                        <Skeleton className="h-4 w-32" />
+                                    </TableCell>
+                                    <TableCell className='text-right'>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : recentLeads.length > 0 ? (
+                            recentLeads.map((lead) => (
+                                <TableRow key={lead.id}>
+                                    <TableCell>
+                                        <div className="font-medium">{lead.name}</div>
+                                        <div className="text-sm text-muted-foreground">{lead.email}</div>
+                                    </TableCell>
+                                    <TableCell className='text-right'>
+                                        <Badge variant="outline" className='capitalize'>{lead.status}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={2} className="h-24 text-center">
+                                    No recent leads found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>
