@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Separator } from '../ui/separator';
 
 export default function AppHeader() {
   return (
@@ -53,11 +54,11 @@ export default function AppHeader() {
         </form>
       </div>
       <TooltipProvider>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-6 w-6" />
                   <span className="sr-only">Toggle notifications</span>
                 </Button>
               </TooltipTrigger>
@@ -68,7 +69,7 @@ export default function AppHeader() {
              <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-                  <Settings className="h-5 w-5" />
+                  <Settings className="h-6 w-6" />
                    <span className="sr-only">Settings</span>
                 </Button>
               </TooltipTrigger>
@@ -76,6 +77,7 @@ export default function AppHeader() {
                 <p>Settings</p>
               </TooltipContent>
             </Tooltip>
+          <Separator orientation='vertical' className='h-8 bg-gray-600' />
           <UserNav />
         </div>
       </TooltipProvider>
