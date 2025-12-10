@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { UserNav } from './user-nav';
@@ -22,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/auth';
+import React from 'react';
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -141,9 +143,8 @@ export default function AppHeader() {
                 {searchResults.length > 0 && !isLoading && (
                    <CommandGroup heading="Results">
                     {searchResults.map((item, index) => (
-                      <>
+                      <React.Fragment key={item.id}>
                         <CommandItem
-                          key={item.id}
                           onSelect={() => handleSelect(item.url)}
                           value={`${item.name}-${item.type}`}
                         >
@@ -158,7 +159,7 @@ export default function AppHeader() {
                           </div>
                         </CommandItem>
                         {index < searchResults.length - 1 && <CommandSeparator />}
-                      </>
+                      </React.Fragment>
                     ))}
                   </CommandGroup>
                 )}
