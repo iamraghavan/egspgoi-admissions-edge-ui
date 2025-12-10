@@ -141,5 +141,20 @@ export async function globalSearch(query: string): Promise<any[]> {
         throw new Error(errorData.message || 'Failed to perform search');
     }
     
-    return response.json();
+    const results = await response.json();
+
+    // The backend returns an object with keys for each type of result.
+    // We need to flatten this into a single array for the UI.
+    const flattenedResults = [];
+    if (results.leads && results.leads.length > 0) {
+        flattenedResults.push(...results.leads);
+    }
+    if (results.campaigns && results.campaigns.length > 0) {
+        flattenedResults.push(...results.campaigns);
+    }
+    if (results.users && results.users.length > 0) {
+        flattenedResults.push(...results.users);
+    }
+
+    return flattenedResults;
 }

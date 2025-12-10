@@ -124,8 +124,8 @@ export default function AppHeader() {
             <Command>
               <CommandList>
                 {isLoading && <CommandEmpty>Searching...</CommandEmpty>}
-                {!isLoading && searchResults.length === 0 && searchQuery.length > 1 && <CommandEmpty>No results found.</CommandEmpty>}
-                {searchResults.length > 0 && (
+                {!isLoading && searchResults.length === 0 && searchQuery.length > 2 && <CommandEmpty>No results found.</CommandEmpty>}
+                {searchResults.length > 0 && !isLoading && (
                    <CommandGroup heading="Results">
                     {searchResults.map((item) => (
                       <CommandItem
