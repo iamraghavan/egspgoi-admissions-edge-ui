@@ -1,6 +1,6 @@
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings, Shield } from 'lucide-react';
+import { Bell, Search, Menu, Settings } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
@@ -74,17 +74,6 @@ export default function AppHeader() {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Settings</p>
-              </TooltipContent>
-            </Tooltip>
-             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-                  <Shield className="h-5 w-5" />
-                   <span className="sr-only">Admin Panel</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Admin Panel</p>
               </TooltipContent>
             </Tooltip>
           <UserNav />
