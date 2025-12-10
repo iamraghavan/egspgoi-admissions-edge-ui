@@ -54,7 +54,7 @@ export default function AppHeader() {
         </form>
       </div>
       <TooltipProvider>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
