@@ -25,7 +25,11 @@ export default function AppSidebar() {
     async function fetchProfile() {
       try {
         const profile = await getProfile();
-        setUser(profile);
+        if (profile) {
+            setUser(profile);
+        } else {
+            handleLogout();
+        }
       } catch (error) {
         console.error("Failed to fetch user profile for sidebar", error);
         handleLogout();

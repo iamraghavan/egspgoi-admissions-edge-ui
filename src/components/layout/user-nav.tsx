@@ -35,7 +35,11 @@ export function UserNav() {
     async function fetchProfile() {
       try {
         const profile = await getProfile();
-        setUser(profile);
+        if (profile) {
+            setUser(profile);
+        } else {
+            handleLogout();
+        }
       } catch (error) {
         console.error("Failed to fetch user profile", error);
         // If fetching fails, token might be invalid, log out user

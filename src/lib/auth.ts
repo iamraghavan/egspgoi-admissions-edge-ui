@@ -85,48 +85,19 @@ export async function refreshToken(): Promise<void> {
  * Fetches the current user's profile.
  * @returns A promise that resolves with the user's profile.
  */
-export async function getProfile(): Promise<UserProfile> {
+export async function getProfile(): Promise<UserProfile | null> {
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-            throw new Error('Authentication token not found');
+        const storedUser = localStorage.getItem('userProfile');
+        if (storedUser) {
+            try {
+                return JSON.parse(storedUser) as UserProfile;
+            } catch (error) {
+                console.error("Failed to parse user profile from localStorage", error);
+                return null;
+            }
         }
     }
-
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-        throw new Error(errorData.message || 'Failed to fetch profile');
-    }
-    
-    const profile = await response.json();
-    
-    // The profile endpoint returns the full user object from the DB
-    // We need to find the role name from the user object from login, which is stored in localStorage
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('userProfile');
-      if (storedUser) {
-        const parsedUser: UserProfile = JSON.parse(storedUser);
-        return {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          role: parsedUser.role, // Use role from stored user profile after login
-        };
-      }
-    }
-    
-    // Fallback if localStorage is not available or doesn't have the user profile
-    return {
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        role: 'user', // default role
-    };
+    return null;
 }
 
 
