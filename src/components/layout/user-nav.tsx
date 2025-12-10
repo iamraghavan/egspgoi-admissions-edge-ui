@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import placeholderImagesData from '@/lib/placeholder-images.json'
 import { useEffect, useState } from "react"
 import { getProfile, logout } from "@/lib/auth"
 import { Skeleton } from "../ui/skeleton"
@@ -25,8 +24,6 @@ interface UserProfile {
 
 export function UserNav() {
   const router = useRouter();
-  const { placeholderImages } = placeholderImagesData;
-  const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
   const [user, setUser] = useState<UserProfile | null>(null);
 
   const handleLogout = () => {
@@ -53,7 +50,6 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" />}
             <AvatarFallback>
               {user ? user.name.charAt(0).toUpperCase() : <Skeleton className="h-10 w-10 rounded-full" />}
             </AvatarFallback>

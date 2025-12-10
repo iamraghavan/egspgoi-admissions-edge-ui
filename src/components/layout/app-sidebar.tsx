@@ -4,7 +4,6 @@ import Nav from './nav';
 import { AppLogo } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import placeholderImagesData from '@/lib/placeholder-images.json';
 import { Separator } from '../ui/separator';
 import { useEffect, useState } from 'react';
 import { getProfile, logout } from '@/lib/auth';
@@ -14,8 +13,6 @@ import type { User } from '@/lib/types';
 
 export default function AppSidebar() {
   const router = useRouter();
-  const { placeholderImages } = placeholderImagesData;
-  const userAvatar = placeholderImages.find(p => p.id === 'user-avatar-1');
   const appVersion = "0.1.0"; 
   const [user, setUser] = useState<User | null>(null);
 
@@ -53,7 +50,6 @@ export default function AppSidebar() {
             <Separator className="bg-gray-700" />
             <div className='flex items-center gap-3'>
               <Avatar className="h-10 w-10">
-                {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" />}
                 <AvatarFallback>
                   {user ? user.name.charAt(0).toUpperCase() : <Skeleton className="h-10 w-10 rounded-full" />}
                 </AvatarFallback>
