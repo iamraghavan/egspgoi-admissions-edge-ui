@@ -1,29 +1,39 @@
+
 import { UserNav } from './user-nav';
-import { AppLogo } from '../icons';
 import { Button } from '../ui/button';
 import { Bell, Search, Menu } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
+import Link from 'next/link';
+import { AppLogo } from '../icons';
 
 export default function AppHeader() {
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="shrink-0 md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col">
-          <Nav isMobile={true} />
-        </SheetContent>
-      </Sheet>
+      <div className="flex items-center gap-2 md:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="flex flex-col p-0 bg-[#161d26] text-white border-r-0">
+             <div className="flex h-16 items-center border-b border-gray-700 px-6">
+                <Link href="/" className="flex items-center gap-2 font-semibold">
+                  <AppLogo className="h-6 w-6" />
+                  <span>Admissions Edge</span>
+                </Link>
+              </div>
+            <Nav isMobile={true} />
+          </SheetContent>
+        </Sheet>
+      </div>
 
       <div className="w-full flex-1">
         <form>
@@ -38,8 +48,9 @@ export default function AppHeader() {
         </form>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="h-5 w-5" />
+           <span className="sr-only">Toggle notifications</span>
         </Button>
         <UserNav />
       </div>
