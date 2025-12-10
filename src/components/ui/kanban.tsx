@@ -447,7 +447,10 @@ export interface KanbanColumnContentProps {
 function KanbanColumnContent({ value, className, children }: KanbanColumnContentProps) {
   const { columns, getItemId } = React.useContext(KanbanContext);
 
-  const itemIds = React.useMemo(() => columns[value].map(getItemId), [columns, getItemId, value]);
+  const itemIds = React.useMemo(() => {
+    if (!columns[value]) return [];
+    return columns[value].map(getItemId);
+  }, [columns, getItemId, value]);
 
   return (
     <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>

@@ -21,8 +21,8 @@ const AssignedToCell = ({ row }: { row: any }) => {
     const [user, setUser] = useState<User | undefined>(undefined);
     
     useEffect(() => {
-        getAssignedToUser(lead.assignedTo).then(setUser);
-    }, [lead.assignedTo]);
+        getAssignedToUser(lead.agent_id).then(setUser);
+    }, [lead.agent_id]);
 
     if (!user) return <div className="h-10 w-24 animate-pulse bg-muted rounded-md" />;
 
@@ -88,15 +88,15 @@ export const leadColumns: ColumnDef<Lead>[] = [
     ),
   },
   {
-    accessorKey: "assignedTo",
+    accessorKey: "agent_id",
     header: "Assigned To",
     cell: AssignedToCell,
   },
   {
-    accessorKey: "lastContacted",
+    accessorKey: "last_contacted_at",
     header: "Last Contacted",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("lastContacted"))
+      const date = new Date(row.getValue("last_contacted_at"))
       return <div>{date.toLocaleDateString()}</div>
     },
   },

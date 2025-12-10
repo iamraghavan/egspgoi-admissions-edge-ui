@@ -16,8 +16,11 @@ export type Lead = {
   email: string;
   phone: string;
   status: LeadStatus;
-  assignedTo: string; // agent_id
-  lastContacted: string; // last_contacted_at
+  agent_id: string; // agent_id
+  last_contacted_at: string; // last_contacted_at
+  // These are from the API but we will use the snake_case versions for now
+  assignedTo: string; 
+  lastContacted: string; 
 };
 
 export type CampaignStatus = "Planning" | "Active" | "Completed" | "Archived";

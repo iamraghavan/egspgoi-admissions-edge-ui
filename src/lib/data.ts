@@ -82,6 +82,7 @@ export const getLeads = async (): Promise<Lead[]> => {
     if (data && Array.isArray(data.leads)) {
         return data.leads.map((lead: any) => ({
             ...lead,
+            // Aliasing for component compatibility
             lastContacted: lead.last_contacted_at || new Date().toISOString(),
             assignedTo: lead.agent_id || 'user-2' // fallback for now
         }));
@@ -199,13 +200,13 @@ export async function globalSearch(query: string): Promise<any[]> {
     const results = await response.json();
     const flattenedResults = [];
     if (results.leads && Array.isArray(results.leads)) {
-        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/egspgoi/portal/sa/${item.id}/leads` })));
+        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/egspgoi/sa/${item.id}/leads` })));
     }
     if (results.campaigns && Array.isArray(results.campaigns)) {
-        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/egspgoi/portal/sa/${item.id}/campaigns` })));
+        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/egspgoi/sa/${item.id}/campaigns` })));
     }
     if (results.users && Array.isArray(results.users)) {
-        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/egspgoi/portal/sa/${item.id}/users` })));
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/egspgoi/sa/${item.id}/users` })));
     }
 
     if (flattenedResults.length === 0 && (results.leads?.length === 0 && results.campaigns?.length === 0 && results.users?.length === 0)) {
@@ -214,4 +215,5 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 

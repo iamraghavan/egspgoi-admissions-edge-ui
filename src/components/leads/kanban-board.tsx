@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { getLeads, getUserById, addLeadNote } from "@/lib/data";
+import { getUserById, addLeadNote } from "@/lib/data";
 import { Lead, User, LeadStatus } from "@/lib/types";
 import { GripVertical, Mail, MessageSquare, Phone } from 'lucide-react';
 import {
@@ -73,7 +73,7 @@ function LeadCard({ lead, asHandle, onAddNote, ...props }: LeadCardProps) {
           )}
         </div>
          <p className="text-xs text-muted-foreground">
-            Last contact: {format(new Date(lead.lastContacted), 'PP')}
+            Last contact: {format(new Date(lead.last_contacted_at), 'PP')}
         </p>
         <div className="flex items-center justify-between text-muted-foreground mt-2">
             <Badge
@@ -151,7 +151,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     async function processLeads() {
         if (!leads) return;
         const leadsWithDetails: KanbanLead[] = await Promise.all(leads.map(async (lead) => {
-            const user = await getUserById(lead.assignedTo);
+            const user = await getUserById(lead.agent_id);
             const priorities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
             return {
                 ...lead,
@@ -173,7 +173,9 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
             else if (lead.status === "Lost") statusKey = "Failed";
             else if (["Contacted", "Qualified", "Proposal"].includes(lead.status)) statusKey = "Contacted";
             
-            groupedByStatus[statusKey].push(lead);
+            if (groupedByStatus[statusKey]) {
+              groupedByStatus[statusKey].push(lead);
+            }
         });
         
         setColumns(groupedByStatus);
