@@ -66,9 +66,9 @@ export default function AppHeader() {
         const results = await globalSearch(query);
         setSearchResults(results);
         setIsSearchOpen(true);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Search failed:", error);
-        if ((error as Error).message === 'Authentication token not found' || (error as Error).message === 'Invalid or expired token.') {
+        if (error.message === 'Authentication token not found' || error.message === 'Invalid or expired token' || error.message === 'Invalid or expired token.') {
             handleLogout();
         }
         setSearchResults([]);
