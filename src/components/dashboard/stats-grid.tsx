@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Megaphone, Phone, Percent } from 'lucide-react';
 import { getDashboardStats } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { logout } from '@/lib/auth';
 
 interface DashboardStats {
     newLeads: number;
@@ -39,6 +42,13 @@ const StatCard = ({ title, value, icon: Icon, percentage, loading }: { title: st
 export default function StatsGrid() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -46,8 +56,22 @@ export default function StatsGrid() {
             setLoading(true);
             const fetchedStats = await getDashboardStats();
             setStats(fetchedStats);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch dashboard stats", error);
+            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                toast({
+                    variant: "destructive",
+                    title: "Session Expired",
+                    description: "Your session has expired. Please log in again.",
+                });
+                handleLogout();
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch stats",
+                    description: error.message || "An unexpected error occurred.",
+                });
+            }
         } finally {
             setLoading(false);
         }

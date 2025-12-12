@@ -66,6 +66,33 @@ const inventoryResources: InventoryResource[] = [
 
 // --- Data access functions ---
 
+// Helper to parse "MM/DD/YYYY - hh:mm:ss aa" format
+const parseCustomDate = (dateString: string): string => {
+    if (!dateString) return new Date().toISOString();
+    try {
+        const [datePart, timePart] = dateString.split(' - ');
+        if (!datePart || !timePart) return new Date(dateString).toISOString(); // Fallback for standard formats
+
+        const [day, month, year] = datePart.split('/');
+        const [time, period] = timePart.split(' ');
+        let [hours, minutes, seconds] = time.split(':');
+
+        if (period?.toLowerCase() === 'pm' && hours !== '12') {
+            hours = (parseInt(hours, 10) + 12).toString();
+        }
+        if (period?.toLowerCase() === 'am' && hours === '12') {
+            hours = '00';
+        }
+        
+        // Month in JS is 0-indexed, so subtract 1
+        const isoDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+        return isoDate.toISOString();
+    } catch (e) {
+        console.error("Could not parse date:", dateString, e);
+        return new Date().toISOString(); // Fallback
+    }
+};
+
 export const getLeads = async (): Promise<Lead[]> => {
     let response: Response;
     try {
@@ -92,8 +119,8 @@ export const getLeads = async (): Promise<Lead[]> => {
     if (Array.isArray(data)) {
         return data.map((lead: any) => ({
             ...lead,
-            agent_id: lead.assigned_to || 'unassigned', // Use assigned_to, provide fallback
-            last_contacted_at: lead.created_at || new Date().toISOString(), // Use created_at
+            agent_id: lead.assigned_to,
+            last_contacted_at: parseCustomDate(lead.created_at),
         }));
     }
     
@@ -164,7 +191,7 @@ export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Ad
 export const getDashboardStats = async () => {
   // Simulate some variability
   const leads = await getLeads();
-  const newLeadsCount = leads.filter(l => new Date() > subDays(new Date(), 7)).length;
+  const newLeadsCount = leads.filter(l => new Date() > subDays(new Date(l.last_contacted_at), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
     activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
@@ -227,6 +254,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 
 
 
