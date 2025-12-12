@@ -3,7 +3,7 @@
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
-import { getAuthHeaders } from './auth';
+import { getAuthHeaders, logout } from './auth';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
 
@@ -13,6 +13,7 @@ const users: User[] = [
   { id: 'user-3', name: 'Emily Davis', email: 'emily@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-3')?.imageUrl || '', role: 'Marketing Manager' },
   { id: 'user-4', name: 'David Chen', email: 'david@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-4')?.imageUrl || '', role: 'Finance' },
   { id: 'user-5', name: 'Admin User', email: 'admin@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-1')?.imageUrl || '', role: 'Super Admin' },
+  { id: '7260e815-6498-46e8-983b-338cb60f195a', name: 'Agent Smith', email: 'agent@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-2')?.imageUrl || '', role: 'Admission Executive' },
 ];
 
 const campaigns: Campaign[] = [
@@ -66,24 +67,33 @@ const inventoryResources: InventoryResource[] = [
 // --- Data access functions ---
 
 export const getLeads = async (): Promise<Lead[]> => {
-    const response = await fetch(`${API_BASE_URL}/leads`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
+    let response: Response;
+    try {
+        response = await fetch(`${API_BASE_URL}/leads`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+    } catch (error) {
+        console.error("Network or other fetch error:", error);
+        throw new Error("Failed to fetch leads due to a network error.");
+    }
+
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while fetching leads' }));
+        if (response.status === 401 || response.status === 403 || errorData.message?.includes("token")) {
+             throw new Error("Invalid or expired token");
+        }
         throw new Error(errorData.message || 'Failed to fetch leads');
     }
 
     const data = await response.json();
     
-    if (data && Array.isArray(data.leads)) {
-        return data.leads.map((lead: any) => ({
+    if (Array.isArray(data)) {
+        return data.map((lead: any) => ({
             ...lead,
-            // Aliasing for component compatibility
-            lastContacted: lead.last_contacted_at || new Date().toISOString(),
-            assignedTo: lead.agent_id || 'user-2' // fallback for now
+            agent_id: lead.assigned_to || 'unassigned', // Use assigned_to, provide fallback
+            last_contacted_at: lead.created_at || new Date().toISOString(), // Use created_at
         }));
     }
     
@@ -154,7 +164,7 @@ export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Ad
 export const getDashboardStats = async () => {
   // Simulate some variability
   const leads = await getLeads();
-  const newLeadsCount = leads.filter(l => new Date(l.lastContacted) > subDays(new Date(), 7)).length;
+  const newLeadsCount = leads.filter(l => new Date() > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
     activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
@@ -193,6 +203,9 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred during search' }));
+        if (response.status === 401 || response.status === 403 || errorData.message?.includes("token")) {
+             throw new Error("Invalid or expired token");
+        }
         throw new Error(errorData.message || 'Failed to perform search');
     }
     
@@ -214,6 +227,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 
 
 

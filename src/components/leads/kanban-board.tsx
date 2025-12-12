@@ -151,7 +151,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     async function processLeads() {
         if (!leads) return;
         const leadsWithDetails: KanbanLead[] = await Promise.all(leads.map(async (lead) => {
-            const user = await getUserById(lead.agent_id);
+            const user = lead.agent_id ? await getUserById(lead.agent_id) : undefined;
             const priorities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
             return {
                 ...lead,
@@ -168,13 +168,15 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
         };
         
         leadsWithDetails.forEach(lead => {
-            let statusKey: KanbanColumnKey = "New";
-            if (lead.status === "Won") statusKey = "On Board";
-            else if (lead.status === "Lost") statusKey = "Failed";
-            else if (["Contacted", "Qualified", "Proposal"].includes(lead.status)) statusKey = "Contacted";
-            
-            if (groupedByStatus[statusKey]) {
-              groupedByStatus[statusKey].push(lead);
+            const status = (lead.status || 'new').toLowerCase();
+            if (status === "won") {
+              groupedByStatus["On Board"].push(lead);
+            } else if (status === "lost") {
+              groupedByStatus["Failed"].push(lead);
+            } else if (["contacted", "qualified", "proposal"].includes(status)) {
+              groupedByStatus["Contacted"].push(lead);
+            } else { // new
+              groupedByStatus["New"].push(lead);
             }
         });
         

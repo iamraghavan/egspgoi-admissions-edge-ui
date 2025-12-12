@@ -21,9 +21,15 @@ const AssignedToCell = ({ row }: { row: any }) => {
     const [user, setUser] = useState<User | undefined>(undefined);
     
     useEffect(() => {
-        getAssignedToUser(lead.agent_id).then(setUser);
+        if (lead.agent_id) {
+            getAssignedToUser(lead.agent_id).then(setUser);
+        }
     }, [lead.agent_id]);
 
+    if (!lead.agent_id) {
+        return <Badge variant="outline">Unassigned</Badge>;
+    }
+    
     if (!user) return <div className="h-10 w-24 animate-pulse bg-muted rounded-md" />;
 
     return (
