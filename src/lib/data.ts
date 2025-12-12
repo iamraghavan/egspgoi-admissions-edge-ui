@@ -86,6 +86,9 @@ const parseCustomDate = (dateString: string): string => {
         
         // Month in JS is 0-indexed, so subtract 1
         const isoDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+        if (isNaN(isoDate.getTime())) {
+            return new Date().toISOString(); // Return current date if parsing fails
+        }
         return isoDate.toISOString();
     } catch (e) {
         console.error("Could not parse date:", dateString, e);
@@ -107,11 +110,18 @@ export const getLeads = async (): Promise<Lead[]> => {
 
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while fetching leads' }));
-        if (response.status === 401 || response.status === 403 || errorData.message?.includes("token")) {
+        const errorText = await response.text();
+        let errorJson;
+        try {
+            errorJson = JSON.parse(errorText);
+        } catch (e) {
+            errorJson = { message: errorText || 'An unknown error occurred' };
+        }
+        
+        if (response.status === 401 || response.status === 403 || errorJson.message?.toLowerCase().includes("token")) {
              throw new Error("Invalid or expired token");
         }
-        throw new Error(errorData.message || 'Failed to fetch leads');
+        throw new Error(errorJson.message || 'Failed to fetch leads');
     }
 
     const data = await response.json();
@@ -159,7 +169,7 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     const response = await fetch(`${API_BASE_URL}/leads/${leadId}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ status: status.toLowerCase() }),
+        body: JSON.stringify({ status: status }),
     });
 
     if (!response.ok) {
@@ -243,7 +253,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred during search' }));
-        if (response.status === 401 || response.status === 403 || errorData.message?.includes("token")) {
+        if (response.status === 401 || response.status === 403 || errorData.message?.toLowerCase().includes("token")) {
              throw new Error("Invalid or expired token");
         }
         throw new Error(errorData.message || 'Failed to perform search');
@@ -267,9 +277,3 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
-
-
-
-
-
-

@@ -86,11 +86,7 @@ const dropAnimationConfig: DropAnimation = {
   }),
 };
 
-export interface KanbanMoveEvent {
-  active: DragEndEvent['active'];
-  over: DragEndEvent['over'];
-  event: DragEndEvent;
-}
+export type KanbanMoveEvent = DragEndEvent;
 
 export interface KanbanRootProps<T> {
   value: Record<string, T[]>;
@@ -185,11 +181,7 @@ function Kanban<T>({ value, onValueChange, getItemValue, children, className, on
 
       // Handle item move callback
       if (onMove && !isColumn(active.id)) {
-        onMove({
-            active,
-            over,
-            event
-        });
+        onMove(event);
         return;
       }
 

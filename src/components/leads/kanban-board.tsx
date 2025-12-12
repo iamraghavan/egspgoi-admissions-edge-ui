@@ -169,6 +169,13 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   const [isSubmittingNote, setIsSubmittingNote] = React.useState(false);
   const { toast } = useToast();
 
+  const findContainer = React.useCallback(
+    (id: string) => {
+      return Object.keys(columns).find(key => columns[key as KanbanColumnKey].some(item => item.id === id));
+    },
+    [columns]
+  );
+
   React.useEffect(() => {
     async function processLeads() {
         if (!leads) return;
@@ -193,8 +200,12 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
         };
         
         leadsWithDetails.forEach(lead => {
-            const column = statusToColumnMap[lead.status.toLowerCase()] || 'New';
-            groupedByStatus[column].push(lead);
+            const columnKey = statusToColumnMap[lead.status.toLowerCase()];
+            if (columnKey && groupedByStatus[columnKey]) {
+                groupedByStatus[columnKey].push(lead);
+            } else {
+                groupedByStatus["New"].push(lead); // Default to "New" if status is unknown
+            }
         });
         
         setColumns(groupedByStatus);
@@ -222,49 +233,52 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     }
   }
 
-  const handleMove = async ({ active, over, event }: KanbanMoveEvent) => {
-    const { active: activeEvent, over: overEvent } = event;
-    const activeContainer = active.data.current?.sortable.containerId;
-    const overContainer = overEvent?.data.current?.sortable.containerId || overEvent?.id;
-    const leadId = activeEvent.id as string;
+  const handleMove = async (event: KanbanMoveEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const leadId = active.id as string;
+    const overId = over.id as string;
+    
+    const activeContainer = findContainer(leadId);
+    let overContainer = findContainer(overId);
+    if (!overContainer) {
+        overContainer = Object.keys(columns).includes(overId) ? overId : undefined;
+    }
 
     if (!activeContainer || !overContainer || activeContainer === overContainer) {
       return;
     }
-
-    const newStatus = columnToStatusMap[overContainer as KanbanColumnKey];
     
-    // Find the lead to get its original status
-    const originalLead = leads.find(l => l.id === leadId);
-    if (!originalLead) return;
+    const newStatus = columnToStatusMap[overContainer as KanbanColumnKey];
+    if (!newStatus) return;
 
     // Optimistically update UI
-    const originalColumns = { ...columns };
-    
-    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey] || []);
-    const overItems = Array.from(columns[overContainer as KanbanColumnKey] || []);
+    const originalColumns = JSON.parse(JSON.stringify(columns)); // Deep copy
+
+    const activeItems = columns[activeContainer as KanbanColumnKey];
+    const overItems = columns[overContainer as KanbanColumnKey];
 
     const activeIndex = activeItems.findIndex(item => item.id === leadId);
-    if (activeIndex === -1) return;
-    
     const [movedItem] = activeItems.splice(activeIndex, 1);
     
-    const overIndex = overItems.findIndex(item => item.id === overEvent?.id);
-    const newIndex = overIndex !== -1 ? overIndex : overItems.length;
+    let overIndex = overItems.findIndex(item => item.id === overId);
+    if (overIndex === -1) {
+        overIndex = overItems.length; // If dropping on column, add to end
+    }
 
-    overItems.splice(newIndex, 0, movedItem);
+    overItems.splice(overIndex, 0, movedItem);
 
     setColumns(prev => ({
         ...prev,
-        [activeContainer]: activeItems,
-        [overContainer]: overItems,
+        [activeContainer as KanbanColumnKey]: activeItems,
+        [overContainer as KanbanColumnKey]: overItems,
     }));
-
 
     try {
       await updateLeadStatus(leadId, newStatus);
       // Update the lead's status in the main `leads` state
-      setLeads(prevLeads => prevLeads.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+      setLeads(prevLeads => prevLeads.map(l => (l.id === leadId ? { ...l, status: newStatus } : l)));
       toast({
         title: "Lead Updated",
         description: `Lead status changed to ${newStatus}.`,
@@ -332,5 +346,3 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
-
-    
