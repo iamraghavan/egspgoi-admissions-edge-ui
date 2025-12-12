@@ -136,8 +136,8 @@ export const getLeads = async (): Promise<Lead[]> => {
 
     const data = await response.json();
     
-    if (Array.isArray(data)) {
-        return data.map((lead: any) => ({
+    if (data && Array.isArray(data.items)) {
+        return data.items.map((lead: any) => ({
             ...lead,
             agent_id: lead.assigned_to,
             created_at: parseCustomDate(lead.created_at),
@@ -310,3 +310,4 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
