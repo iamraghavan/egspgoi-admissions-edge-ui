@@ -237,10 +237,16 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
 
     // Optimistically update UI
     const originalColumns = { ...columns };
-    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey]);
-    const overItems = Array.from(columns[overContainer as KanbanColumnKey]);
-    const [movedItem] = activeItems.splice(activeEvent.data.current?.sortable.index, 1);
-    const newIndex = overEvent?.data.current?.sortable.index ?? overItems.length;
+    
+    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey] || []);
+    const overItems = Array.from(columns[overContainer as KanbanColumnKey] || []);
+
+    const activeIndex = activeItems.findIndex(item => item.id === leadId);
+    const [movedItem] = activeItems.splice(activeIndex, 1);
+    
+    const overIndex = overItems.findIndex(item => item.id === overEvent?.id);
+    const newIndex = overIndex !== -1 ? overIndex : overItems.length;
+
     overItems.splice(newIndex, 0, movedItem);
 
     setColumns(prev => ({
@@ -272,7 +278,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
 
   if (isLoading) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {Object.keys(COLUMN_TITLES).map(title => (
                  <div key={title} className="p-4">
                     <Skeleton className="h-6 w-3/4 mb-4" />
