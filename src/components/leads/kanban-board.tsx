@@ -224,7 +224,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
 
   const handleMove = async ({ active, over, event }: KanbanMoveEvent) => {
     const { active: activeEvent, over: overEvent } = event;
-    const activeContainer = activeEvent.data.current?.sortable.containerId;
+    const activeContainer = active.data.current?.sortable.containerId;
     const overContainer = overEvent?.data.current?.sortable.containerId || overEvent?.id;
     const leadId = activeEvent.id as string;
 
@@ -241,8 +241,8 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     // Optimistically update UI
     const originalColumns = { ...columns };
     
-    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey]);
-    const overItems = Array.from(columns[overContainer as KanbanColumnKey]);
+    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey] || []);
+    const overItems = Array.from(columns[overContainer as KanbanColumnKey] || []);
 
     const activeIndex = activeItems.findIndex(item => item.id === leadId);
     if (activeIndex === -1) return;
@@ -332,3 +332,5 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
+
+    
