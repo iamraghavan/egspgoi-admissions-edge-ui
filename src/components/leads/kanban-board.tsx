@@ -141,7 +141,7 @@ function LeadColumn({ value, leads, isOverlay, onAddNote, ...props }: LeadColumn
           </div>
           <ScrollArea className="flex-grow">
             <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-1 -m-1">
-                {leads.map((lead) => (
+                {leads.filter(lead => lead && lead.id).map((lead) => (
                 <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} />
                 ))}
             </KanbanColumnContent>
@@ -172,7 +172,10 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   React.useEffect(() => {
     async function processLeads() {
         if (!leads) return;
-        const leadsWithDetails: KanbanLead[] = await Promise.all(leads.map(async (lead) => {
+        const leadsWithDetails: KanbanLead[] = await Promise.all(
+          leads
+          .filter(lead => lead && lead.id)
+          .map(async (lead) => {
             const user = lead.agent_id ? await getUserById(lead.agent_id) : undefined;
             const priorities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
             return {
@@ -238,10 +241,12 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     // Optimistically update UI
     const originalColumns = { ...columns };
     
-    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey] || []);
-    const overItems = Array.from(columns[overContainer as KanbanColumnKey] || []);
+    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey]);
+    const overItems = Array.from(columns[overContainer as KanbanColumnKey]);
 
     const activeIndex = activeItems.findIndex(item => item.id === leadId);
+    if (activeIndex === -1) return;
+    
     const [movedItem] = activeItems.splice(activeIndex, 1);
     
     const overIndex = overItems.findIndex(item => item.id === overEvent?.id);
