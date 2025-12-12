@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { logout } from '@/lib/auth';
+import { logout, getAuthHeaders } from '@/lib/auth';
 
 
 const courseData = [
@@ -104,6 +104,7 @@ export default function LeadsPage() {
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -230,6 +231,38 @@ export default function LeadsPage() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch("https://cms-egspgoi.vercel.app/api/v1/leads/bulk/template?type=xlsx", {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download template. Please try again.');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lead_upload_template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="Leads" description="Manage and track all your prospective students.">
@@ -350,14 +383,18 @@ export default function LeadsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
-            <a
-              href="https://cms-egspgoi.vercel.app/api/v1/leads/bulk/template?type=xlsx"
-              download
-              className="inline-flex items-center justify-center text-sm font-medium text-primary hover:underline"
+            <Button
+              variant="link"
+              className="inline-flex items-center justify-center text-sm font-medium text-primary hover:underline p-0 h-auto"
+              onClick={handleDownloadTemplate}
+              disabled={isDownloading}
             >
-              <Download className="mr-2 h-4 w-4" />
-              Download Excel Template
-            </a>
+              {isDownloading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Downloading...</>
+              ) : (
+                <><Download className="mr-2 h-4 w-4" /> Download Excel Template</>
+              )}
+            </Button>
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label htmlFor="lead-file">Select File</Label>
               <Input id="lead-file" type="file" accept=".xlsx, .csv" onChange={handleFileSelect} className="file:text-foreground"/>
@@ -386,5 +423,3 @@ export default function LeadsPage() {
     </div>
   );
 }
-
-    
