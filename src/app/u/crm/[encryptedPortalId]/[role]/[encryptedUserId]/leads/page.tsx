@@ -1,4 +1,5 @@
 
+
 'use client';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { Lead } from '@/lib/types';
 
 const courseData = [
@@ -100,6 +101,7 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   
   const [selectedCollege, setSelectedCollege] = useState('');
   const [availableCourses, setAvailableCourses] = useState<string[]>([]);
@@ -160,11 +162,13 @@ export default function LeadsPage() {
         title: "Lead Created",
         description: `${newLead.name} has been successfully added.`,
       });
-      setCreateDialogOpen(false);
-      // Reset form state
+      // Reset form state and close dialog
+      if(formRef.current) {
+        formRef.current.reset();
+      }
       setSelectedCollege('');
       setAvailableCourses([]);
-      event.currentTarget.reset();
+      setCreateDialogOpen(false);
       fetchLeads(); // Refresh leads
     } catch (error: any) {
       toast({
@@ -206,12 +210,15 @@ export default function LeadsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
         setCreateDialogOpen(isOpen);
         if (!isOpen) {
+          if(formRef.current) {
+            formRef.current.reset();
+          }
           setSelectedCollege('');
           setAvailableCourses([]);
         }
       }}>
         <DialogContent className="sm:max-w-[425px]">
-          <form onSubmit={handleCreateLead}>
+          <form onSubmit={handleCreateLead} ref={formRef}>
             <DialogHeader>
               <DialogTitle>Create New Lead</DialogTitle>
               <DialogDescription>
@@ -281,3 +288,5 @@ export default function LeadsPage() {
     </div>
   );
 }
+
+    
