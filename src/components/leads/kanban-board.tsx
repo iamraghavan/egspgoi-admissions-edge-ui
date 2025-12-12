@@ -90,7 +90,7 @@ function LeadCard({ lead, asHandle, onAddNote, ...props }: LeadCardProps) {
           )}
         </div>
          <p className="text-xs text-muted-foreground">
-            Last contact: {format(new Date(lead.last_contacted_at), 'PP')}
+            Last contact: {lead.last_contacted_at ? format(new Date(lead.last_contacted_at), 'PP') : 'N/A'}
         </p>
         <div className="flex items-center justify-between text-muted-foreground mt-2">
             <Badge
@@ -219,15 +219,16 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     }
   }
 
-  const handleMove = async ({ active, over, overContainer }: KanbanMoveEvent) => {
-    const activeContainer = active.data.current?.sortable.containerId;
-    const overId = over.id;
+  const handleMove = async ({ active, over, event }: KanbanMoveEvent) => {
+    const { active: activeEvent, over: overEvent } = event;
+    const activeContainer = activeEvent.data.current?.sortable.containerId;
+    const overContainer = overEvent?.data.current?.sortable.containerId || overEvent?.id;
+    const leadId = activeEvent.id as string;
 
     if (!activeContainer || !overContainer || activeContainer === overContainer) {
       return;
     }
 
-    const leadId = active.id as string;
     const newStatus = columnToStatusMap[overContainer as KanbanColumnKey];
     
     // Find the lead to get its original status
@@ -238,8 +239,8 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     const originalColumns = { ...columns };
     const activeItems = Array.from(columns[activeContainer as KanbanColumnKey]);
     const overItems = Array.from(columns[overContainer as KanbanColumnKey]);
-    const [movedItem] = activeItems.splice(active.data.current?.sortable.index, 1);
-    const newIndex = over.data.current?.sortable.index ?? overItems.length;
+    const [movedItem] = activeItems.splice(activeEvent.data.current?.sortable.index, 1);
+    const newIndex = overEvent?.data.current?.sortable.index ?? overItems.length;
     overItems.splice(newIndex, 0, movedItem);
 
     setColumns(prev => ({
@@ -286,7 +287,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   return (
     <div className="overflow-x-auto -mx-4 px-4">
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
-        <KanbanBoard className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 min-w-[1000px]">
+        <KanbanBoard className="grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-5 min-w-[1000px]">
           {Object.entries(columns).map(([columnValue, leads]) => (
             <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} />
           ))}
