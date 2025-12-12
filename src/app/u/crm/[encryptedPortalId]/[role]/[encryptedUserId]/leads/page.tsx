@@ -14,8 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { logout } from '@/lib/auth';
+
 
 const courseData = [
    { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Biomedical Engineering" },
@@ -107,6 +110,12 @@ export default function LeadsPage() {
   const [availableCourses, setAvailableCourses] = useState<string[]>([]);
   
   const { toast } = useToast();
+  const router = useRouter();
+
+  const handleLogout = useCallback(() => {
+    logout();
+    router.push('/');
+  }, [router]);
 
   const colleges = useMemo(() => {
     return [...new Set(courseData.map(item => item['Institution Name']))];
@@ -124,25 +133,34 @@ export default function LeadsPage() {
   }, [selectedCollege]);
 
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedLeads = await getLeads();
       setLeads(fetchedLeads);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch leads",
-        description: error.message || "Could not retrieve lead data from the server.",
-      });
+       if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+        toast({
+          variant: "destructive",
+          title: "Session Expired",
+          description: "Your session has expired. Please log in again.",
+        });
+        handleLogout();
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to fetch leads",
+            description: error.message || "Could not retrieve lead data from the server.",
+        });
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, handleLogout]);
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+  }, [fetchLeads]);
 
   const handleCreateLead = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -162,13 +180,6 @@ export default function LeadsPage() {
         title: "Lead Created",
         description: `${newLead.name} has been successfully added.`,
       });
-      // Reset form state and close dialog
-      if(formRef.current) {
-        formRef.current.reset();
-      }
-      setSelectedCollege('');
-      setAvailableCourses([]);
-      setCreateDialogOpen(false);
       fetchLeads(); // Refresh leads
     } catch (error: any) {
       toast({
@@ -178,6 +189,7 @@ export default function LeadsPage() {
       });
     } finally {
       setSubmitting(false);
+      setCreateDialogOpen(false);
     }
   };
 
