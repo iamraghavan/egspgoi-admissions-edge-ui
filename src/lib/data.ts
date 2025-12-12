@@ -295,13 +295,13 @@ export async function globalSearch(query: string): Promise<any[]> {
     const results = await response.json();
     const flattenedResults = [];
     if (results.leads && Array.isArray(results.leads)) {
-        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/egspgoi/sa/${item.id}/leads` })));
+        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/leads/${item.id}` })));
     }
     if (results.campaigns && Array.isArray(results.campaigns)) {
-        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/egspgoi/sa/${item.id}/campaigns` })));
+        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/campaigns/${item.id}` })));
     }
     if (results.users && Array.isArray(results.users)) {
-        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/egspgoi/sa/${item.id}/users` })));
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/users/${item.id}` })));
     }
 
     if (flattenedResults.length === 0 && (results.leads?.length === 0 && results.campaigns?.length === 0 && results.users?.length === 0)) {

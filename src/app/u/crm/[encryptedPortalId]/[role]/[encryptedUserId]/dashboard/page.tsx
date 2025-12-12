@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import StatsGrid from '@/components/dashboard/stats-grid';
 import LeadsChart from '@/components/dashboard/leads-chart';
@@ -24,15 +24,24 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { logout } from '@/lib/auth';
+import { logout, getProfile } from '@/lib/auth';
 
 export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const params = useParams();
+  const pathname = usePathname();
   const { encryptedPortalId, encryptedUserId, role } = params as { encryptedPortalId: string; encryptedUserId: string; role: string };
   const router = useRouter();
   const { toast } = useToast();
+  const [userName, setUserName] = useState<string>('User');
+
+   useEffect(() => {
+    const profile = getProfile();
+    if (profile && profile.name) {
+      setUserName(profile.name.split(' ')[0]);
+    }
+  }, []);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -70,7 +79,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Dashboard" />
+      <PageHeader title={`Welcome Back, ${userName}!`} description="Here's a snapshot of your admissions activity." />
       <StatsGrid />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LeadsChart />

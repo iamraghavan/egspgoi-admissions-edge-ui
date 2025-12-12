@@ -24,6 +24,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandS
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/auth';
 import React from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -53,11 +54,17 @@ export default function AppHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
   
   const handleLogout = useCallback(() => {
     logout();
     router.push('/');
-  }, [router]);
+     toast({
+        variant: "destructive",
+        title: "Session Expired",
+        description: "Your session has expired. Please log in again.",
+    });
+  }, [router, toast]);
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 2) {
@@ -68,8 +75,14 @@ export default function AppHeader() {
         setIsSearchOpen(true);
       } catch (error: any) {
         console.error("Search failed:", error);
-        if (error.message === 'Authentication token not found' || error.message === 'Invalid or expired token' || error.message === 'Invalid or expired token.') {
+        if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
             handleLogout();
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Search Failed",
+                description: error.message || "An unexpected error occurred during search.",
+            });
         }
         setSearchResults([]);
       } finally {
@@ -88,7 +101,15 @@ export default function AppHeader() {
   }, [searchQuery, debouncedSearch]);
 
   const handleSelect = (url: string) => {
-    router.push(url);
+    const {encryptedPortalId, role, encryptedUserId} = router.query as {encryptedPortalId: string, role: string, encryptedUserId: string};
+    
+    // a bit of a hack to make the search result links work
+    const dynamicUrl = url
+        .replace(':encryptedPortalId', encryptedPortalId)
+        .replace(':role', role)
+        .replace(':encryptedUserId', encryptedUserId);
+    
+    router.push(dynamicUrl);
     setIsSearchOpen(false);
     setSearchQuery('');
   }
@@ -147,6 +168,7 @@ export default function AppHeader() {
                         <CommandItem
                           onSelect={() => handleSelect(item.url)}
                           value={`${item.name}-${item.type}`}
+                          className='cursor-pointer'
                         >
                           <div className="flex items-center w-full">
                             {getIconForType(item.type)}
