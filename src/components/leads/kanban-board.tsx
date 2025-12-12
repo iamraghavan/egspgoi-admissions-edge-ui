@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { getUserById, addLeadNote } from "@/lib/data";
+import { getUserById, addLeadNote, updateLeadStatus } from "@/lib/data";
 import { Lead, User, LeadStatus } from "@/lib/types";
 import { GripVertical, Mail, MessageSquare, Phone } from 'lucide-react';
 import {
@@ -14,6 +14,7 @@ import {
   KanbanItem,
   KanbanItemHandle,
   KanbanOverlay,
+  type KanbanMoveEvent,
 } from '@/components/ui/kanban';
 import { Button } from '@/components/ui/button-1';
 import { Badge } from '@/components/ui/badge-2';
@@ -44,6 +45,22 @@ const COLUMN_TITLES: Record<KanbanColumnKey, string> = {
   "On Board": 'On Board',
   "Failed": 'Failed',
 };
+
+const statusToColumnMap: Record<string, KanbanColumnKey> = {
+  'new': 'New',
+  'contacted': 'Contacted',
+  'qualified': 'Contacted',
+  'proposal': 'Contacted',
+  'won': 'On Board',
+  'lost': 'Failed',
+};
+
+const columnToStatusMap: Record<KanbanColumnKey, LeadStatus> = {
+    'New': 'New',
+    'Contacted': 'Contacted',
+    'On Board': 'Won',
+    'Failed': 'Lost'
+}
 
 interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
   lead: KanbanLead;
@@ -140,7 +157,12 @@ interface KanbanBoardComponentProps {
 }
 
 export default function KanbanBoardComponent({ leads, isLoading, setLeads }: KanbanBoardComponentProps) {
-  const [columns, setColumns] = React.useState<Record<string, KanbanLead[]>>({});
+  const [columns, setColumns] = React.useState<Record<KanbanColumnKey, KanbanLead[]>>({
+      "New": [],
+      "Contacted": [],
+      "On Board": [],
+      "Failed": [],
+  });
   const [noteDialogOpen, setNoteDialogOpen] = React.useState(false);
   const [selectedLead, setSelectedLead] = React.useState<KanbanLead | null>(null);
   const [noteContent, setNoteContent] = React.useState('');
@@ -168,16 +190,8 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
         };
         
         leadsWithDetails.forEach(lead => {
-            const status = (lead.status || 'new').toLowerCase();
-            if (status === "won") {
-              groupedByStatus["On Board"].push(lead);
-            } else if (status === "lost") {
-              groupedByStatus["Failed"].push(lead);
-            } else if (["contacted", "qualified", "proposal"].includes(status)) {
-              groupedByStatus["Contacted"].push(lead);
-            } else { // new
-              groupedByStatus["New"].push(lead);
-            }
+            const column = statusToColumnMap[lead.status.toLowerCase()] || 'New';
+            groupedByStatus[column].push(lead);
         });
         
         setColumns(groupedByStatus);
@@ -205,6 +219,56 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     }
   }
 
+  const handleMove = async ({ active, over, overContainer }: KanbanMoveEvent) => {
+    const activeContainer = active.data.current?.sortable.containerId;
+    const overId = over.id;
+
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
+    }
+
+    const leadId = active.id as string;
+    const newStatus = columnToStatusMap[overContainer as KanbanColumnKey];
+    
+    // Find the lead to get its original status
+    const originalLead = leads.find(l => l.id === leadId);
+    if (!originalLead) return;
+
+    // Optimistically update UI
+    const originalColumns = { ...columns };
+    const activeItems = Array.from(columns[activeContainer as KanbanColumnKey]);
+    const overItems = Array.from(columns[overContainer as KanbanColumnKey]);
+    const [movedItem] = activeItems.splice(active.data.current?.sortable.index, 1);
+    const newIndex = over.data.current?.sortable.index ?? overItems.length;
+    overItems.splice(newIndex, 0, movedItem);
+
+    setColumns(prev => ({
+        ...prev,
+        [activeContainer]: activeItems,
+        [overContainer]: overItems,
+    }));
+
+
+    try {
+      await updateLeadStatus(leadId, newStatus);
+      // Update the lead's status in the main `leads` state
+      setLeads(prevLeads => prevLeads.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+      toast({
+        title: "Lead Updated",
+        description: `Lead status changed to ${newStatus}.`,
+      });
+    } catch (error: any) {
+      // Revert UI on failure
+      setColumns(originalColumns);
+      toast({
+        variant: "destructive",
+        title: "Failed to Update Lead",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
+  };
+
+
   if (isLoading) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -221,7 +285,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
 
   return (
     <div className="overflow-x-auto -mx-4 px-4">
-      <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id}>
+      <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
         <KanbanBoard className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 min-w-[1000px]">
           {Object.entries(columns).map(([columnValue, leads]) => (
             <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} />

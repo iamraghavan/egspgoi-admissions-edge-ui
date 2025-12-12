@@ -155,6 +155,19 @@ export const addLeadNote = async (leadId: string, content: string): Promise<void
     }
 };
 
+export const updateLeadStatus = async (leadId: string, status: LeadStatus): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}/status`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status: status.toLowerCase() }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while updating lead status' }));
+        throw new Error(errorData.message || 'Failed to update lead status');
+    }
+};
+
 
 export const getLeadById = async (id: string): Promise<Lead | undefined> => {
     const leads = await getLeads();
@@ -191,7 +204,7 @@ export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Ad
 export const getDashboardStats = async () => {
   // Simulate some variability
   const leads = await getLeads();
-  const newLeadsCount = leads.filter(l => new Date() > subDays(new Date(l.last_contacted_at), 7)).length;
+  const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
     activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
@@ -254,6 +267,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 
 
 
