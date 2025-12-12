@@ -163,6 +163,28 @@ export const createLead = async (leadData: { name: string; email: string; phone:
     return response.json();
 };
 
+export const uploadLeads = async (file: File): Promise<{ message: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers = getAuthHeaders();
+  // Remove Content-Type, browser will set it with boundary
+  delete headers['Content-Type'];
+
+  const response = await fetch(`${API_BASE_URL}/leads/bulk/upload`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred during upload' }));
+    throw new Error(errorData.message || 'Failed to upload file');
+  }
+
+  return response.json();
+};
+
 export const addLeadNote = async (leadId: string, content: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/leads/${leadId}/notes`, {
         method: 'POST',

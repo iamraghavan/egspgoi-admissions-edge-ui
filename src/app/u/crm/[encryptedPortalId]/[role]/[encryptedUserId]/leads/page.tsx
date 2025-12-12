@@ -4,11 +4,11 @@
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getLeads, createLead } from '@/lib/data';
+import { getLeads, createLead, uploadLeads } from '@/lib/data';
 import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
 import KanbanBoard from '@/components/leads/kanban-board';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2, Upload, Download, File } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,7 +103,9 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   
   const [selectedCollege, setSelectedCollege] = useState('');
@@ -193,13 +195,55 @@ export default function LeadsPage() {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setUploadFile(event.target.files[0]);
+    }
+  };
+
+  const handleBulkUpload = async () => {
+    if (!uploadFile) {
+      toast({
+        variant: "destructive",
+        title: "No file selected",
+        description: "Please select a file to upload.",
+      });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await uploadLeads(uploadFile);
+      toast({
+        title: "Upload Successful",
+        description: response.message || `${uploadFile.name} has been uploaded and is being processed.`,
+      });
+      setUploadDialogOpen(false);
+      setUploadFile(null);
+      fetchLeads();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message || "An unexpected error occurred during the upload.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="Leads" description="Manage and track all your prospective students.">
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Lead
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Bulk Upload
+          </Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Lead
+          </Button>
+        </div>
       </PageHeader>
       <Tabs defaultValue="board">
         <TabsList>
@@ -297,8 +341,49 @@ export default function LeadsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Lead Upload</DialogTitle>
+            <DialogDescription>
+              Upload a .xlsx or .csv file with your leads. Make sure it follows the provided template.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <a
+              href="https://cms-egspgoi.vercel.app/api/v1/leads/bulk/template?type=xlsx"
+              download
+              className="inline-flex items-center justify-center text-sm font-medium text-primary hover:underline"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Excel Template
+            </a>
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="lead-file">Select File</Label>
+              <Input id="lead-file" type="file" accept=".xlsx, .csv" onChange={handleFileSelect} className="file:text-foreground"/>
+            </div>
+            {uploadFile && (
+              <div className="flex items-center gap-2 rounded-md border border-muted p-2 text-sm">
+                <File className="h-5 w-5 text-muted-foreground" />
+                <span>{uploadFile.name}</span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkUpload} disabled={isSubmitting || !uploadFile}>
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+              ) : (
+                <><Upload className="mr-2 h-4 w-4" /> Upload & Process</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
