@@ -87,11 +87,9 @@ const dropAnimationConfig: DropAnimation = {
 };
 
 export interface KanbanMoveEvent {
+  active: DragEndEvent['active'];
+  over: DragEndEvent['over'];
   event: DragEndEvent;
-  activeContainer: string;
-  activeIndex: number;
-  overContainer: string;
-  overIndex: number;
 }
 
 export interface KanbanRootProps<T> {
@@ -187,23 +185,11 @@ function Kanban<T>({ value, onValueChange, getItemValue, children, className, on
 
       // Handle item move callback
       if (onMove && !isColumn(active.id)) {
-        const activeContainer = findContainer(active.id);
-        const overContainer = findContainer(over.id);
-
-        if (activeContainer && overContainer) {
-          const activeIndex = columns[activeContainer].findIndex((item: T) => getItemValue(item) === active.id);
-          const overIndex = isColumn(over.id)
-            ? columns[overContainer].length
-            : columns[overContainer].findIndex((item: T) => getItemValue(item) === over.id);
-
-          onMove({
-            event,
-            activeContainer,
-            activeIndex,
-            overContainer,
-            overIndex,
-          });
-        }
+        onMove({
+            active,
+            over,
+            event
+        });
         return;
       }
 
