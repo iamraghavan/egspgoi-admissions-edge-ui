@@ -1,14 +1,19 @@
+'use client';
 
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { getLeadById, getUserById } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Edit, Mail, MessageSquare, Phone } from "lucide-react";
 import Link from "next/link";
 import type { Lead, User } from "@/lib/types";
 import { format, formatDistanceToNow } from "date-fns";
+import { useToast } from '@/hooks/use-toast';
+import { logout } from '@/lib/auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div className="grid grid-cols-3 gap-2">
@@ -17,17 +22,94 @@ const DetailItem = ({ label, value }: { label: string, value: React.ReactNode })
     </div>
 );
 
-export default async function LeadDetailPage({ params }: { params: { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string } }) {
-    const lead = await getLeadById(params.leadId);
-    let assignedUser: User | undefined;
-    if (lead?.agent_id) {
-        assignedUser = await getUserById(lead.agent_id);
+export default function LeadDetailPage() {
+    const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
+    const router = useRouter();
+    const { toast } = useToast();
+    
+    const [lead, setLead] = useState<Lead | null>(null);
+    const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
+
+    const handleLogout = useCallback(() => {
+        logout();
+        router.push('/');
+    }, [router]);
+
+    useEffect(() => {
+        const fetchLeadDetails = async () => {
+            if (!params.leadId) return;
+
+            try {
+                setLoading(true);
+                const fetchedLead = await getLeadById(params.leadId);
+                
+                if (fetchedLead) {
+                    setLead(fetchedLead);
+                    if (fetchedLead.agent_id) {
+                        const user = await getUserById(fetchedLead.agent_id);
+                        setAssignedUser(user);
+                    }
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Lead not found",
+                    });
+                }
+            } catch (error: any) {
+                console.error("Failed to fetch lead details", error);
+                if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                    toast({
+                        variant: "destructive",
+                        title: "Session Expired",
+                        description: "Your session has expired. Please log in again.",
+                    });
+                    handleLogout();
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Failed to fetch lead",
+                        description: error.message || "An unexpected error occurred.",
+                    });
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLeadDetails();
+    }, [params.leadId, toast, handleLogout]);
+
+    if (loading) {
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10" />
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-6 w-20 ml-2" />
+                    <div className="ml-auto flex items-center gap-2">
+                        <Skeleton className="h-9 w-20" />
+                    </div>
+                </div>
+                 <div className="grid md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2 grid gap-6">
+                        <Card><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+                        <Card><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+                        <Card><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+                    </div>
+                    <div className="space-y-6">
+                         <Card><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent><Skeleton className="h-12 w-full" /></CardContent></Card>
+                         <Card><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent><Skeleton className="h-24 w-full" /></CardContent></Card>
+                    </div>
+                </div>
+            </div>
+        )
     }
     
     if (!lead) {
         return (
             <div className="flex items-center justify-center h-full">
-                <p>Lead not found.</p>
+                <p>Lead not found or could not be loaded.</p>
             </div>
         );
     }
@@ -61,7 +143,7 @@ export default async function LeadDetailPage({ params }: { params: { encryptedPo
                         <CardContent className="space-y-4">
                             <DetailItem label="Email" value={<a href={`mailto:${lead.email}`} className="text-primary hover:underline">{lead.email}</a>} />
                             <DetailItem label="Phone" value={<a href={`tel:${lead.phone}`} className="text-primary hover:underline">{lead.phone}</a>} />
-                            <DetailItem label="Location" value={`${lead.district}, ${lead.state}`} />
+                            <DetailItem label="Location" value={lead.district && lead.state ? `${lead.district}, ${lead.state}` : 'N/A'} />
                         </CardContent>
                     </Card>
 
