@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -10,6 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
 import { getUsers } from "@/lib/data"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 
 async function getAssignedToUser(userId: string) {
     const users = await getUsers();
@@ -110,6 +113,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
     id: "actions",
     cell: ({ row }) => {
       const lead = row.original
+      const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
 
       return (
         <DropdownMenu>
@@ -133,7 +137,11 @@ export const leadColumns: ColumnDef<Lead>[] = [
                 Call lead
               </a>
             </DropdownMenuItem>
-            <DropdownMenuItem>View lead details</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+                <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
+                    View lead details
+                </Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
