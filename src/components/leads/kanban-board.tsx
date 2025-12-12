@@ -256,24 +256,27 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     // Optimistically update UI
     const originalColumns = JSON.parse(JSON.stringify(columns)); // Deep copy
 
-    const activeItems = columns[activeContainer as KanbanColumnKey];
-    const overItems = columns[overContainer as KanbanColumnKey];
+    setColumns(prevColumns => {
+        const activeItems = Array.from(prevColumns[activeContainer as KanbanColumnKey]);
+        const overItems = Array.from(prevColumns[overContainer as KanbanColumnKey]);
+        
+        const activeIndex = activeItems.findIndex(item => item.id === leadId);
+        const [movedItem] = activeItems.splice(activeIndex, 1);
+        
+        let overIndex = overItems.findIndex(item => item.id === overId);
+        if (overIndex === -1 && overId === overContainer) {
+            overIndex = overItems.length;
+        }
 
-    const activeIndex = activeItems.findIndex(item => item.id === leadId);
-    const [movedItem] = activeItems.splice(activeIndex, 1);
-    
-    let overIndex = overItems.findIndex(item => item.id === overId);
-    if (overIndex === -1) {
-        overIndex = overItems.length; // If dropping on column, add to end
-    }
+        overItems.splice(overIndex, 0, movedItem);
 
-    overItems.splice(overIndex, 0, movedItem);
+        return {
+            ...prevColumns,
+            [activeContainer as KanbanColumnKey]: activeItems,
+            [overContainer as KanbanColumnKey]: overItems,
+        };
+    });
 
-    setColumns(prev => ({
-        ...prev,
-        [activeContainer as KanbanColumnKey]: activeItems,
-        [overContainer as KanbanColumnKey]: overItems,
-    }));
 
     try {
       await updateLeadStatus(leadId, newStatus);

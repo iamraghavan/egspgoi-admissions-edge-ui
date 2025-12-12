@@ -67,11 +67,21 @@ const inventoryResources: InventoryResource[] = [
 // --- Data access functions ---
 
 // Helper to parse "MM/DD/YYYY - hh:mm:ss aa" format
-const parseCustomDate = (dateString: string): string => {
+const parseCustomDate = (dateString: string | null | undefined): string => {
     if (!dateString) return new Date().toISOString();
     try {
+        // Check for existing ISO format first
+        if (!isNaN(new Date(dateString).getTime())) {
+            return new Date(dateString).toISOString();
+        }
+
         const [datePart, timePart] = dateString.split(' - ');
-        if (!datePart || !timePart) return new Date(dateString).toISOString(); // Fallback for standard formats
+        if (!datePart || !timePart) {
+            // Fallback for just date or other non-standard formats
+             const parsed = new Date(dateString);
+             if(!isNaN(parsed.getTime())) return parsed.toISOString();
+             throw new Error("Unrecognized date format");
+        }
 
         const [day, month, year] = datePart.split('/');
         const [time, period] = timePart.split(' ');
@@ -85,14 +95,14 @@ const parseCustomDate = (dateString: string): string => {
         }
         
         // Month in JS is 0-indexed, so subtract 1
-        const isoDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+        const isoDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds || '00'));
         if (isNaN(isoDate.getTime())) {
-            return new Date().toISOString(); // Return current date if parsing fails
+             throw new Error("Could not construct a valid date");
         }
         return isoDate.toISOString();
     } catch (e) {
         console.error("Could not parse date:", dateString, e);
-        return new Date().toISOString(); // Fallback
+        return new Date().toISOString(); // Fallback to current time to avoid crashes
     }
 };
 
@@ -130,7 +140,8 @@ export const getLeads = async (): Promise<Lead[]> => {
         return data.map((lead: any) => ({
             ...lead,
             agent_id: lead.assigned_to,
-            last_contacted_at: parseCustomDate(lead.created_at),
+            created_at: parseCustomDate(lead.created_at),
+            last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
         }));
     }
     
