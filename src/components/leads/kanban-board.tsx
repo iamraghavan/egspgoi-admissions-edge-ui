@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { getUserById, addLeadNote, updateLeadStatus, initiateCall } from "@/lib/data";
 import { Lead, User, LeadStatus, Note } from "@/lib/types";
-import { GripVertical, Mail, MessageSquare, Phone, Loader2 } from 'lucide-react';
+import { GripVertical, Mail, MessageSquare, Phone, Loader2, ArrowUpRight } from 'lucide-react';
 import {
   Kanban,
   KanbanBoard,
@@ -56,13 +56,15 @@ const statusToColumnMap: Record<string, KanbanColumnKey> = {
   'proposal': 'Contacted',
   'won': 'On Board',
   'lost': 'Failed',
+  'on board': 'On Board',
+  'failed': 'Failed'
 };
 
 const columnToStatusMap: Record<KanbanColumnKey, LeadStatus> = {
     'New': 'New',
     'Contacted': 'Contacted',
-    'On Board': 'Won',
-    'Lost': 'Failed'
+    'On Board': 'On Board',
+    'Failed': 'Failed'
 }
 
 interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
@@ -110,6 +112,14 @@ function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, onNavigate, isCal
             </Badge>
             <div className='flex items-center gap-1'>
                 <TooltipProvider>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onNavigate(lead.id)}>
+                                <ArrowUpRight className="size-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>View Details</p></TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
                              <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onInitiateCall(lead.id)} disabled={isCalling}>
