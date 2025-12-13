@@ -64,20 +64,15 @@ const inventoryResources: InventoryResource[] = [
     { name: 'DynamoDB', count: 3 },
 ];
 
-// --- Data access functions ---
-
-// Helper to parse "MM/DD/YYYY - hh:mm:ss aa" format
 const parseCustomDate = (dateString: string | null | undefined): string => {
     if (!dateString) return new Date().toISOString();
     try {
-        // Check for existing ISO format first
         if (!isNaN(new Date(dateString).getTime())) {
             return new Date(dateString).toISOString();
         }
 
         const [datePart, timePart] = dateString.split(' - ');
         if (!datePart || !timePart) {
-            // Fallback for just date or other non-standard formats
              const parsed = new Date(dateString);
              if(!isNaN(parsed.getTime())) return parsed.toISOString();
              throw new Error("Unrecognized date format");
@@ -94,15 +89,14 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
             hours = '00';
         }
         
-        // Month in JS is 0-indexed, so subtract 1
-        const isoDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds || '00'));
+        const isoDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds || '00')));
         if (isNaN(isoDate.getTime())) {
              throw new Error("Could not construct a valid date");
         }
         return isoDate.toISOString();
     } catch (e) {
         console.error("Could not parse date:", dateString, e);
-        return new Date().toISOString(); // Fallback to current time to avoid crashes
+        return new Date().toISOString();
     }
 };
 
@@ -171,12 +165,34 @@ export const createLead = async (leadData: { name: string; email: string; phone:
     return response.json();
 };
 
+export const updateLead = async (leadId: string, leadData: Partial<Lead>): Promise<Lead> => {
+    const leadToUpdate: any = { ...leadData };
+    
+    // API expects `assigned_to` instead of `agent_id`
+    if (leadToUpdate.agent_id) {
+        leadToUpdate.assigned_to = leadToUpdate.agent_id;
+        delete leadToUpdate.agent_id;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(leadToUpdate),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while updating the lead' }));
+        throw new Error(errorData.message || 'Failed to update lead');
+    }
+
+    return response.json();
+}
+
 export const uploadLeads = async (file: File): Promise<{ message: string }> => {
   const formData = new FormData();
   formData.append('file', file);
 
   const headers = getAuthHeaders();
-  // Remove Content-Type, browser will set it with boundary
   delete headers['Content-Type'];
 
   const response = await fetch(`${API_BASE_URL}/leads/bulk/upload`, {
@@ -208,7 +224,7 @@ export const addLeadNote = async (leadId: string, content: string): Promise<Note
     const currentUser = getProfile();
     return {
         ...newNote,
-        author_name: currentUser?.name || 'Unknown',
+        author_name: newNote.author_name || currentUser?.name || 'Unknown',
         created_at: parseCustomDate(newNote.created_at)
     };
 };
@@ -289,47 +305,39 @@ export const getPaymentRecords = async (): Promise<PaymentRecord[]> => Promise.r
 export const getAdSpends = async (): Promise<AdSpend[]> => Promise.resolve(adSpends);
 
 export const getUserById = async (id: string): Promise<User | undefined> => {
-    // In a real app, this would fetch from /api/v1/users/:id
     return Promise.resolve(users.find(user => user.id === id))
 };
 export const getUsers = async (): Promise<User[]> => {
-    // In a real app, this would fetch from /api/v1/users
     return Promise.resolve(users);
 }
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
 export const getDashboardStats = async () => {
-  // Simulate some variability
   const leads = await getLeads();
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
     activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
     callsToday: calls.filter(c => new Date(c.timestamp) > subDays(new Date(), 1)).length,
-    conversionRate: Math.floor(Math.random() * 5 + 18), // between 18% and 23%
+    conversionRate: Math.floor(Math.random() * 5 + 18),
   });
 };
 
 export const getLeadsOverTime = async () => {
     const data = [
-        { date: "Jan", leads: Math.floor(Math.random() * 20 + 80) }, // 80-100
-        { date: "Feb", leads: Math.floor(Math.random() * 20 + 90) }, // 90-110
-        { date: "Mar", leads: Math.floor(Math.random() * 20 + 100) }, // 100-120
-        { date: "Apr", leads: Math.floor(Math.random() * 20 + 110) }, // 110-130
-        { date: "May", leads: Math.floor(Math.random() * 20 + 100) }, // 100-120
-        { date: "Jun", leads: Math.floor(Math.random() * 20 + 120) }, // 120-140
+        { date: "Jan", leads: Math.floor(Math.random() * 20 + 80) },
+        { date: "Feb", leads: Math.floor(Math.random() * 20 + 90) },
+        { date: "Mar", leads: Math.floor(Math.random() * 20 + 100) },
+        { date: "Apr", leads: Math.floor(Math.random() * 20 + 110) },
+        { date: "May", leads: Math.floor(Math.random() * 20 + 100) },
+        { date: "Jun", leads: Math.floor(Math.random() * 20 + 120) },
     ];
     return Promise.resolve(data);
 }
 
 export const getInventoryResources = async (): Promise<InventoryResource[]> => Promise.resolve(inventoryResources);
 
-/**
- * Performs a global search across different types of data.
- * @param query - The search query string.
- * @returns A promise that resolves with an array of search results.
- */
 export async function globalSearch(query: string): Promise<any[]> {
     if (query.trim().length < 3) {
         return [];
@@ -365,5 +373,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
+    
 
     

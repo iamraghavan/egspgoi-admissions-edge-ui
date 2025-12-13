@@ -1,9 +1,10 @@
 
+
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getLeadById, getUserById, getUsers, initiateCall, transferLead } from "@/lib/data";
+import { getLeadById, getUserById, getUsers, initiateCall, transferLead, updateLead } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ import { logout } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const DetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div className="grid grid-cols-3 gap-2">
@@ -24,6 +27,14 @@ const DetailItem = ({ label, value }: { label: string, value: React.ReactNode })
         <dd className="text-sm col-span-2">{value || '-'}</dd>
     </div>
 );
+
+const courseData = [
+   { "Institution Name": "E.G.S. Pillay Engineering College", "Course / Specialization": "Biomedical Engineering" },
+   { "Institution Name": "E.G.S. Pillay Engineering College", "Course / Specialization": "Civil Engineering" },
+   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Course / Specialization": "Tamil" },
+   // Add other courses as needed...
+];
+
 
 export default function LeadDetailPage() {
     const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
@@ -33,11 +44,30 @@ export default function LeadDetailPage() {
     const [lead, setLead] = useState<Lead | null>(null);
     const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
     const [loading, setLoading] = useState(true);
-    const [isTransferring, setTransferring] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCalling, setCalling] = useState(false);
+    
     const [isTransferDialogOpen, setTransferDialogOpen] = useState(false);
+    const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+    
     const [users, setUsers] = useState<User[]>([]);
     const [selectedAgent, setSelectedAgent] = useState<string>('');
+
+    const colleges = useMemo(() => [...new Set(courseData.map(item => item['Institution Name']))], []);
+    const [selectedCollege, setSelectedCollege] = useState('');
+    const [availableCourses, setAvailableCourses] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (selectedCollege) {
+            const courses = courseData
+                .filter(item => item['Institution Name'] === selectedCollege)
+                .map(item => item['Course / Specialization']);
+            setAvailableCourses([...new Set(courses)]);
+        } else {
+            setAvailableCourses([]);
+        }
+    }, [selectedCollege]);
+
 
     const handleLogout = useCallback(() => {
         logout();
@@ -53,6 +83,7 @@ export default function LeadDetailPage() {
             
             if (fetchedLead) {
                 setLead(fetchedLead);
+                setSelectedCollege(fetchedLead.college || '');
                 if (fetchedLead.agent_id) {
                     const user = await getUserById(fetchedLead.agent_id);
                     setAssignedUser(user);
@@ -101,7 +132,6 @@ export default function LeadDetailPage() {
         if (!lead) return;
         setCalling(true);
         try {
-            // This is a placeholder for getting the current agent's number
             const agentNumber = "1234567890";
             await initiateCall(lead.id, agentNumber);
             toast({
@@ -121,14 +151,14 @@ export default function LeadDetailPage() {
     
     const handleTransferLead = async () => {
         if (!lead || !selectedAgent) return;
-        setTransferring(true);
+        setIsSubmitting(true);
         try {
             await transferLead(lead.id, selectedAgent);
             toast({
                 title: "Lead Transferred",
                 description: `Lead has been successfully transferred.`,
             });
-            await fetchLeadDetails(); // Re-fetch lead to show updated assignee
+            await fetchLeadDetails();
         } catch (error: any) {
             toast({
                 variant: "destructive",
@@ -136,8 +166,42 @@ export default function LeadDetailPage() {
                 description: error.message,
             });
         } finally {
-            setTransferring(false);
+            setIsSubmitting(false);
             setTransferDialogOpen(false);
+        }
+    };
+
+    const handleUpdateLead = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!lead) return;
+
+        setIsSubmitting(true);
+        const formData = new FormData(event.currentTarget);
+        const updatedData = {
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            phone: formData.get('phone') as string,
+            college: formData.get('college') as string,
+            course: formData.get('course') as string,
+            status: formData.get('status') as Lead['status'],
+        };
+        
+        try {
+            await updateLead(lead.id, updatedData);
+            toast({
+                title: "Lead Updated",
+                description: "Lead details have been saved.",
+            });
+            fetchLeadDetails();
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: error.message || "Could not save lead details.",
+            });
+        } finally {
+            setIsSubmitting(false);
+            setEditDialogOpen(false);
         }
     };
 
@@ -219,17 +283,87 @@ export default function LeadDetailPage() {
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>Cancel</Button>
-                                <Button onClick={handleTransferLead} disabled={isTransferring || !selectedAgent}>
-                                    {isTransferring && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <Button onClick={handleTransferLead} disabled={isSubmitting || !selectedAgent}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Confirm Transfer
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button variant="outline" size="sm">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                    </Button>
+                    <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                            </Button>
+                        </DialogTrigger>
+                         <DialogContent className="sm:max-w-[425px]">
+                            <form onSubmit={handleUpdateLead}>
+                                <DialogHeader>
+                                <DialogTitle>Edit Lead</DialogTitle>
+                                <DialogDescription>
+                                    Update the details for {lead.name}.
+                                </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                     <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="name" className="text-right">Name</Label>
+                                        <Input id="name" name="name" defaultValue={lead.name} className="col-span-3" required />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="email" className="text-right">Email</Label>
+                                        <Input id="email" name="email" type="email" defaultValue={lead.email} className="col-span-3" required />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="phone" className="text-right">Phone</Label>
+                                        <Input id="phone" name="phone" defaultValue={lead.phone} className="col-span-3" required />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="college" className="text-right">College</Label>
+                                        <Select name="college" defaultValue={lead.college} onValueChange={setSelectedCollege} required>
+                                            <SelectTrigger className="col-span-3">
+                                                <SelectValue placeholder="Select a college" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {colleges.map(college => <SelectItem key={college} value={college}>{college}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="course" className="text-right">Course</Label>
+                                        <Select name="course" defaultValue={lead.course} disabled={!selectedCollege} required>
+                                            <SelectTrigger className="col-span-3">
+                                                <SelectValue placeholder="Select a course" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableCourses.map(course => <SelectItem key={course} value={course}>{course}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="status" className="text-right">Status</Label>
+                                        <Select name="status" defaultValue={lead.status} required>
+                                            <SelectTrigger className="col-span-3">
+                                                <SelectValue placeholder="Select a status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {["New", "Contacted", "Qualified", "Proposal", "On Board", "Failed"].map(status => (
+                                                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                                    <Button type="submit" disabled={isSubmitting}>
+                                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Save Changes
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
