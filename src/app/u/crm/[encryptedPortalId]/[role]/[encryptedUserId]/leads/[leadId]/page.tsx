@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -269,7 +270,7 @@ export default function LeadDetailPage() {
                                         <div className="flex-1">
                                             <p className="text-sm">{note.content}</p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Added by {note.author_name} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                                Added by {note.author_name || 'Unknown'} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </li>
@@ -321,3 +322,5 @@ export default function LeadDetailPage() {
         </div>
     );
 }
+
+    

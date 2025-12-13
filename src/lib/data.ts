@@ -1,4 +1,5 @@
-import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
+
+import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
 import { getAuthHeaders, logout } from './auth';
@@ -191,7 +192,7 @@ export const uploadLeads = async (file: File): Promise<{ message: string }> => {
   return response.json();
 };
 
-export const addLeadNote = async (leadId: string, content: string): Promise<void> => {
+export const addLeadNote = async (leadId: string, content: string): Promise<Note> => {
     const response = await fetch(`${API_BASE_URL}/leads/${leadId}/notes`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -202,6 +203,11 @@ export const addLeadNote = async (leadId: string, content: string): Promise<void
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while adding the note' }));
         throw new Error(errorData.message || 'Failed to add note');
     }
+    const newNote = await response.json();
+    return {
+        ...newNote,
+        created_at: parseCustomDate(newNote.created_at)
+    };
 };
 
 export const updateLeadStatus = async (leadId: string, status: LeadStatus): Promise<void> => {
@@ -356,3 +362,5 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
+    

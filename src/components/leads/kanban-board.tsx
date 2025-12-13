@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { getUserById, addLeadNote, updateLeadStatus } from "@/lib/data";
-import { Lead, User, LeadStatus } from "@/lib/types";
+import { Lead, User, LeadStatus, Note } from "@/lib/types";
 import { GripVertical, Mail, MessageSquare, Phone } from 'lucide-react';
 import {
   Kanban,
@@ -222,22 +222,16 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     if (!selectedLead || !noteContent.trim()) return;
     setIsSubmittingNote(true);
     try {
-        await addLeadNote(selectedLead.id, noteContent);
+        const newNote = await addLeadNote(selectedLead.id, noteContent);
         toast({ title: "Note added successfully!" });
-
+  
         // Optimistically update the notes in the UI
-        const newNote = {
-            content: noteContent,
-            author_id: 'current_user', // Replace with actual user ID
-            author_name: 'You', // Replace with actual user name
-            created_at: new Date().toISOString()
-        };
         const updatedLead = { ...selectedLead, notes: [...(selectedLead.notes || []), newNote] };
         setSelectedLead(updatedLead);
-
+  
         // Also update the main leads state
         setLeads(prevLeads => prevLeads.map(l => l.id === selectedLead.id ? updatedLead : l));
-
+  
         setNoteContent('');
         // No need to close dialog, user might want to add another note or see the history
     } catch (error: any) {
@@ -365,12 +359,12 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
                          {selectedLead?.notes && selectedLead.notes.length > 0 ? (
                             <ul className="space-y-4">
                             {[...selectedLead.notes].reverse().map((note, index) => (
-                                <li key={index} className="flex gap-3">
+                                <li key={note.id || index} className="flex gap-3">
                                     <MessageSquare className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
                                     <div className="flex-1">
                                         <p className="text-sm">{note.content}</p>
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            {note.author_name} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                            {note.author_name || 'Unknown'} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                                         </p>
                                     </div>
                                 </li>
@@ -393,3 +387,5 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
+
+    
