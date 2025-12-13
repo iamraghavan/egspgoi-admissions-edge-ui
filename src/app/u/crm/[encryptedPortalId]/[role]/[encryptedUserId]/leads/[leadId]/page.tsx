@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Edit, Mail, MessageSquare, Phone, UserSwitch, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit, Mail, MessageSquare, Phone, Users, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Lead, User } from "@/lib/types";
 import { format, formatDistanceToNow } from "date-fns";
@@ -193,7 +193,7 @@ export default function LeadDetailPage() {
                     <Dialog open={isTransferDialogOpen} onOpenChange={setTransferDialogOpen}>
                         <DialogTrigger asChild>
                             <Button variant="outline" size="sm">
-                                <UserSwitch className="mr-2 h-4 w-4" />
+                                <Users className="mr-2 h-4 w-4" />
                                 Transfer
                             </Button>
                         </DialogTrigger>
