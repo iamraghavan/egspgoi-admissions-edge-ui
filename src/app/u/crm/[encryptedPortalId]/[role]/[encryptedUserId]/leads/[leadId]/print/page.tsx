@@ -1,19 +1,20 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getLeadById, getUserById } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Download, Loader2 } from "lucide-react";
 import type { Lead, User } from "@/lib/types";
 import { format } from "date-fns";
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const PrintDetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div>
@@ -30,6 +31,9 @@ export default function LeadPrintPage() {
     const [lead, setLead] = useState<Lead | null>(null);
     const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+
 
     const handleLogout = useCallback(() => {
         logout();
@@ -81,6 +85,51 @@ export default function LeadPrintPage() {
         window.print();
     };
 
+    const handleDownloadPdf = async () => {
+        if (!printRef.current || !lead) return;
+        setIsDownloading(true);
+        
+        try {
+            const canvas = await html2canvas(printRef.current, {
+                scale: 2, // Increase resolution
+                useCORS: true, 
+            });
+            const imgData = canvas.toDataURL('image/png');
+            
+            // A4 page dimensions in mm: 210 x 297
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const canvasAspectRatio = canvasWidth / canvasHeight;
+            
+            let finalPdfWidth = pdfWidth;
+            let finalPdfHeight = pdfWidth / canvasAspectRatio;
+
+            if (finalPdfHeight > pdfHeight) {
+                finalPdfHeight = pdfHeight;
+                finalPdfWidth = pdfHeight * canvasAspectRatio;
+            }
+
+            const x = (pdfWidth - finalPdfWidth) / 2;
+            const y = (pdfHeight - finalPdfHeight) / 2;
+
+            pdf.addImage(imgData, 'PNG', x, y, finalPdfWidth, finalPdfHeight);
+            pdf.save(`lead-summary-${lead.lead_reference_id}.pdf`);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            toast({
+                variant: 'destructive',
+                title: 'PDF Download Failed',
+                description: 'Could not generate PDF. Please try again.'
+            });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="bg-gray-100 min-h-screen p-8">
@@ -119,14 +168,20 @@ export default function LeadPrintPage() {
                   }
                   .printable-area {
                     display: block !important;
-                    position: fixed;
+                    position: absolute;
                     top: 0;
                     left: 0;
                     width: 100%;
-                    height: 100%;
+                    height: auto;
                     padding: 2rem;
-                    background-color: white;
+                    margin: 0;
+                    border: none;
+                    box-shadow: none;
                   }
+                }
+                 @page {
+                    size: A4;
+                    margin: 0;
                 }
             `}</style>
             
@@ -136,14 +191,23 @@ export default function LeadPrintPage() {
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Lead Details
                     </Button>
-                    <Button onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" />
-                        Print / Download PDF
-                    </Button>
+                    <div className='flex items-center gap-2'>
+                        <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                            {isDownloading ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Downloading...</>
+                            ) : (
+                                <><Download className="mr-2 h-4 w-4" />Download PDF</>
+                            )}
+                        </Button>
+                        <Button onClick={handlePrint} variant="outline">
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print
+                        </Button>
+                    </div>
                 </div>
             </div>
             
-            <div className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border-none">
+            <div ref={printRef} className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border-none max-w-4xl mx-auto">
                 <header className="flex justify-between items-start pb-8 border-b">
                     <div>
                         <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
@@ -216,7 +280,17 @@ export default function LeadPrintPage() {
                     </div>
                 </main>
 
-                <footer className="mt-12 pt-6 border-t">
+                <footer className="mt-12 pt-8 border-t space-y-12">
+                    <div className="grid grid-cols-2 gap-8">
+                        <div>
+                            <div className="w-4/5 border-b border-gray-400"></div>
+                            <p className="text-sm text-gray-600 mt-2">Authorized Signature</p>
+                        </div>
+                         <div>
+                            <div className="w-4/5 border-b border-gray-400"></div>
+                            <p className="text-sm text-gray-600 mt-2">Date</p>
+                        </div>
+                    </div>
                     <p className="text-xs text-gray-500 text-center">
                         This is a computer-generated document and does not require a physical signature.
                     </p>
@@ -225,4 +299,3 @@ export default function LeadPrintPage() {
         </div>
     );
 }
-
