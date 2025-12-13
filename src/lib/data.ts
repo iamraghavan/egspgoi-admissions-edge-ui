@@ -1,8 +1,9 @@
 
+
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
-import { getAuthHeaders, logout } from './auth';
+import { getAuthHeaders, logout, getProfile } from './auth';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
 
@@ -204,8 +205,10 @@ export const addLeadNote = async (leadId: string, content: string): Promise<Note
         throw new Error(errorData.message || 'Failed to add note');
     }
     const newNote = await response.json();
+    const currentUser = getProfile();
     return {
         ...newNote,
+        author_name: currentUser?.name || 'Unknown',
         created_at: parseCustomDate(newNote.created_at)
     };
 };
