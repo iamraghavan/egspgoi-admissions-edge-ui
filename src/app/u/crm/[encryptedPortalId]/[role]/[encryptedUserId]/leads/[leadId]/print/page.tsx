@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 const PrintDetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div>
         <p className="text-xs text-gray-500 uppercase font-medium">{label}</p>
-        <p className="text-sm text-gray-800">{value || 'N/A'}</p>
+        <div className="text-sm text-gray-800">{value || 'N/A'}</div>
     </div>
 );
 
@@ -127,7 +127,7 @@ export default function LeadPrintPage() {
                 }
             `}</style>
             
-            <div className="printable-area max-w-4xl mx-auto p-4 md:p-8">
+            <div className="max-w-4xl mx-auto p-4 md:p-8">
                  <div className="no-print flex justify-between items-center mb-8">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -139,7 +139,7 @@ export default function LeadPrintPage() {
                     </Button>
                 </div>
 
-                <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border">
+                <div className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border">
                     <header className="flex justify-between items-start pb-8 border-b">
                         <div>
                             <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
