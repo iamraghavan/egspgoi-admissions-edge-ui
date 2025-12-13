@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Edit, Mail, MessageSquare, Phone, Users, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit, Mail, MessageSquare, Phone, Users, Loader2, Printer } from "lucide-react";
 import Link from "next/link";
 import type { Lead, User } from "@/lib/types";
 import { format, formatDistanceToNow } from "date-fns";
@@ -85,6 +85,7 @@ export default function LeadDetailPage() {
                 setLead(fetchedLead);
                 if(fetchedLead.college) {
                     handleCollegeChange(fetchedLead.college);
+                    setSelectedCollege(fetchedLead.college);
                 }
                 if (fetchedLead.agent_id) {
                     const user = await getUserById(fetchedLead.agent_id);
@@ -252,6 +253,12 @@ export default function LeadDetailPage() {
                 <h1 className="text-xl md:text-2xl font-semibold tracking-tight">{lead.name}</h1>
                 <Badge variant="outline" className="capitalize text-sm ml-2">{lead.status}</Badge>
                 <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}/print`} target="_blank">
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print
+                        </Link>
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling}>
                         {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
                         Call Lead
@@ -399,13 +406,13 @@ export default function LeadDetailPage() {
                         <CardContent>
                             {lead.notes && lead.notes.length > 0 ? (
                                 <ul className="space-y-4">
-                                {lead.notes.map((note, index) => (
+                                {[...lead.notes].reverse().map((note, index) => (
                                     <li key={note.id || index} className="flex gap-3">
                                         <MessageSquare className="h-5 w-5 text-muted-foreground mt-1" />
                                         <div className="flex-1">
                                             <p className="text-sm">{note.content}</p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Added by {note.author_name || 'Unknown'} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                                Added by {note.author_name} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </li>
@@ -457,3 +464,4 @@ export default function LeadDetailPage() {
         </div>
     );
 }
+
