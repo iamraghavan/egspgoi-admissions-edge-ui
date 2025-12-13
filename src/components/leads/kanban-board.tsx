@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { getUserById, addLeadNote, updateLeadStatus } from "@/lib/data";
+import { getUserById, addLeadNote, updateLeadStatus, initiateCall } from "@/lib/data";
 import { Lead, User, LeadStatus, Note } from "@/lib/types";
-import { GripVertical, Mail, MessageSquare, Phone } from 'lucide-react';
+import { GripVertical, Mail, MessageSquare, Phone, Loader2 } from 'lucide-react';
 import {
   Kanban,
   KanbanBoard,
@@ -65,9 +65,11 @@ const columnToStatusMap: Record<KanbanColumnKey, LeadStatus> = {
 interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
   lead: KanbanLead;
   onAddNote: (lead: KanbanLead) => void;
+  onInitiateCall: (leadId: string) => void;
+  isCalling: boolean;
 }
 
-function LeadCard({ lead, asHandle, onAddNote, ...props }: LeadCardProps) {
+function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, isCalling, ...props }: LeadCardProps) {
   const cardContent = (
     <div className="rounded-md border bg-card p-3 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col gap-2.5">
@@ -102,7 +104,14 @@ function LeadCard({ lead, asHandle, onAddNote, ...props }: LeadCardProps) {
             </Badge>
             <div className='flex items-center gap-1'>
                 <TooltipProvider>
-                    <Tooltip><TooltipTrigger asChild><Button asChild variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary"><a href={`tel:${lead.phone}`}><Phone className="size-4"/></a></Button></TooltipTrigger><TooltipContent><p>Call {lead.name}</p></TooltipContent></Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onInitiateCall(lead.id)} disabled={isCalling}>
+                                {isCalling ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Call {lead.name}</p></TooltipContent>
+                    </Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button asChild variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary"><a href={`mailto:${lead.email}`}><Mail className="size-4"/></a></Button></TooltipTrigger><TooltipContent><p>Email {lead.name}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onAddNote(lead)}><MessageSquare className="size-4"/></Button></TooltipTrigger><TooltipContent><p>Add Note</p></TooltipContent></Tooltip>
                 </TooltipProvider>
@@ -123,9 +132,11 @@ interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>
   leads: KanbanLead[];
   isOverlay?: boolean;
   onAddNote: (lead: KanbanLead) => void;
+  onInitiateCall: (leadId: string) => void;
+  callingLeadId: string | null;
 }
 
-function LeadColumn({ value, leads, isOverlay, onAddNote, ...props }: LeadColumnProps) {
+function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, callingLeadId, ...props }: LeadColumnProps) {
   return (
         <KanbanColumn value={value} {...props} className="rounded-lg border bg-muted/50 p-2.5 shadow-inner flex flex-col">
           <div className="flex items-center justify-between mb-2.5 p-1">
@@ -142,7 +153,7 @@ function LeadColumn({ value, leads, isOverlay, onAddNote, ...props }: LeadColumn
           <ScrollArea className="flex-grow">
             <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-1 -m-1">
                 {leads.filter(lead => lead && lead.id).map((lead) => (
-                <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} />
+                <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} onInitiateCall={onInitiateCall} isCalling={callingLeadId === lead.id} />
                 ))}
             </KanbanColumnContent>
           </ScrollArea>
@@ -168,6 +179,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   const [noteContent, setNoteContent] = React.useState('');
   const [isSubmittingNote, setIsSubmittingNote] = React.useState(false);
   const { toast } = useToast();
+  const [callingLeadId, setCallingLeadId] = React.useState<string | null>(null);
 
   const findContainer = React.useCallback(
     (id: string) => {
@@ -216,6 +228,25 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   const handleAddNoteClick = (lead: KanbanLead) => {
     setSelectedLead(lead);
     setNoteDialogOpen(true);
+  };
+  
+  const handleInitiateCall = async (leadId: string) => {
+    setCallingLeadId(leadId);
+    try {
+        await initiateCall(leadId);
+        toast({
+            title: "Call Initiated",
+            description: `A call is being connected.`,
+        });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Failed to Initiate Call",
+            description: error.message,
+        });
+    } finally {
+        setCallingLeadId(null);
+    }
   };
 
   const handleNoteSubmit = async () => {
@@ -323,7 +354,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
         <KanbanBoard className="grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-5 min-w-[1000px]">
           {Object.entries(columns).map(([columnValue, leads]) => (
-            <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} />
+            <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} onInitiateCall={handleInitiateCall} callingLeadId={callingLeadId}/>
           ))}
         </KanbanBoard>
         <KanbanOverlay>
@@ -364,7 +395,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
                                     <div className="flex-1">
                                         <p className="text-sm">{note.content}</p>
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            {note.author_name || 'Unknown'} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                            Added by {note.author_name || 'Unknown'} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                                         </p>
                                     </div>
                                 </li>
@@ -387,5 +418,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
+
+    
 
     
