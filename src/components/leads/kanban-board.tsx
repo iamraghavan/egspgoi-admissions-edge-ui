@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -31,6 +32,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 
 interface KanbanLead extends Lead {
     priority: 'low' | 'medium' | 'high';
@@ -59,22 +62,25 @@ const columnToStatusMap: Record<KanbanColumnKey, LeadStatus> = {
     'New': 'New',
     'Contacted': 'Contacted',
     'On Board': 'Won',
-    'Failed': 'Lost'
+    'Lost': 'Failed'
 }
 
 interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
   lead: KanbanLead;
   onAddNote: (lead: KanbanLead) => void;
   onInitiateCall: (leadId: string) => void;
+  onNavigate: (leadId: string) => void;
   isCalling: boolean;
 }
 
-function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, isCalling, ...props }: LeadCardProps) {
+function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, onNavigate, isCalling, ...props }: LeadCardProps) {
   const cardContent = (
     <div className="rounded-md border bg-card p-3 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col gap-2.5">
         <div className="flex items-start justify-between gap-2">
-          <span className="font-medium text-sm leading-tight">{lead.name}</span>
+          <button onClick={() => onNavigate(lead.id)} className="text-left">
+            <span className="font-medium text-sm leading-tight hover:underline">{lead.name}</span>
+          </button>
            {lead.assignee && (
              <TooltipProvider>
               <Tooltip>
@@ -133,10 +139,11 @@ interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>
   isOverlay?: boolean;
   onAddNote: (lead: KanbanLead) => void;
   onInitiateCall: (leadId: string) => void;
+  onNavigate: (leadId: string) => void;
   callingLeadId: string | null;
 }
 
-function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, callingLeadId, ...props }: LeadColumnProps) {
+function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, onNavigate, callingLeadId, ...props }: LeadColumnProps) {
   return (
         <KanbanColumn value={value} {...props} className="rounded-lg border bg-muted/50 p-2.5 shadow-inner flex flex-col">
           <div className="flex items-center justify-between mb-2.5 p-1">
@@ -153,7 +160,7 @@ function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, callin
           <ScrollArea className="flex-grow">
             <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-1 -m-1">
                 {leads.filter(lead => lead && lead.id).map((lead) => (
-                <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} onInitiateCall={onInitiateCall} isCalling={callingLeadId === lead.id} />
+                <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} onInitiateCall={onInitiateCall} onNavigate={onNavigate} isCalling={callingLeadId === lead.id} />
                 ))}
             </KanbanColumnContent>
           </ScrollArea>
@@ -180,6 +187,8 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   const [isSubmittingNote, setIsSubmittingNote] = React.useState(false);
   const { toast } = useToast();
   const [callingLeadId, setCallingLeadId] = React.useState<string | null>(null);
+  const router = useRouter();
+  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; };
 
   const findContainer = React.useCallback(
     (id: string) => {
@@ -247,6 +256,10 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     } finally {
         setCallingLeadId(null);
     }
+  };
+
+  const handleNavigate = (leadId: string) => {
+    router.push(`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${leadId}`);
   };
 
   const handleNoteSubmit = async () => {
@@ -354,7 +367,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
         <KanbanBoard className="grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-5 min-w-[1000px]">
           {Object.entries(columns).map(([columnValue, leads]) => (
-            <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} onInitiateCall={handleInitiateCall} callingLeadId={callingLeadId}/>
+            <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} onInitiateCall={handleInitiateCall} onNavigate={handleNavigate} callingLeadId={callingLeadId}/>
           ))}
         </KanbanBoard>
         <KanbanOverlay>
@@ -418,6 +431,8 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
+
+    
 
     
 
