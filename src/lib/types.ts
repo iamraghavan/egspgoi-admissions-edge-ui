@@ -1,4 +1,5 @@
 
+
 export type Role = "Super Admin" | "Marketing Manager" | "Admission Manager" | "Finance" | "Admission Executive";
 
 export type User = {
@@ -39,6 +40,14 @@ export type Lead = {
   created_at: string;
   notes?: Note[];
 };
+
+export type PaginatedLeadsResponse = {
+  leads: Lead[];
+  meta: {
+    cursor: string | null;
+    count: number;
+  } | null;
+}
 
 export type CampaignStatus = "Planning" | "Active" | "Completed" | "Archived";
 

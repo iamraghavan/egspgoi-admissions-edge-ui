@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,13 +25,16 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Loader2 } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   searchKey: string
   searchPlaceholder: string
+  onLoadMore?: () => void
+  canLoadMore?: boolean
+  isFetchingMore?: boolean
 }
 
 export default function DataTable<TData, TValue>({
@@ -38,6 +42,9 @@ export default function DataTable<TData, TValue>({
   data,
   searchKey,
   searchPlaceholder,
+  onLoadMore,
+  canLoadMore,
+  isFetchingMore
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -55,6 +62,7 @@ export default function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    manualPagination: true,
     state: {
       sorting,
       columnFilters,
@@ -156,24 +164,23 @@ export default function DataTable<TData, TValue>({
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="space-x-2">
-          <Button
+        {onLoadMore && canLoadMore && (
+           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={onLoadMore}
+            disabled={isFetchingMore}
           >
-            Previous
+            {isFetchingMore ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                </>
+            ) : (
+                'Load More'
+            )}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   )

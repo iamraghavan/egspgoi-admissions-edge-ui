@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
+import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, PaginatedLeadsResponse } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
 import { getAuthHeaders, logout, getProfile } from './auth';
@@ -100,10 +100,17 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
     }
 };
 
-export const getLeads = async (): Promise<Lead[]> => {
+export const getLeads = async (cursor: string | null = null): Promise<PaginatedLeadsResponse> => {
     let response: Response;
+    const limit = 20;
+    const url = new URL(`${API_BASE_URL}/leads`);
+    url.searchParams.append('limit', limit.toString());
+    if (cursor) {
+        url.searchParams.append('cursor', cursor);
+    }
+
     try {
-        response = await fetch(`${API_BASE_URL}/leads`, {
+        response = await fetch(url.toString(), {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -130,8 +137,8 @@ export const getLeads = async (): Promise<Lead[]> => {
 
     const data = await response.json();
     
-    if (data && Array.isArray(data.items)) {
-        return data.items.map((lead: any) => ({
+    if (data && data.success && Array.isArray(data.data)) {
+        const leads = data.data.map((lead: any) => ({
             ...lead,
             agent_id: lead.assigned_to,
             created_at: parseCustomDate(lead.created_at),
@@ -142,9 +149,10 @@ export const getLeads = async (): Promise<Lead[]> => {
                 created_at: parseCustomDate(note.created_at),
             })),
         }));
+        return { leads, meta: data.meta };
     }
     
-    return [];
+    return { leads: [], meta: null };
 };
 
 export const createLead = async (leadData: { name: string; email: string; phone: string; college: string; course: string; }): Promise<Lead> => {
@@ -289,12 +297,12 @@ export const deleteLead = async (leadId: string): Promise<void> => {
 
 
 export const getLeadById = async (id: string): Promise<Lead | undefined> => {
-    const leads = await getLeads();
+    const { leads } = await getLeads();
     return leads.find(lead => lead.id === id)
 };
 export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"]);
 export const getLeadsByStatus = async (status: LeadStatus): Promise<Lead[]> => {
-    const leads = await getLeads();
+    const { leads } = await getLeads();
     return leads.filter(lead => lead.status === status)
 };
 
@@ -319,7 +327,7 @@ export const getUsers = async (): Promise<User[]> => {
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
 export const getDashboardStats = async () => {
-  const leads = await getLeads();
+  const { leads } = await getLeads();
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,

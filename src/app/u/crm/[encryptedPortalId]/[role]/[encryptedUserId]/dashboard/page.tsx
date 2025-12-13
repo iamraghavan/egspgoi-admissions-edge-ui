@@ -52,7 +52,7 @@ export default function DashboardPage() {
     const fetchRecentLeads = async () => {
       try {
         setLoading(true);
-        const allLeads = await getLeads();
+        const { leads: allLeads } = await getLeads();
         setRecentLeads(allLeads.slice(0, 5));
       } catch (error: any) {
         if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {

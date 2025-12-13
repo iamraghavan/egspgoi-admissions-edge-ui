@@ -121,6 +121,9 @@ export default function LeadsPage() {
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [isParsing, setIsParsing] = useState(false);
 
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
 
   const handleLogout = useCallback(() => {
     logout();
@@ -143,11 +146,16 @@ export default function LeadsPage() {
   }, [selectedCollege]);
 
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeads = useCallback(async (cursor: string | null = null) => {
+    if (cursor) {
+        setIsFetchingMore(true);
+    } else {
+        setLoading(true);
+    }
     try {
-      setLoading(true);
-      const fetchedLeads = await getLeads();
-      setLeads(fetchedLeads);
+      const { leads: fetchedLeads, meta } = await getLeads(cursor);
+      setLeads(prev => cursor ? [...prev, ...fetchedLeads] : fetchedLeads);
+      setNextCursor(meta?.cursor || null);
     } catch (error: any) {
        if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
         toast({
@@ -165,12 +173,13 @@ export default function LeadsPage() {
       }
     } finally {
       setLoading(false);
+      setIsFetchingMore(false);
     }
   }, [toast, handleLogout]);
 
   useEffect(() => {
     fetchLeads();
-  }, [fetchLeads]);
+  }, []);
 
   const handleCreateLead = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -341,6 +350,9 @@ export default function LeadsPage() {
             data={leads}
             searchKey="name"
             searchPlaceholder="Filter leads by name..."
+            onLoadMore={() => fetchLeads(nextCursor)}
+            canLoadMore={!!nextCursor}
+            isFetchingMore={isFetchingMore}
           />
         </TabsContent>
       </Tabs>
