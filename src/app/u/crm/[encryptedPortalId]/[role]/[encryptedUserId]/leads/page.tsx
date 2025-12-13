@@ -1,4 +1,5 @@
 
+
 'use client';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { getLeads, createLead, uploadLeads } from '@/lib/data';
 import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
 import KanbanBoard from '@/components/leads/kanban-board';
-import { PlusCircle, Loader2, Upload, Download, File } from 'lucide-react';
+import { PlusCircle, Loader2, Upload, Download, File, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { logout, getAuthHeaders } from '@/lib/auth';
+import * as XLSX from 'xlsx';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 const courseData = [
@@ -114,6 +117,11 @@ export default function LeadsPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const [uploadStep, setUploadStep] = useState<'select' | 'verify'>('select');
+  const [parsedData, setParsedData] = useState<any[]>([]);
+  const [isParsing, setIsParsing] = useState(false);
+
+
   const handleLogout = useCallback(() => {
     logout();
     router.push('/');
@@ -197,9 +205,45 @@ export default function LeadsPage() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setUploadFile(event.target.files[0]);
+      const file = event.target.files[0];
+      setUploadFile(file);
+      parseFile(file);
     }
   };
+
+  const parseFile = (file: File) => {
+    setIsParsing(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet);
+            setParsedData(json);
+            setUploadStep('verify');
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Parsing Failed',
+                description: 'Could not read the file. Please ensure it is a valid .xlsx or .csv file.',
+            });
+        } finally {
+            setIsParsing(false);
+        }
+    };
+    reader.onerror = () => {
+        setIsParsing(false);
+        toast({
+            variant: 'destructive',
+            title: 'File Read Error',
+            description: 'Could not read the selected file.',
+        });
+    }
+    reader.readAsBinaryString(file);
+  };
+
 
   const handleBulkUpload = async () => {
     if (!uploadFile) {
@@ -217,8 +261,7 @@ export default function LeadsPage() {
         title: "Upload Successful",
         description: response.message || `${uploadFile.name} has been uploaded and is being processed.`,
       });
-      setUploadDialogOpen(false);
-      setUploadFile(null);
+      handleCloseUploadDialog();
       fetchLeads();
     } catch (error: any) {
       toast({
@@ -261,6 +304,13 @@ export default function LeadsPage() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleCloseUploadDialog = () => {
+    setUploadDialogOpen(false);
+    setUploadFile(null);
+    setParsedData([]);
+    setUploadStep('select');
   };
 
   return (
@@ -374,50 +424,91 @@ export default function LeadsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Bulk Lead Upload</DialogTitle>
-            <DialogDescription>
-              Upload a .xlsx or .csv file with your leads. Make sure it follows the provided template.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <Button
-              variant="link"
-              className="inline-flex items-center justify-center text-sm font-medium text-primary hover:underline p-0 h-auto"
-              onClick={handleDownloadTemplate}
-              disabled={isDownloading}
-            >
-              {isDownloading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Downloading...</>
-              ) : (
-                <><Download className="mr-2 h-4 w-4" /> Download Excel Template</>
-              )}
-            </Button>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="lead-file">Select File</Label>
-              <Input id="lead-file" type="file" accept=".xlsx, .csv" onChange={handleFileSelect} className="file:text-foreground"/>
-            </div>
-            {uploadFile && (
-              <div className="flex items-center gap-2 rounded-md border border-muted p-2 text-sm">
-                <File className="h-5 w-5 text-muted-foreground" />
-                <span>{uploadFile.name}</span>
+      <Dialog open={isUploadDialogOpen} onOpenChange={handleCloseUploadDialog}>
+        <DialogContent className={uploadStep === 'verify' ? "sm:max-w-4xl" : "sm:max-w-md"}>
+          {uploadStep === 'select' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Bulk Lead Upload</DialogTitle>
+                <DialogDescription>
+                  Upload a .xlsx or .csv file with your leads. Make sure it follows the provided template.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-4 py-4">
+                <Button
+                  variant="link"
+                  className="inline-flex items-center justify-center text-sm font-medium text-primary hover:underline p-0 h-auto"
+                  onClick={handleDownloadTemplate}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Downloading...</>
+                  ) : (
+                    <><Download className="mr-2 h-4 w-4" /> Download Excel Template</>
+                  )}
+                </Button>
+                <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="lead-file">Select File</Label>
+                  <Input id="lead-file" type="file" accept=".xlsx, .csv" onChange={handleFileSelect} className="file:text-foreground"/>
+                </div>
+                {isParsing && (
+                    <div className="flex items-center justify-center p-4">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Parsing file...</span>
+                    </div>
+                )}
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleBulkUpload} disabled={isSubmitting || !uploadFile}>
-              {isSubmitting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
-              ) : (
-                <><Upload className="mr-2 h-4 w-4" /> Upload & Process</>
-              )}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={handleCloseUploadDialog}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {uploadStep === 'verify' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Verify Uploaded Data</DialogTitle>
+                <DialogDescription>
+                  Review the leads below. Click "Confirm & Import" to finalize the upload. Found {parsedData.length} records in {uploadFile?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[50vh] overflow-auto border rounded-md my-4">
+                  <Table>
+                      <TableHeader className='sticky top-0 bg-muted'>
+                          <TableRow>
+                              {parsedData.length > 0 && Object.keys(parsedData[0]).map(key => (
+                                  <TableHead key={key}>{key}</TableHead>
+                              ))}
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {parsedData.map((row, rowIndex) => (
+                              <TableRow key={rowIndex}>
+                                  {Object.values(row).map((cell, cellIndex) => (
+                                      <TableCell key={cellIndex} className='whitespace-nowrap'>{String(cell)}</TableCell>
+                                  ))}
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadStep('select')}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button onClick={handleBulkUpload} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
+                  ) : (
+                    <><Upload className="mr-2 h-4 w-4" /> Confirm & Import</>
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
