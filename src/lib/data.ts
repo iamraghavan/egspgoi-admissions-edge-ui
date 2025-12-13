@@ -142,6 +142,10 @@ export const getLeads = async (): Promise<Lead[]> => {
             agent_id: lead.assigned_to,
             created_at: parseCustomDate(lead.created_at),
             last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
+            notes: (lead.notes || []).map((note: any) => ({
+                ...note,
+                created_at: parseCustomDate(note.created_at),
+            })),
         }));
     }
     
@@ -310,4 +314,5 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
+
 
