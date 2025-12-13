@@ -14,6 +14,7 @@ import { getUsers, initiateCall, deleteLead } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 async function getAssignedToUser(userId: string) {
     const users = await getUsers();
@@ -116,12 +117,12 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
       const { toast } = useToast();
+      const [isCalling, setIsCalling] = useState(false);
 
       const handleCall = async () => {
+        setIsCalling(true);
         try {
-            // This is a placeholder for getting the current agent's number
-            const agentNumber = "1234567890";
-            await initiateCall(lead.id, agentNumber);
+            await initiateCall(lead.id);
             toast({
                 title: "Call Initiated",
                 description: `Calling ${lead.name}...`,
@@ -132,6 +133,8 @@ export const leadColumns: ColumnDef<Lead>[] = [
                 title: "Call Failed",
                 description: error.message,
             });
+        } finally {
+            setIsCalling(false);
         }
       };
 
@@ -172,8 +175,8 @@ export const leadColumns: ColumnDef<Lead>[] = [
               Copy email address
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleCall}>
-              <Phone className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={handleCall} disabled={isCalling}>
+              {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
               Initiate Call
             </DropdownMenuItem>
             <DropdownMenuSeparator />

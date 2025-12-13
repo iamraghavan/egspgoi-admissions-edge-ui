@@ -1,3 +1,4 @@
+
 export type Role = "Super Admin" | "Marketing Manager" | "Admission Manager" | "Finance" | "Admission Executive";
 
 export type User = {
@@ -6,6 +7,7 @@ export type User = {
   email: string;
   avatarUrl: string;
   role: Role;
+  phone?: string;
 };
 
 export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost" | "Failed" | "On Board";

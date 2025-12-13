@@ -134,8 +134,7 @@ export default function LeadDetailPage() {
         if (!lead) return;
         setCalling(true);
         try {
-            const agentNumber = "1234567890";
-            await initiateCall(lead.id, agentNumber);
+            await initiateCall(lead.id);
             toast({
                 title: "Call Initiated",
                 description: `A call is being connected to ${lead.name}.`,

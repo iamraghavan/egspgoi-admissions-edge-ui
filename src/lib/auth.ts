@@ -10,6 +10,7 @@ interface UserProfile {
     name: string;
     email: string;
     role: string;
+    phone?: string;
 }
 
 export function getAuthHeaders() {

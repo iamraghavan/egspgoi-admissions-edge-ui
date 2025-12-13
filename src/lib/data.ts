@@ -138,6 +138,7 @@ export const getLeads = async (): Promise<Lead[]> => {
             last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
             notes: (lead.notes || []).map((note: any) => ({
                 ...note,
+                author_name: note.author_name || 'Unknown',
                 created_at: parseCustomDate(note.created_at),
             })),
         }));
@@ -242,7 +243,11 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     }
 };
 
-export const initiateCall = async (leadId: string, agentNumber: string): Promise<any> => {
+export const initiateCall = async (leadId: string): Promise<any> => {
+    const profile = getProfile();
+    // Use agent's number from profile if available, otherwise use fallback
+    const agentNumber = profile?.phone || "918064522110";
+
     const response = await fetch(`${API_BASE_URL}/leads/${leadId}/call`, {
         method: 'POST',
         headers: getAuthHeaders(),
