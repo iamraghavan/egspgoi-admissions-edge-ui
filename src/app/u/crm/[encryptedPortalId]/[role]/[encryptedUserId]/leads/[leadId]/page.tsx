@@ -57,17 +57,17 @@ export default function LeadDetailPage() {
     const [selectedCollege, setSelectedCollege] = useState('');
     const [availableCourses, setAvailableCourses] = useState<string[]>([]);
 
-    useEffect(() => {
-        if (selectedCollege) {
+    const handleCollegeChange = (college: string) => {
+        setSelectedCollege(college);
+        if (college) {
             const courses = courseData
-                .filter(item => item['Institution Name'] === selectedCollege)
+                .filter(item => item['Institution Name'] === college)
                 .map(item => item['Course / Specialization']);
             setAvailableCourses([...new Set(courses)]);
         } else {
             setAvailableCourses([]);
         }
-    }, [selectedCollege]);
-
+    };
 
     const handleLogout = useCallback(() => {
         logout();
@@ -83,7 +83,9 @@ export default function LeadDetailPage() {
             
             if (fetchedLead) {
                 setLead(fetchedLead);
-                setSelectedCollege(fetchedLead.college || '');
+                if(fetchedLead.college) {
+                    handleCollegeChange(fetchedLead.college);
+                }
                 if (fetchedLead.agent_id) {
                     const user = await getUserById(fetchedLead.agent_id);
                     setAssignedUser(user);
@@ -320,7 +322,7 @@ export default function LeadDetailPage() {
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="college" className="text-right">College</Label>
-                                        <Select name="college" defaultValue={lead.college} onValueChange={setSelectedCollege} required>
+                                        <Select name="college" value={selectedCollege} onValueChange={handleCollegeChange} required>
                                             <SelectTrigger className="col-span-3">
                                                 <SelectValue placeholder="Select a college" />
                                             </SelectTrigger>
@@ -456,5 +458,3 @@ export default function LeadDetailPage() {
         </div>
     );
 }
-
-    
