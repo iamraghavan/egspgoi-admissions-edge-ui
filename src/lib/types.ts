@@ -10,6 +10,13 @@ export type User = {
 
 export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost";
 
+export type Note = {
+  content: string;
+  author_id: string;
+  author_name?: string;
+  created_at: string;
+};
+
 export type Lead = {
   id: string;
   name: string;
@@ -17,11 +24,17 @@ export type Lead = {
   phone: string;
   status: LeadStatus;
   agent_id: string; // Corresponds to assigned_to from API
-  last_contacted_at: string; // Corresponds to created_at from API
+  last_contacted_at: string; // Corresponds to updated_at from API
   college?: string;
   course?: string;
+  lead_reference_id?: string;
+  source_website?: string;
+  district?: string;
+  state?: string;
+  admission_year?: string;
   assigned_to: string | null;
   created_at: string;
+  notes?: Note[];
 };
 
 export type CampaignStatus = "Planning" | "Active" | "Completed" | "Archived";

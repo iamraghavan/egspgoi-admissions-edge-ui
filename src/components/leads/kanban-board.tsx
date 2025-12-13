@@ -20,14 +20,14 @@ import { Button } from '@/components/ui/button-1';
 import { Badge } from '@/components/ui/badge-2';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../ui/dialog';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
@@ -224,8 +224,22 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     try {
         await addLeadNote(selectedLead.id, noteContent);
         toast({ title: "Note added successfully!" });
-        setNoteDialogOpen(false);
+
+        // Optimistically update the notes in the UI
+        const newNote = {
+            content: noteContent,
+            author_id: 'current_user', // Replace with actual user ID
+            author_name: 'You', // Replace with actual user name
+            created_at: new Date().toISOString()
+        };
+        const updatedLead = { ...selectedLead, notes: [...(selectedLead.notes || []), newNote] };
+        setSelectedLead(updatedLead);
+
+        // Also update the main leads state
+        setLeads(prevLeads => prevLeads.map(l => l.id === selectedLead.id ? updatedLead : l));
+
         setNoteContent('');
+        // No need to close dialog, user might want to add another note or see the history
     } catch (error: any) {
         toast({ variant: "destructive", title: "Failed to add note", description: error.message });
     } finally {
@@ -236,48 +250,46 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   const handleMove = async (event: KanbanMoveEvent) => {
     const { active, over } = event;
     if (!over) return;
-
+  
     const leadId = active.id as string;
-    const overId = over.id as string;
     
     const activeContainer = findContainer(leadId);
-    let overContainer = findContainer(overId);
+    let overContainer = findContainer(over.id as string);
     if (!overContainer) {
-        overContainer = Object.keys(columns).includes(overId) ? overId : undefined;
+      overContainer = Object.keys(columns).includes(over.id as string) ? (over.id as string) : undefined;
     }
-
+  
     if (!activeContainer || !overContainer || activeContainer === overContainer) {
       return;
     }
     
     const newStatus = columnToStatusMap[overContainer as KanbanColumnKey];
     if (!newStatus) return;
-
-    // Optimistically update UI
+  
+    // Optimistic UI update
     const originalColumns = JSON.parse(JSON.stringify(columns)); // Deep copy
-
+  
     setColumns(prevColumns => {
-        const activeItems = Array.from(prevColumns[activeContainer as KanbanColumnKey]);
-        const overItems = Array.from(prevColumns[overContainer as KanbanColumnKey]);
-        
-        const activeIndex = activeItems.findIndex(item => item.id === leadId);
-        const [movedItem] = activeItems.splice(activeIndex, 1);
-        
-        let overIndex = overItems.findIndex(item => item.id === overId);
-        if (overIndex === -1 && overId === overContainer) {
-            overIndex = overItems.length;
-        }
-
-        overItems.splice(overIndex, 0, movedItem);
-
-        return {
-            ...prevColumns,
-            [activeContainer as KanbanColumnKey]: activeItems,
-            [overContainer as KanbanColumnKey]: overItems,
-        };
+      const activeItems = Array.from(prevColumns[activeContainer as KanbanColumnKey]);
+      const overItems = Array.from(prevColumns[overContainer as KanbanColumnKey]);
+      
+      const activeIndex = activeItems.findIndex(item => item.id === leadId);
+      const [movedItem] = activeItems.splice(activeIndex, 1);
+      
+      let overIndex = overItems.findIndex(item => item.id === over.id);
+      if (overIndex === -1 && over.id === overContainer) {
+        overIndex = overItems.length;
+      }
+  
+      overItems.splice(overIndex, 0, movedItem);
+  
+      return {
+        ...prevColumns,
+        [activeContainer as KanbanColumnKey]: activeItems,
+        [overContainer as KanbanColumnKey]: overItems,
+      };
     });
-
-
+  
     try {
       await updateLeadStatus(leadId, newStatus);
       // Update the lead's status in the main `leads` state
@@ -325,22 +337,54 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
         </KanbanOverlay>
       </Kanban>
       
-      <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
-        <DialogContent>
+      <Dialog open={noteDialogOpen} onOpenChange={(isOpen) => {
+          if (!isOpen) {
+              setNoteContent('');
+              setSelectedLead(null);
+          }
+          setNoteDialogOpen(isOpen);
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-                <DialogTitle>Add Note for {selectedLead?.name}</DialogTitle>
+                <DialogTitle>Notes for {selectedLead?.name}</DialogTitle>
+                <DialogDescription>View history and add a new note.</DialogDescription>
             </DialogHeader>
-            <div className='py-4'>
-                <Textarea 
-                    placeholder="Type your note here..." 
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    rows={4}
-                />
+            <div className='py-4 space-y-4'>
+                <div className='space-y-2'>
+                    <h4 className="text-sm font-medium">Add a new note</h4>
+                    <Textarea 
+                        placeholder="Type your note here..." 
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
+                        rows={3}
+                    />
+                </div>
+                 <div className='space-y-2'>
+                    <h4 className="text-sm font-medium">History</h4>
+                    <ScrollArea className="h-[200px] w-full rounded-md border p-3">
+                         {selectedLead?.notes && selectedLead.notes.length > 0 ? (
+                            <ul className="space-y-4">
+                            {[...selectedLead.notes].reverse().map((note, index) => (
+                                <li key={index} className="flex gap-3">
+                                    <MessageSquare className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-sm">{note.content}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {note.author_name} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-center text-muted-foreground py-4">No notes for this lead yet.</p>
+                        )}
+                    </ScrollArea>
+                </div>
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleNoteSubmit} disabled={isSubmittingNote}>
+                <Button onClick={handleNoteSubmit} disabled={isSubmittingNote || !noteContent.trim()}>
                     {isSubmittingNote ? "Adding..." : "Add Note"}
                 </Button>
             </DialogFooter>
