@@ -108,21 +108,27 @@ export default function LeadPrintPage() {
     }
 
     return (
-        <div className="bg-gray-100 min-h-screen p-4 md:p-8 print:bg-white print:p-0">
+        <div className="bg-gray-100 print:bg-white">
             <style jsx global>{`
                 @media print {
-                    .no-print {
+                    body > *:not(.printable-area) {
                         display: none !important;
                     }
-                    body {
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
+                    .printable-area {
+                        display: block !important;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                    }
+                    .no-print {
+                        display: none !important;
                     }
                 }
             `}</style>
             
-            <div className="max-w-4xl mx-auto">
-                <div className="no-print flex justify-between items-center mb-8">
+            <div className="printable-area max-w-4xl mx-auto p-4 md:p-8">
+                 <div className="no-print flex justify-between items-center mb-8">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Lead Details
@@ -133,7 +139,7 @@ export default function LeadPrintPage() {
                     </Button>
                 </div>
 
-                <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none">
+                <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border">
                     <header className="flex justify-between items-start pb-8 border-b">
                         <div>
                             <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
@@ -191,7 +197,7 @@ export default function LeadPrintPage() {
                                 {lead.notes && lead.notes.length > 0 ? (
                                     <div className="space-y-4 p-4">
                                         {[...lead.notes].reverse().map((note, index) => (
-                                            <div key={note.id || index} className="p-3 bg-gray-50 rounded-md">
+                                            <div key={note.id || index} className="p-3 bg-gray-50 rounded-md break-inside-avoid">
                                                 <p className="text-sm text-gray-800">{note.content}</p>
                                                 <p className="text-xs text-gray-500 mt-2 text-right">
                                                     - {note.author_name}, {format(new Date(note.created_at), 'PPpp')}
@@ -216,3 +222,4 @@ export default function LeadPrintPage() {
         </div>
     );
 }
+
