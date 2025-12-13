@@ -8,9 +8,10 @@ export type User = {
   role: Role;
 };
 
-export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost";
+export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost" | "Failed" | "On Board";
 
 export type Note = {
+  id?: string;
   content: string;
   author_id: string;
   author_name?: string;

@@ -6,13 +6,14 @@ import { Lead, User } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal, Phone } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Phone, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
-import { getUsers } from "@/lib/data"
+import { getUsers, initiateCall, deleteLead } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 async function getAssignedToUser(userId: string) {
     const users = await getUsers();
@@ -111,9 +112,46 @@ export const leadColumns: ColumnDef<Lead>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+      const { toast } = useToast();
+
+      const handleCall = async () => {
+        try {
+            // This is a placeholder for getting the current agent's number
+            const agentNumber = "1234567890";
+            await initiateCall(lead.id, agentNumber);
+            toast({
+                title: "Call Initiated",
+                description: `Calling ${lead.name}...`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Call Failed",
+                description: error.message,
+            });
+        }
+      };
+
+      const handleDelete = async () => {
+        try {
+            await deleteLead(lead.id);
+            toast({
+                title: "Lead Deleted",
+                description: `${lead.name} has been deleted.`,
+            });
+            // This is a way to trigger a re-fetch in the parent component
+            (table.options.meta as any)?.refreshData();
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Delete Failed",
+                description: error.message,
+            });
+        }
+      };
 
       return (
         <DropdownMenu>
@@ -125,22 +163,23 @@ export const leadColumns: ColumnDef<Lead>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(lead.email)}
-            >
-              Copy email address
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <a href={`tel:${lead.phone}`} className="flex items-center w-full">
-                <Phone className="mr-2 h-4 w-4" />
-                Call lead
-              </a>
-            </DropdownMenuItem>
             <DropdownMenuItem asChild>
                 <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
                     View lead details
                 </Link>
+            </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
+              Copy email address
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleCall}>
+              <Phone className="mr-2 h-4 w-4" />
+              Initiate Call
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Lead
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

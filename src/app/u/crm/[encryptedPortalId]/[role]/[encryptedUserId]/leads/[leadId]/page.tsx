@@ -1,19 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getLeadById, getUserById } from "@/lib/data";
+import { getLeadById, getUserById, getUsers, initiateCall, transferLead } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Edit, Mail, MessageSquare, Phone } from "lucide-react";
+import { ArrowLeft, Edit, Mail, MessageSquare, Phone, UserSwitch, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Lead, User } from "@/lib/types";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const DetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div className="grid grid-cols-3 gap-2">
@@ -30,55 +32,113 @@ export default function LeadDetailPage() {
     const [lead, setLead] = useState<Lead | null>(null);
     const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const [isTransferring, setTransferring] = useState(false);
+    const [isCalling, setCalling] = useState(false);
+    const [isTransferDialogOpen, setTransferDialogOpen] = useState(false);
+    const [users, setUsers] = useState<User[]>([]);
+    const [selectedAgent, setSelectedAgent] = useState<string>('');
 
     const handleLogout = useCallback(() => {
         logout();
         router.push('/');
     }, [router]);
 
-    useEffect(() => {
-        const fetchLeadDetails = async () => {
-            if (!params.leadId) return;
+    const fetchLeadDetails = useCallback(async () => {
+        if (!params.leadId) return;
 
-            try {
-                setLoading(true);
-                const fetchedLead = await getLeadById(params.leadId);
-                
-                if (fetchedLead) {
-                    setLead(fetchedLead);
-                    if (fetchedLead.agent_id) {
-                        const user = await getUserById(fetchedLead.agent_id);
-                        setAssignedUser(user);
-                    }
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Lead not found",
-                    });
+        try {
+            setLoading(true);
+            const fetchedLead = await getLeadById(params.leadId);
+            
+            if (fetchedLead) {
+                setLead(fetchedLead);
+                if (fetchedLead.agent_id) {
+                    const user = await getUserById(fetchedLead.agent_id);
+                    setAssignedUser(user);
                 }
-            } catch (error: any) {
-                console.error("Failed to fetch lead details", error);
-                if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                    toast({
-                        variant: "destructive",
-                        title: "Session Expired",
-                        description: "Your session has expired. Please log in again.",
-                    });
-                    handleLogout();
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Failed to fetch lead",
-                        description: error.message || "An unexpected error occurred.",
-                    });
-                }
-            } finally {
-                setLoading(false);
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Lead not found",
+                });
             }
-        };
-
-        fetchLeadDetails();
+        } catch (error: any) {
+            console.error("Failed to fetch lead details", error);
+            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                toast({
+                    variant: "destructive",
+                    title: "Session Expired",
+                    description: "Your session has expired. Please log in again.",
+                });
+                handleLogout();
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch lead",
+                    description: error.message || "An unexpected error occurred.",
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
     }, [params.leadId, toast, handleLogout]);
+
+    useEffect(() => {
+        fetchLeadDetails();
+    }, [fetchLeadDetails]);
+
+    useEffect(() => {
+        getUsers().then(setUsers);
+    }, []);
+
+    const availableAgents = useMemo(() => {
+        return users.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');
+    }, [users]);
+
+
+    const handleInitiateCall = async () => {
+        if (!lead) return;
+        setCalling(true);
+        try {
+            // This is a placeholder for getting the current agent's number
+            const agentNumber = "1234567890";
+            await initiateCall(lead.id, agentNumber);
+            toast({
+                title: "Call Initiated",
+                description: `A call is being connected to ${lead.name}.`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Initiate Call",
+                description: error.message,
+            });
+        } finally {
+            setCalling(false);
+        }
+    };
+    
+    const handleTransferLead = async () => {
+        if (!lead || !selectedAgent) return;
+        setTransferring(true);
+        try {
+            await transferLead(lead.id, selectedAgent);
+            toast({
+                title: "Lead Transferred",
+                description: `Lead has been successfully transferred.`,
+            });
+            await fetchLeadDetails(); // Re-fetch lead to show updated assignee
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Transfer Lead",
+                description: error.message,
+            });
+        } finally {
+            setTransferring(false);
+            setTransferDialogOpen(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -126,6 +186,45 @@ export default function LeadDetailPage() {
                 <h1 className="text-xl md:text-2xl font-semibold tracking-tight">{lead.name}</h1>
                 <Badge variant="outline" className="capitalize text-sm ml-2">{lead.status}</Badge>
                 <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling}>
+                        {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                        Call Lead
+                    </Button>
+                    <Dialog open={isTransferDialogOpen} onOpenChange={setTransferDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <UserSwitch className="mr-2 h-4 w-4" />
+                                Transfer
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Transfer Lead</DialogTitle>
+                                <DialogDescription>
+                                    Assign this lead to another agent.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <Select onValueChange={setSelectedAgent} defaultValue={lead.agent_id}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select an agent" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableAgents.map(agent => (
+                                            <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleTransferLead} disabled={isTransferring || !selectedAgent}>
+                                    {isTransferring && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Confirm Transfer
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                     <Button variant="outline" size="sm">
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
@@ -165,7 +264,7 @@ export default function LeadDetailPage() {
                             {lead.notes && lead.notes.length > 0 ? (
                                 <ul className="space-y-4">
                                 {lead.notes.map((note, index) => (
-                                    <li key={index} className="flex gap-3">
+                                    <li key={note.id || index} className="flex gap-3">
                                         <MessageSquare className="h-5 w-5 text-muted-foreground mt-1" />
                                         <div className="flex-1">
                                             <p className="text-sm">{note.content}</p>

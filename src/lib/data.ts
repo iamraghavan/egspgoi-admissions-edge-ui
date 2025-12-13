@@ -1,5 +1,3 @@
-
-
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource } from './types';
 import placeholderImages from './placeholder-images.json';
 import { subDays, subHours } from 'date-fns';
@@ -156,7 +154,11 @@ export const createLead = async (leadData: { name: string; email: string; phone:
     const response = await fetch(`${API_BASE_URL}/leads`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(leadData),
+        body: JSON.stringify({
+            ...leadData,
+            admission_year: new Date().getFullYear().toString(),
+            source_website: 'internal_dashboard'
+        }),
     });
 
     if (!response.ok) {
@@ -212,6 +214,46 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while updating lead status' }));
         throw new Error(errorData.message || 'Failed to update lead status');
+    }
+};
+
+export const initiateCall = async (leadId: string, agentNumber: string): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}/call`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ agent_number: agentNumber }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while initiating the call' }));
+        throw new Error(errorData.message || 'Failed to initiate call');
+    }
+    return response.json();
+};
+
+export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}/transfer`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ new_agent_id: newAgentId }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while transferring the lead' }));
+        throw new Error(errorData.message || 'Failed to transfer lead');
+    }
+    return response.json();
+};
+
+export const deleteLead = async (leadId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while deleting the lead' }));
+        throw new Error(errorData.message || 'Failed to delete lead');
     }
 };
 
@@ -314,5 +356,3 @@ export async function globalSearch(query: string): Promise<any[]> {
 
     return flattenedResults;
 }
-
-
