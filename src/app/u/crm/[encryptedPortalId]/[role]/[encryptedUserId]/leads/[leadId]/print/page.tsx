@@ -111,24 +111,27 @@ export default function LeadPrintPage() {
         <div className="bg-gray-100 print:bg-white">
             <style jsx global>{`
                 @media print {
-                    body > *:not(.printable-area) {
-                        display: none !important;
-                    }
-                    .printable-area {
-                        display: block !important;
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                    }
-                    .no-print {
-                        display: none !important;
-                    }
+                  body {
+                    background-color: white !important;
+                  }
+                  .no-print {
+                    display: none !important;
+                  }
+                  .printable-area {
+                    display: block !important;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    padding: 2rem;
+                    background-color: white;
+                  }
                 }
             `}</style>
             
-            <div className="max-w-4xl mx-auto p-4 md:p-8">
-                 <div className="no-print flex justify-between items-center mb-8">
+            <div className="max-w-4xl mx-auto p-4 md:p-8 no-print">
+                 <div className="flex justify-between items-center mb-8">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Lead Details
@@ -138,86 +141,86 @@ export default function LeadPrintPage() {
                         Print / Download PDF
                     </Button>
                 </div>
+            </div>
+            
+            <div className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border-none">
+                <header className="flex justify-between items-start pb-8 border-b">
+                    <div>
+                        <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
+                    </div>
+                    <div className="text-right">
+                        <h1 className="text-3xl font-bold text-gray-800">Lead Summary</h1>
+                        <p className="text-sm text-gray-500 mt-1">Lead ID: {lead.lead_reference_id}</p>
+                        <p className="text-sm text-gray-500">Generated on: {format(new Date(), 'PPpp')}</p>
+                    </div>
+                </header>
 
-                <div className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border">
-                    <header className="flex justify-between items-start pb-8 border-b">
+                <main className="mt-8">
+                    <div className="grid grid-cols-2 gap-8">
                         <div>
-                            <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
-                        </div>
-                        <div className="text-right">
-                            <h1 className="text-3xl font-bold text-gray-800">Lead Summary</h1>
-                            <p className="text-sm text-gray-500 mt-1">Lead ID: {lead.lead_reference_id}</p>
-                            <p className="text-sm text-gray-500">Generated on: {format(new Date(), 'PPpp')}</p>
-                        </div>
-                    </header>
-
-                    <main className="mt-8">
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <h2 className="text-lg font-semibold text-gray-700 mb-4">Lead Information</h2>
-                                <div className="space-y-4">
-                                    <PrintDetailItem label="Name" value={lead.name} />
-                                    <PrintDetailItem label="Email" value={lead.email} />
-                                    <PrintDetailItem label="Phone" value={lead.phone} />
-                                    <PrintDetailItem label="Location" value={`${lead.district}, ${lead.state}`} />
-                                    <PrintDetailItem label="Status" value={<Badge variant="outline" className="capitalize">{lead.status}</Badge>} />
-                                </div>
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-semibold text-gray-700 mb-4">Course Interest & Source</h2>
-                                <div className="space-y-4">
-                                    <PrintDetailItem label="College" value={lead.college} />
-                                    <PrintDetailItem label="Course" value={lead.course} />
-                                    <PrintDetailItem label="Admission Year" value={lead.admission_year} />
-                                    <PrintDetailItem label="Source Website" value={lead.source_website} />
-                                    <PrintDetailItem label="Date Created" value={format(new Date(lead.created_at), 'PPpp')} />
-                                </div>
+                            <h2 className="text-lg font-semibold text-gray-700 mb-4">Lead Information</h2>
+                            <div className="space-y-4">
+                                <PrintDetailItem label="Name" value={lead.name} />
+                                <PrintDetailItem label="Email" value={lead.email} />
+                                <PrintDetailItem label="Phone" value={lead.phone} />
+                                <PrintDetailItem label="Location" value={`${lead.district}, ${lead.state}`} />
+                                <PrintDetailItem label="Status" value={<Badge variant="outline" className="capitalize">{lead.status}</Badge>} />
                             </div>
                         </div>
-
-                         {assignedUser && (
-                            <div className="mt-8">
-                                <h2 className="text-lg font-semibold text-gray-700 mb-4">Assigned Agent</h2>
-                                 <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
-                                    <Avatar>
-                                        <AvatarImage src={assignedUser.avatarUrl} />
-                                        <AvatarFallback>{assignedUser.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-medium leading-none text-gray-800">{assignedUser.name}</p>
-                                        <p className="text-sm text-gray-500">{assignedUser.email}</p>
-                                    </div>
-                                </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-700 mb-4">Course Interest & Source</h2>
+                            <div className="space-y-4">
+                                <PrintDetailItem label="College" value={lead.college} />
+                                <PrintDetailItem label="Course" value={lead.course} />
+                                <PrintDetailItem label="Admission Year" value={lead.admission_year} />
+                                <PrintDetailItem label="Source Website" value={lead.source_website} />
+                                <PrintDetailItem label="Date Created" value={format(new Date(lead.created_at), 'PPpp')} />
                             </div>
-                        )}
+                        </div>
+                    </div>
 
+                     {assignedUser && (
                         <div className="mt-8">
-                            <h2 className="text-lg font-semibold text-gray-700 mb-4">Notes History</h2>
-                            <div className="border rounded-lg">
-                                {lead.notes && lead.notes.length > 0 ? (
-                                    <div className="space-y-4 p-4">
-                                        {[...lead.notes].reverse().map((note, index) => (
-                                            <div key={note.id || index} className="p-3 bg-gray-50 rounded-md break-inside-avoid">
-                                                <p className="text-sm text-gray-800">{note.content}</p>
-                                                <p className="text-xs text-gray-500 mt-2 text-right">
-                                                    - {note.author_name}, {format(new Date(note.created_at), 'PPpp')}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-center text-gray-500 py-8">No notes available for this lead.</p>
-                                )}
+                            <h2 className="text-lg font-semibold text-gray-700 mb-4">Assigned Agent</h2>
+                             <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
+                                <Avatar>
+                                    <AvatarImage src={assignedUser.avatarUrl} />
+                                    <AvatarFallback>{assignedUser.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium leading-none text-gray-800">{assignedUser.name}</p>
+                                    <p className="text-sm text-gray-500">{assignedUser.email}</p>
+                                </div>
                             </div>
                         </div>
-                    </main>
+                    )}
 
-                    <footer className="mt-12 pt-6 border-t">
-                        <p className="text-xs text-gray-500 text-center">
-                            This is a computer-generated document and does not require a physical signature.
-                        </p>
-                    </footer>
-                </div>
+                    <div className="mt-8">
+                        <h2 className="text-lg font-semibold text-gray-700 mb-4">Notes History</h2>
+                        <div className="border rounded-lg">
+                            {lead.notes && lead.notes.length > 0 ? (
+                                <div className="space-y-4 p-4">
+                                    {[...lead.notes].reverse().map((note, index) => (
+                                        <div key={note.id || index} className="p-3 bg-gray-50 rounded-md break-inside-avoid">
+                                            <p className="text-sm text-gray-800">{note.content}</p>
+                                            <p className="text-xs text-gray-500 mt-2 text-right">
+                                                - {note.author_name}, {format(new Date(note.created_at), 'PPpp')}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-center text-gray-500 py-8">No notes available for this lead.</p>
+                            )}
+                        </div>
+                    </div>
+                </main>
+
+                <footer className="mt-12 pt-6 border-t">
+                    <p className="text-xs text-gray-500 text-center">
+                        This is a computer-generated document and does not require a physical signature.
+                    </p>
+                </footer>
             </div>
         </div>
     );
