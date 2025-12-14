@@ -2,7 +2,7 @@
 
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ export default function CampaignsPage() {
     const { placeholderImages } = placeholderImagesData;
     const { toast } = useToast();
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleLogout = useCallback(() => {
         logout();
@@ -71,7 +72,7 @@ export default function CampaignsPage() {
         <div className="flex flex-col gap-8">
             <PageHeader title="Campaigns" description="Manage your marketing campaigns.">
                  <Button asChild>
-                    <Link href={`${router.asPath}/create`}>
+                    <Link href={`${pathname}/create`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Create Campaign
                     </Link>
