@@ -2,7 +2,7 @@
 
 import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, PaginatedLeadsResponse } from './types';
 import placeholderImages from './placeholder-images.json';
-import { subDays, subHours } from 'date-fns';
+import { subDays, subHours, format } from 'date-fns';
 import { getAuthHeaders, logout, getProfile } from './auth';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
@@ -379,15 +379,7 @@ export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status
     const response = await fetch(`${API_BASE_URL}/campaigns`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({
-            name: campaignData.name,
-            start_date: campaignData.startDate,
-            end_date: campaignData.endDate,
-            settings: {
-                budget_daily: campaignData.budget
-            },
-            status: 'draft'
-        }),
+        body: JSON.stringify(campaignData),
     });
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
