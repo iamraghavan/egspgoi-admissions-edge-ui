@@ -16,14 +16,6 @@ const users: User[] = [
   { id: '7260e815-6498-46e8-983b-338cb60f195a', name: 'Agent Smith', email: 'agent@example.com', avatarUrl: placeholderImages.placeholderImages.find(p => p.id === 'user-avatar-2')?.imageUrl || '', role: 'Admission Executive' },
 ];
 
-const campaigns: Campaign[] = [
-  { id: 'camp-1', name: 'Fall 2024 Undergrad', startDate: '2024-08-01T00:00:00Z', endDate: '2024-11-30T00:00:00Z', budget: 50000, status: 'Active', manager: 'user-3' },
-  { id: 'camp-2', name: 'Spring 2025 Grad Programs', startDate: '2024-12-01T00:00:00Z', endDate: '2025-03-31T00:00:00Z', budget: 75000, status: 'Planning', manager: 'user-3' },
-  { id: 'camp-4', name: 'Online MBA Launch', startDate: '2024-09-15T00:00:00Z', endDate: '2025-01-15T00:00:00Z', budget: 120000, status: 'Active', manager: 'user-3' },
-  { id: 'camp-5', name: 'Data Science Bootcamp', startDate: '2024-10-01T00:00:00Z', endDate: '2024-12-31T00:00:00Z', budget: 60000, status: 'Planning', manager: 'user-3' },
-  { id: 'camp-3', name: 'Summer Internships 2024', startDate: '2024-05-01T00:00:00Z', endDate: '2024-07-31T00:00:00Z', budget: 25000, status: 'Completed', manager: 'user-3' },
-];
-
 const calls: Call[] = [
   { id: 'call-1', leadId: 'lead-2', agentId: 'user-2', duration: 320, timestamp: subHours(new Date(), 26).toISOString(), recordingUrl: '#' },
   { id: 'call-2', leadId: 'lead-3', agentId: 'user-2', duration: 450, timestamp: subHours(new Date(), 49).toISOString(), recordingUrl: '#' },
@@ -253,7 +245,6 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 
 export const initiateCall = async (leadId: string): Promise<any> => {
     const profile = getProfile();
-    // Use agent's number from profile if available, otherwise use fallback
     const agentNumber = profile?.phone || "918064522110";
 
     const response = await fetch(`${API_BASE_URL}/leads/${leadId}/call`, {
@@ -297,8 +288,44 @@ export const deleteLead = async (leadId: string): Promise<void> => {
 
 
 export const getLeadById = async (id: string): Promise<Lead | undefined> => {
-    const { leads } = await getLeads();
-    return leads.find(lead => lead.id === id)
+    const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        let errorJson;
+        try {
+            errorJson = JSON.parse(errorText);
+        } catch (e) {
+            errorJson = { message: errorText || 'An unknown error occurred' };
+        }
+        
+        if (response.status === 401 || response.status === 403 || errorJson.message?.toLowerCase().includes("token")) {
+             throw new Error("Invalid or expired token");
+        }
+        throw new Error(errorJson.message || 'Failed to fetch lead');
+    }
+
+    const data = await response.json();
+
+    if (data && data.success && data.data) {
+        const lead = data.data;
+        return {
+            ...lead,
+            agent_id: lead.assigned_to,
+            created_at: parseCustomDate(lead.created_at),
+            last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
+            notes: (lead.notes || []).map((note: any) => ({
+                ...note,
+                author_name: note.author_name || 'Unknown',
+                created_at: parseCustomDate(note.created_at),
+            })),
+        };
+    }
+    
+    return undefined;
 };
 export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"]);
 export const getLeadsByStatus = async (status: LeadStatus): Promise<Lead[]> => {
@@ -306,8 +333,61 @@ export const getLeadsByStatus = async (status: LeadStatus): Promise<Lead[]> => {
     return leads.filter(lead => lead.status === status)
 };
 
-export const getCampaigns = async (): Promise<Campaign[]> => Promise.resolve(campaigns);
-export const getCampaignById = async (id: string): Promise<Campaign | undefined> => Promise.resolve(campaigns.find(c => c.id === id));
+export const getCampaigns = async (): Promise<Campaign[]> => {
+    const response = await fetch(`${API_BASE_URL}/campaigns`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        if (response.status === 401 || response.status === 403) throw new Error("Invalid or expired token");
+        throw new Error(errorData.message || 'Failed to fetch campaigns');
+    }
+    const result = await response.json();
+    return result.data.map((c: any) => ({
+        ...c,
+        startDate: c.start_date,
+        endDate: c.end_date
+    })) as Campaign[];
+};
+
+export const getCampaignById = async (id: string): Promise<Campaign | undefined> => {
+    const response = await fetch(`${API_BASE_URL}/campaigns/${id}`, {
+        headers: getAuthHeaders(),
+    });
+     if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        if (response.status === 401 || response.status === 403) throw new Error("Invalid or expired token");
+        throw new Error(errorData.message || 'Failed to fetch campaign');
+    }
+    const result = await response.json();
+    const campaign = result.data;
+    return {
+        ...campaign,
+        startDate: campaign.start_date,
+        endDate: campaign.end_date
+    }
+};
+
+export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status'>): Promise<Campaign> => {
+    const response = await fetch(`${API_BASE_URL}/campaigns`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            name: campaignData.name,
+            start_date: campaignData.startDate,
+            end_date: campaignData.endDate,
+            settings: {
+                budget_daily: campaignData.budget
+            },
+            status: 'draft'
+        }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Failed to create campaign');
+    }
+    return response.json();
+};
 
 export const getCalls = async (): Promise<Call[]> => Promise.resolve(calls);
 export const getLiveCalls = async (): Promise<LiveCall[]> => Promise.resolve(liveCalls);
@@ -328,10 +408,11 @@ export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Ad
 
 export const getDashboardStats = async () => {
   const { leads } = await getLeads();
+  const campaigns = await getCampaigns();
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return Promise.resolve({
     newLeads: newLeadsCount,
-    activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
+    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
     callsToday: calls.filter(c => new Date(c.timestamp) > subDays(new Date(), 1)).length,
     conversionRate: Math.floor(Math.random() * 5 + 18),
   });
