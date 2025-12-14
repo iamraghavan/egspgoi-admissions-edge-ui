@@ -23,6 +23,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -30,6 +31,7 @@ export default function CampaignsPage() {
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isSubmitting, setSubmitting] = useState(false);
     const [date, setDate] = useState<DateRange | undefined>();
+    const isMobile = useIsMobile();
 
     const { placeholderImages } = placeholderImagesData;
     const { toast } = useToast();
@@ -138,7 +140,7 @@ export default function CampaignsPage() {
                                         <Button
                                             id="date"
                                             variant={"outline"}
-                                            className={cn("w-[250px] justify-start text-left font-normal col-span-3", !date && "text-muted-foreground" )}
+                                            className={cn("w-full justify-start text-left font-normal col-span-3", !date && "text-muted-foreground" )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {date?.from ? (
@@ -159,7 +161,7 @@ export default function CampaignsPage() {
                                             defaultMonth={date?.from}
                                             selected={date}
                                             onSelect={setDate}
-                                            numberOfMonths={2}
+                                            numberOfMonths={isMobile ? 1 : 2}
                                         />
                                         </PopoverContent>
                                     </Popover>
