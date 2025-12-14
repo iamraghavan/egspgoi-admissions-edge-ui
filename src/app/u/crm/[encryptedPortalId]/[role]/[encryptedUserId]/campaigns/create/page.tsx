@@ -66,7 +66,7 @@ export default function CreateCampaignPage() {
             await createCampaign(payload as any);
             toast({ title: "Campaign Created", description: `${payload.name} has been successfully created.` });
             router.push(`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/campaigns`);
-        } catch (error: any) => {
+        } catch (error: any) {
             toast({ variant: "destructive", title: "Failed to create campaign", description: error.message });
         } finally {
             setSubmitting(false);
