@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import type { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 export default function CampaignsPage() {
@@ -30,6 +32,7 @@ export default function CampaignsPage() {
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isSubmitting, setSubmitting] = useState(false);
     const [date, setDate] = useState<DateRange | undefined>(undefined);
+    const isMobile = useIsMobile();
 
     const { placeholderImages } = placeholderImagesData;
     const { toast } = useToast();
@@ -165,7 +168,7 @@ export default function CampaignsPage() {
                                             defaultMonth={date?.from}
                                             selected={date}
                                             onSelect={setDate}
-                                            numberOfMonths={2}
+                                            numberOfMonths={isMobile ? 1 : 2}
                                           />
                                         </PopoverContent>
                                       </Popover>
