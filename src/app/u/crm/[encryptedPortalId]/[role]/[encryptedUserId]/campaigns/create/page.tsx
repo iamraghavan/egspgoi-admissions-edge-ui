@@ -7,19 +7,15 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createCampaign } from "@/lib/data";
-import { ArrowLeft, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import type { DateRange } from 'react-day-picker';
 import { format } from "date-fns";
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
+import { Calendar, type RangeValue } from '@/components/ui/calendar-1';
 
 const courseData = [
    { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Biomedical Engineering" },
@@ -31,10 +27,9 @@ export default function CreateCampaignPage() {
     const router = useRouter();
     const params = useParams();
     const { toast } = useToast();
-    const isMobile = useIsMobile();
     
     const [isSubmitting, setSubmitting] = useState(false);
-    const [date, setDate] = useState<DateRange | undefined>(undefined);
+    const [date, setDate] = useState<RangeValue | null>(null);
 
     const colleges = [...new Set(courseData.map(item => item['Institution Name']))];
 
@@ -43,42 +38,29 @@ export default function CreateCampaignPage() {
         setSubmitting(true);
 
         const formData = new FormData(event.currentTarget);
-        const campaignData = {
-            name: formData.get('name') as string,
-            type: formData.get('type') as string,
-            platform: formData.get('platform') as string,
-            institution: formData.get('institution') as string,
-            objective: formData.get('objective') as string,
-            kpi: formData.get('kpi') as string,
-            target_audience_age: formData.get('target_audience_age') as string,
-            target_audience_location: formData.get('target_audience_location') as string,
-            budget: Number(formData.get('budget')),
-            startDate: date?.from,
-            endDate: date?.to,
-        };
-
-        if (!campaignData.startDate || !campaignData.endDate) {
+        
+        if (!date?.start || !date.end) {
             toast({ variant: "destructive", title: "Please select a date range." });
             setSubmitting(false);
             return;
         }
 
         const payload = {
-            name: campaignData.name,
-            type: campaignData.type,
-            platform: campaignData.platform,
+            name: formData.get('name') as string,
+            type: formData.get('type') as string,
+            platform: formData.get('platform') as string,
             status: 'draft',
-            start_date: format(campaignData.startDate, 'yyyy-MM-dd'),
-            end_date: format(campaignData.endDate, 'yyyy-MM-dd'),
-            institution: campaignData.institution,
-            objective: campaignData.objective,
-            kpi: campaignData.kpi,
+            start_date: format(date.start, 'yyyy-MM-dd'),
+            end_date: format(date.end, 'yyyy-MM-dd'),
+            institution: formData.get('institution') as string,
+            objective: formData.get('objective') as string,
+            kpi: formData.get('kpi') as string,
             target_audience: {
-                age: campaignData.target_audience_age,
-                location: campaignData.target_audience_location,
+                age: formData.get('target_audience_age') as string,
+                location: formData.get('target_audience_location') as string,
             },
             settings: {
-                budget_daily: campaignData.budget,
+                budget_daily: Number(formData.get('budget')),
             }
         };
 
@@ -147,42 +129,7 @@ export default function CreateCampaignPage() {
                                 </div>
                                  <div className="space-y-2">
                                     <Label>Date Range</Label>
-                                     <Popover>
-                                        <PopoverTrigger asChild>
-                                          <Button
-                                            id="date"
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full justify-start text-left font-normal",
-                                              !date && "text-muted-foreground"
-                                            )}
-                                          >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date?.from ? (
-                                              date.to ? (
-                                                <>
-                                                  {format(date.from, "LLL dd, y")} -{" "}
-                                                  {format(date.to, "LLL dd, y")}
-                                                </>
-                                              ) : (
-                                                format(date.from, "LLL dd, y")
-                                              )
-                                            ) : (
-                                              <span>Pick a date range</span>
-                                            )}
-                                          </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                          <Calendar
-                                            initialFocus
-                                            mode="range"
-                                            defaultMonth={date?.from}
-                                            selected={date}
-                                            onSelect={setDate}
-                                            numberOfMonths={isMobile ? 1 : 2}
-                                          />
-                                        </PopoverContent>
-                                      </Popover>
+                                     <Calendar allowClear value={date} onChange={setDate} />
                                 </div>
                             </div>
                             
@@ -235,4 +182,3 @@ export default function CreateCampaignPage() {
         </div>
     );
 }
-
