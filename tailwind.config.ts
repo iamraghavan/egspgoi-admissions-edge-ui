@@ -76,11 +76,35 @@ export default {
             height: '0',
           },
         },
+        'fade-spin': {
+          '0%': {
+            opacity: '1',
+          },
+          '100%': {
+            opacity: '0.15',
+          },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-spin': 'fade-spin 1.2s linear infinite',
       },
+      boxShadow: {
+        'error-input': 'var(--shadow-error-input)',
+        'error-input-hover': 'var(--shadow-error-input-hover)',
+        'focus-input': 'var(--shadow-focus-input)',
+        'focus-ring': 'var(--shadow-focus-ring)',
+        'border-small': 'var(--shadow-border-small)',
+        'border': 'var(--shadow-border)',
+        'border-medium': 'var(--shadow-border-medium)',
+        'border-large': 'var(--shadow-border-large)',
+        'tooltip': 'var(--shadow-tooltip)',
+        'menu': 'var(--shadow-menu)',
+        'modal': 'var(--shadow-modal)',
+        'fullscreen': 'var(--shadow-fullscreen)',
+        'focus-calendar-date': 'var(--shadow-focus-calendar-date)',
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],

@@ -6,7 +6,7 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCampaigns, createCampaign } from "@/lib/data";
-import { PlusCircle, Calendar, DollarSign, Loader2 } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, DollarSign, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import placeholderImagesData from "@/lib/placeholder-images.json";
@@ -18,20 +18,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { DateRange } from 'react-day-picker';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Calendar } from "@/components/ui/calendar-1";
+import type { RangeValue } from "@/components/ui/calendar-1";
+
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isSubmitting, setSubmitting] = useState(false);
-    const [date, setDate] = useState<DateRange | undefined>();
-    const isMobile = useIsMobile();
+    const [date, setDate] = useState<RangeValue | null>(null);
 
     const { placeholderImages } = placeholderImagesData;
     const { toast } = useToast();
@@ -85,8 +81,8 @@ export default function CampaignsPage() {
         const newCampaignData = {
             name: formData.get('name') as string,
             budget: Number(formData.get('budget')),
-            startDate: date?.from?.toISOString() ?? '',
-            endDate: date?.to?.toISOString() ?? '',
+            startDate: date?.start?.toISOString() ?? '',
+            endDate: date?.end?.toISOString() ?? '',
         };
 
         if (!newCampaignData.startDate || !newCampaignData.endDate) {
@@ -104,7 +100,7 @@ export default function CampaignsPage() {
         } finally {
             setSubmitting(false);
             setCreateOpen(false);
-            setDate(undefined);
+            setDate(null);
         }
     }
 
@@ -135,36 +131,9 @@ export default function CampaignsPage() {
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label className="text-right">Date Range</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <Button
-                                            id="date"
-                                            variant={"outline"}
-                                            className={cn("w-full justify-start text-left font-normal col-span-3", !date && "text-muted-foreground" )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date?.from ? (
-                                            date.to ? (
-                                                <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</>
-                                            ) : (
-                                                format(date.from, "LLL dd, y")
-                                            )
-                                            ) : (
-                                            <span>Pick a date range</span>
-                                            )}
-                                        </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                            initialFocus
-                                            mode="range"
-                                            defaultMonth={date?.from}
-                                            selected={date}
-                                            onSelect={setDate}
-                                            numberOfMonths={isMobile ? 1 : 2}
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <div className='col-span-3'>
+                                        <Calendar value={date} onChange={setDate} allowClear />
+                                    </div>
                                 </div>
                             </div>
                              <DialogFooter>
@@ -211,7 +180,7 @@ export default function CampaignsPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground space-y-2 mt-4">
                                         <div className="flex items-center">
-                                            <Calendar className="w-4 h-4 mr-2" />
+                                            <CalendarIcon className="w-4 h-4 mr-2" />
                                             <span>{format(new Date(campaign.startDate), 'LLL dd, y')} - {format(new Date(campaign.endDate), 'LLL dd, y')}</span>
                                         </div>
                                         <div className="flex items-center">
