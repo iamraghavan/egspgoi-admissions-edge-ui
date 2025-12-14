@@ -18,8 +18,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from "@/components/ui/calendar-1";
-import type { RangeValue } from "@/components/ui/calendar-1";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import type { DateRange } from 'react-day-picker';
+import { cn } from '@/lib/utils';
 
 
 export default function CampaignsPage() {
@@ -27,7 +29,7 @@ export default function CampaignsPage() {
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isSubmitting, setSubmitting] = useState(false);
-    const [date, setDate] = useState<RangeValue | null>(null);
+    const [date, setDate] = useState<DateRange | undefined>(undefined);
 
     const { placeholderImages } = placeholderImagesData;
     const { toast } = useToast();
@@ -81,8 +83,8 @@ export default function CampaignsPage() {
         const newCampaignData = {
             name: formData.get('name') as string,
             budget: Number(formData.get('budget')),
-            startDate: date?.start?.toISOString() ?? '',
-            endDate: date?.end?.toISOString() ?? '',
+            startDate: date?.from?.toISOString() ?? '',
+            endDate: date?.to?.toISOString() ?? '',
         };
 
         if (!newCampaignData.startDate || !newCampaignData.endDate) {
@@ -100,7 +102,7 @@ export default function CampaignsPage() {
         } finally {
             setSubmitting(false);
             setCreateOpen(false);
-            setDate(null);
+            setDate(undefined);
         }
     }
 
@@ -131,9 +133,42 @@ export default function CampaignsPage() {
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label className="text-right">Date Range</Label>
-                                    <div className='col-span-3'>
-                                        <Calendar value={date} onChange={setDate} allowClear />
-                                    </div>
+                                     <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            id="date"
+                                            variant={"outline"}
+                                            className={cn(
+                                              "col-span-3 justify-start text-left font-normal",
+                                              !date && "text-muted-foreground"
+                                            )}
+                                          >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date?.from ? (
+                                              date.to ? (
+                                                <>
+                                                  {format(date.from, "LLL dd, y")} -{" "}
+                                                  {format(date.to, "LLL dd, y")}
+                                                </>
+                                              ) : (
+                                                format(date.from, "LLL dd, y")
+                                              )
+                                            ) : (
+                                              <span>Pick a date</span>
+                                            )}
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                          <Calendar
+                                            initialFocus
+                                            mode="range"
+                                            defaultMonth={date?.from}
+                                            selected={date}
+                                            onSelect={setDate}
+                                            numberOfMonths={2}
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
                                 </div>
                             </div>
                              <DialogFooter>

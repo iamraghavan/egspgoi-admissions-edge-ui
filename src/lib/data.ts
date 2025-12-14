@@ -288,41 +288,46 @@ export const deleteLead = async (leadId: string): Promise<void> => {
 
 
 export const getLeadById = async (id: string): Promise<Lead | undefined> => {
-    const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        let errorJson;
-        try {
-            errorJson = JSON.parse(errorText);
-        } catch (e) {
-            errorJson = { message: errorText || 'An unknown error occurred' };
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorJson;
+            try {
+                errorJson = JSON.parse(errorText);
+            } catch (e) {
+                errorJson = { message: errorText || 'An unknown error occurred' };
+            }
+            
+            if (response.status === 401 || response.status === 403 || errorJson.message?.toLowerCase().includes("token")) {
+                 throw new Error("Invalid or expired token");
+            }
+            throw new Error(errorJson.message || 'Failed to fetch lead');
         }
-        
-        if (response.status === 401 || response.status === 403 || errorJson.message?.toLowerCase().includes("token")) {
-             throw new Error("Invalid or expired token");
+
+        const data = await response.json();
+
+        if (data && data.success && data.data) {
+            const lead = data.data;
+            return {
+                ...lead,
+                agent_id: lead.assigned_to,
+                created_at: parseCustomDate(lead.created_at),
+                last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
+                notes: (lead.notes || []).map((note: any) => ({
+                    ...note,
+                    author_name: note.author_name || 'Unknown',
+                    created_at: parseCustomDate(note.created_at),
+                })),
+            };
         }
-        throw new Error(errorJson.message || 'Failed to fetch lead');
-    }
-
-    const data = await response.json();
-
-    if (data && data.success && data.data) {
-        const lead = data.data;
-        return {
-            ...lead,
-            agent_id: lead.assigned_to,
-            created_at: parseCustomDate(lead.created_at),
-            last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
-            notes: (lead.notes || []).map((note: any) => ({
-                ...note,
-                author_name: note.author_name || 'Unknown',
-                created_at: parseCustomDate(note.created_at),
-            })),
-        };
+    } catch (error) {
+        console.error("Error in getLeadById:", error);
+        throw error;
     }
     
     return undefined;
@@ -346,7 +351,8 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
     return result.data.map((c: any) => ({
         ...c,
         startDate: c.start_date,
-        endDate: c.end_date
+        endDate: c.end_date,
+        budget: c.settings?.budget_daily || 0,
     })) as Campaign[];
 };
 
@@ -364,7 +370,8 @@ export const getCampaignById = async (id: string): Promise<Campaign | undefined>
     return {
         ...campaign,
         startDate: campaign.start_date,
-        endDate: campaign.end_date
+        endDate: campaign.end_date,
+        budget: campaign.settings?.budget_daily || 0,
     }
 };
 
@@ -386,7 +393,14 @@ export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status
         const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
         throw new Error(errorData.message || 'Failed to create campaign');
     }
-    return response.json();
+    const result = await response.json();
+    const campaign = result.data;
+    return {
+        ...campaign,
+        startDate: campaign.start_date,
+        endDate: campaign.end_date,
+        budget: campaign.settings?.budget_daily || 0,
+    }
 };
 
 export const getCalls = async (): Promise<Call[]> => Promise.resolve(calls);
@@ -471,3 +485,4 @@ export async function globalSearch(query: string): Promise<any[]> {
     
 
     
+
