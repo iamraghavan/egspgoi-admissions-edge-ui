@@ -8,7 +8,7 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createCampaign } from "@/lib/data";
-import { ArrowLeft, Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,88 +17,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { DateRange } from 'react-day-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
+import { courseData } from '@/lib/course-data';
 
-
-const courseData = [
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Biomedical Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Civil Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Computer Science and Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Electronics and Communication Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Electrical and Electronics Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.E", "Course / Specialization": "Mechanical Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.Tech", "Course / Specialization": "Artificial Intelligence and Data Science" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.Tech", "Course / Specialization": "Computer Science and Business Systems" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "UG", "Degree/Level": "B.Tech", "Course / Specialization": "Information Technology" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "M.E / M.Tech", "Course / Specialization": "Communication Systems" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "M.E / M.Tech", "Course / Specialization": "Computer Science and Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "M.E / M.Tech", "Course / Specialization": "Environmental Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "M.E / M.Tech", "Course / Specialization": "Power Electronics and Drives" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "M.E / M.Tech", "Course / Specialization": "Manufacturing Engineering" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "MCA", "Course / Specialization": "Master of Computer Application" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "PG", "Degree/Level": "MBA", "Course / Specialization": "Master of Business Administration" },
-   { "Institution Name": "E.G.S. Pillay Engineering College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "All Departments" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.A", "Course / Specialization": "Tamil" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.A", "Course / Specialization": "English" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.A", "Course / Specialization": "Defense and Strategic Studies" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Com", "Course / Specialization": "General" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Com", "Course / Specialization": "Computer Application" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Com", "Course / Specialization": "Professional Accounting" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Com", "Course / Specialization": "Business Process Service" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.B.A", "Course / Specialization": "Business Administration" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.C.A", "Course / Specialization": "Computer Applications" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Computer Science" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Computer Science with Cognitive System" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Information Technology" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Visual Communication" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Fashion Technology & Costume Designing" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Physics" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Maths" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Chemistry" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Biochemistry" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Biotechnology" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Nutrition & Dietetics" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Hospital Administration" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Data Science" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Microbiology" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Artificial Intelligence & Machine Learning" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Com", "Course / Specialization": "Commerce" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.B.A", "Course / Specialization": "Business Administration" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.A", "Course / Specialization": "English" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Computer Science" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Information Technology" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Physics" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Maths" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Chemistry" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Biochemistry" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Biotechnology" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "PG", "Degree/Level": "M.Sc", "Course / Specialization": "Food Science & Nutrition" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "English" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Physics" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Commerce" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Management" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Computer Science" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Biochemistry" },
-   { "Institution Name": "Edayathangudy G. S. Pillay Arts & Science College", "Category": "Ph.D", "Degree/Level": "Ph.D", "Course / Specialization": "Biotechnology" },
-   { "Institution Name": "EGS Pillay Polytechnic College", "Category": "Diploma", "Degree/Level": "Diploma", "Course / Specialization": "Civil Engineering" },
-   { "Institution Name": "EGS Pillay Polytechnic College", "Category": "Diploma", "Degree/Level": "Diploma", "Course / Specialization": "Computer Science and Engineering" },
-   { "Institution Name": "EGS Pillay Polytechnic College", "Category": "Diploma", "Degree/Level": "Diploma", "Course / Specialization": "Electronics and Communication Engineering" },
-   { "Institution Name": "EGS Pillay Polytechnic College", "Category": "Diploma", "Degree/Level": "Diploma", "Course / Specialization": "Electrical and Electronics Engineering" },
-   { "Institution Name": "EGS Pillay Polytechnic College", "Category": "Diploma", "Degree/Level": "Diploma", "Course / Specialization": "Mechanical Engineering" },
-   { "Institution Name": "EGS Pillay School & College of Nursing", "Category": "UG", "Degree/Level": "B.Sc", "Course / Specialization": "Nursing" },
-   { "Institution Name": "EGS Pillay School & College of Nursing", "Category": "Diploma", "Degree/Level": "DGNM", "Course / Specialization": "Diploma in General Nursing and Midwifery" },
-   { "Institution Name": "EGS Pillay College of Pharmacy", "Category": "Diploma", "Degree/Level": "D. Pharm", "Course / Specialization": "Pharmacy" },
-   { "Institution Name": "EGS Pillay College of Pharmacy", "Category": "UG", "Degree/Level": "B. Pharm", "Course / Specialization": "Pharmacy" },
-   { "Institution Name": "EGS Pillay College of Pharmacy", "Category": "Doctorate", "Degree/Level": "Pharm. D", "Course / Specialization": "Doctor of Pharmacy" },
-   { "Institution Name": "EGS Pillay College of Pharmacy", "Category": "PG", "Degree/Level": "M. Pharm", "Course / Specialization": "Pharmacy" },
-   { "Institution Name": "EGS Pillay Naturopathy & Yoga Medical College", "Category": "UG", "Degree/Level": "-", "Course / Specialization": "BNYS" },
-   { "Institution Name": "EGS Pillay College of Education", "Category": "UG", "Degree/Level": "B.Ed", "Course / Specialization": "All Subjects" },
-   { "Institution Name": "EGS Pillay School", "Category": "School", "Degree/Level": "-", "Course / Specialization": "International School" },
-   { "Institution Name": "EGS Pillay School", "Category": "School", "Degree/Level": "-", "Course / Specialization": "Matriculation School" },
-   { "Institution Name": "EGS Pillay School", "Category": "School", "Degree/Level": "-", "Course / Specialization": "Nursery and Primary School" }
-];
 
 export default function CreateCampaignPage() {
     const router = useRouter();
@@ -145,7 +66,7 @@ export default function CreateCampaignPage() {
             await createCampaign(payload as any);
             toast({ title: "Campaign Created", description: `${payload.name} has been successfully created.` });
             router.push(`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/campaigns`);
-        } catch (error: any) {
+        } catch (error: any) => {
             toast({ variant: "destructive", title: "Failed to create campaign", description: error.message });
         } finally {
             setSubmitting(false);
@@ -206,42 +127,7 @@ export default function CreateCampaignPage() {
                                 </div>
                                  <div className="space-y-2">
                                     <Label>Date Range</Label>
-                                     <Popover>
-                                        <PopoverTrigger asChild>
-                                        <Button
-                                            id="date"
-                                            variant={"outline"}
-                                            className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !date && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date?.from ? (
-                                            date.to ? (
-                                                <>
-                                                {format(date.from, "LLL dd, y")} -{" "}
-                                                {format(date.to, "LLL dd, y")}
-                                                </>
-                                            ) : (
-                                                format(date.from, "LLL dd, y")
-                                            )
-                                            ) : (
-                                            <span>Pick a date</span>
-                                            )}
-                                        </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            initialFocus
-                                            mode="range"
-                                            defaultMonth={date?.from}
-                                            selected={date}
-                                            onSelect={setDate}
-                                            numberOfMonths={2}
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <DropdownRangeDatePicker selected={date} onSelect={setDate} />
                                 </div>
                             </div>
                             
