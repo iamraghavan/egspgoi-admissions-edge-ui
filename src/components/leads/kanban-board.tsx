@@ -17,8 +17,8 @@ import {
   KanbanOverlay,
   type KanbanMoveEvent,
 } from '@/components/ui/kanban';
-import { Button } from '@/components/ui/button-1';
-import { Badge } from '@/components/ui/badge-2';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -104,8 +104,7 @@ function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, onNavigate, isCal
         </p>
         <div className="flex items-center justify-between text-muted-foreground mt-2">
             <Badge
-                variant={lead.priority === 'high' ? 'destructive' : lead.priority === 'medium' ? 'primary' : 'warning'}
-                appearance="outline"
+                variant={lead.priority === 'high' ? 'destructive' : lead.priority === 'medium' ? 'default' : 'secondary'}
                 className="pointer-events-none h-5 rounded-sm px-1.5 text-[11px] capitalize shrink-0"
             >
                 {lead.priority}
@@ -162,7 +161,7 @@ function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, onNavi
               <Badge variant="secondary">{leads.length}</Badge>
             </div>
             <KanbanColumnHandle asChild>
-              <Button variant="ghost" size="sm" mode="icon" className="size-7">
+              <Button variant="ghost" size="sm" className="size-7">
                 <GripVertical className="size-4" />
               </Button>
             </KanbanColumnHandle>
@@ -447,3 +446,4 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     
 
     
+
