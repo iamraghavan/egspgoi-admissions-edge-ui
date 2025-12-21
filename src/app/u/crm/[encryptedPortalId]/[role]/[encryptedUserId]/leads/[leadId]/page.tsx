@@ -50,7 +50,6 @@ export default function LeadDetailPage() {
                 });
             }
         } catch (error: any) {
-            console.error("Failed to fetch lead details", error);
             if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
                 toast({
                     variant: "destructive",
