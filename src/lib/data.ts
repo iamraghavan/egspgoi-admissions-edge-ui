@@ -474,7 +474,49 @@ export async function globalSearch(query: string): Promise<any[]> {
     return flattenedResults;
 }
 
+
+// Smartflo API integrations
+export const hangupCall = async (callId: string): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/smartflo/call/hangup`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ call_id: callId }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Failed to hang up call');
+    }
+    return response.json();
+};
+
+type GetCallRecordsParams = {
+  from_date: string;
+  to_date: string;
+  call_direction?: 'inbound' | 'outbound';
+  agent_name?: string;
+  page?: number;
+};
+
+export const getCallRecords = async (params: GetCallRecordsParams): Promise<any> => {
+    const url = new URL(`${API_BASE_URL}/smartflo/call/records`);
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+            url.searchParams.append(key, value.toString());
+        }
+    });
+
+    const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Failed to fetch call records');
+    }
+    return response.json();
+};
     
 
     
+
 

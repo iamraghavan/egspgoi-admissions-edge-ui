@@ -1,24 +1,156 @@
+
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { DateRange } from 'react-day-picker';
 import PageHeader from "@/components/page-header";
-import LiveCallCard from "@/components/calls/live-call-card";
-import { getLiveCalls } from "@/lib/data";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DataTable from '@/components/leads/data-table';
+import { callRecordsColumns } from '@/components/calls/records-columns';
+import { Button } from '@/components/ui/button';
+import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { RefreshCw } from 'lucide-react';
+import { getCallRecords, getUsers } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import { logout } from '@/lib/auth';
+import HangupForm from '@/components/calls/hangup-form';
+import type { User } from '@/lib/types';
+import { format } from 'date-fns';
 
-export default async function CallMonitoringPage() {
-    const liveCalls = await getLiveCalls();
+export default function CallMonitoringPage() {
+    const [records, setRecords] = useState([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [direction, setDirection] = useState<'inbound' | 'outbound' | ''>('');
+    const [agent, setAgent] = useState('');
+    const [page, setPage] = useState(1);
+    const [canLoadMore, setCanLoadMore] = useState(false);
+    
+    const { toast } = useToast();
+    const router = useRouter();
 
+    const handleLogout = useCallback(() => {
+        logout();
+        router.push('/');
+    }, [router]);
+    
+    const fetchRecords = useCallback(async (isNewSearch = false) => {
+        setLoading(true);
+        try {
+            const params: any = { page: isNewSearch ? 1 : page };
+            if (dateRange?.from) params.from_date = format(dateRange.from, 'yyyy-MM-dd');
+            if (dateRange?.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd');
+            if (direction) params.call_direction = direction;
+            if (agent) params.agent_name = agent;
+
+            const response = await getCallRecords(params);
+            
+            if(response.success) {
+                setRecords(isNewSearch ? response.data : [...records, ...response.data]);
+                setCanLoadMore(response.data.length > 0 && response.meta?.has_next_page);
+                 if (isNewSearch) setPage(2);
+                 else setPage(prev => prev + 1);
+            } else {
+                 throw new Error(response.message || 'Failed to fetch records');
+            }
+        } catch (error: any) {
+             if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
+                handleLogout();
+            } else {
+                toast({ variant: "destructive", title: "Failed to fetch records", description: error.message });
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [page, dateRange, direction, agent, toast, handleLogout, records]);
+
+    useEffect(() => {
+        getUsers().then(setUsers);
+    }, []);
+
+    const handleSearch = () => {
+        setRecords([]); // Clear old records
+        setPage(1); // Reset page
+        fetchRecords(true);
+    }
+    
     return (
-        <div>
-            <PageHeader title="Live Call Monitoring" description="Monitor active calls in real-time." />
-            {liveCalls.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {liveCalls.map((call) => (
-                        <LiveCallCard key={call.callId} call={call} />
-                    ))}
-                </div>
-            ) : (
-                <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
-                    <p className="text-muted-foreground">No active calls right now.</p>
-                </div>
-            )}
+        <div className="flex flex-col gap-8">
+            <PageHeader title="Smartflo Call Management" description="Monitor calls and manage call records." />
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Call Controls</CardTitle>
+                    <CardDescription>Use the form below to manually hang up an active call.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <HangupForm />
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Call Records</CardTitle>
+                    <CardDescription>Review and filter through past call records.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-wrap items-end gap-4 mb-6">
+                        <div className="grid w-full max-w-xs items-center gap-1.5">
+                            <label className="text-sm font-medium">Date Range</label>
+                            <DropdownRangeDatePicker selected={dateRange} onSelect={setDateRange} />
+                        </div>
+                         <div className="grid w-full max-w-xs items-center gap-1.5">
+                            <label className="text-sm font-medium">Call Direction</label>
+                             <Select onValueChange={(val: any) => setDirection(val)} value={direction}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Directions" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">All</SelectItem>
+                                    <SelectItem value="inbound">Inbound</SelectItem>
+                                    <SelectItem value="outbound">Outbound</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid w-full max-w-xs items-center gap-1.5">
+                            <label className="text-sm font-medium">Agent</label>
+                            <Select onValueChange={setAgent} value={agent}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Agents" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">All</SelectItem>
+                                    {users.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex gap-2">
+                             <Button onClick={handleSearch} disabled={loading}>
+                                {loading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                                Search
+                            </Button>
+                            <Button variant="outline" onClick={() => fetchRecords(true)} disabled={loading}>
+                                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+                    <DataTable 
+                        columns={callRecordsColumns} 
+                        data={records}
+                        searchKey="call_id" // Not used for filtering, but required by component
+                        searchPlaceholder="Filter by ID..." // Not used
+                        onLoadMore={() => fetchRecords()}
+                        canLoadMore={canLoadMore}
+                        isFetchingMore={loading && page > 1}
+                    />
+                </CardContent>
+            </Card>
         </div>
     );
 }
