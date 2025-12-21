@@ -1,3 +1,4 @@
+
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,16 +29,16 @@ export default async function AccountingPage() {
           <DataTable 
             columns={paymentsColumns} 
             data={payments}
-            searchKey="id"
-            searchPlaceholder="Filter by ID..."
+            searchKey="date"
+            searchPlaceholder="Filter by date..."
           />
         </TabsContent>
         <TabsContent value="adspends" className="mt-6">
           <DataTable 
             columns={adSpendsColumns} 
             data={adSpends}
-            searchKey="id"
-            searchPlaceholder="Filter by ID..."
+            searchKey="platform"
+            searchPlaceholder="Filter by platform..."
           />
         </TabsContent>
       </Tabs>

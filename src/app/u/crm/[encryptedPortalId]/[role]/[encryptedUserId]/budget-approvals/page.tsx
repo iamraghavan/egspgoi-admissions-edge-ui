@@ -1,3 +1,4 @@
+
 import PageHeader from "@/components/page-header";
 import DataTable from "@/components/leads/data-table";
 import { budgetColumns } from "@/components/budgets/columns";
@@ -32,24 +33,24 @@ export default async function BudgetApprovalsPage() {
                     <DataTable 
                         columns={budgetColumns} 
                         data={pendingRequests as BudgetRequest[]} 
-                        searchKey="id"
-                        searchPlaceholder="Filter by ID..."
+                        searchKey="campaignId"
+                        searchPlaceholder="Filter by campaign..."
                     />
                 </TabsContent>
                 <TabsContent value="my-requests" className="mt-6">
                     <DataTable 
                         columns={budgetColumns} 
                         data={myRequests as BudgetRequest[]}
-                        searchKey="id"
-                        searchPlaceholder="Filter by ID..."
+                        searchKey="campaignId"
+                        searchPlaceholder="Filter by campaign..."
                     />
                 </TabsContent>
                 <TabsContent value="all" className="mt-6">
                     <DataTable 
                         columns={budgetColumns} 
                         data={allRequests as BudgetRequest[]}
-                        searchKey="id"
-                        searchPlaceholder="Filter by ID..."
+                        searchKey="campaignId"
+                        searchPlaceholder="Filter by campaign..."
                     />
                 </TabsContent>
             </Tabs>
