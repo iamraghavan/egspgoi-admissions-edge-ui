@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -26,8 +25,8 @@ export default function CallMonitoringPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
-    const [direction, setDirection] = useState<'inbound' | 'outbound' | ''>('');
-    const [agent, setAgent] = useState('');
+    const [direction, setDirection] = useState<'inbound' | 'outbound' | 'all'>('all');
+    const [agent, setAgent] = useState('all');
     const [page, setPage] = useState(1);
     const [canLoadMore, setCanLoadMore] = useState(false);
     
@@ -45,8 +44,8 @@ export default function CallMonitoringPage() {
             const params: any = { page: isNewSearch ? 1 : page };
             if (dateRange?.from) params.from_date = format(dateRange.from, 'yyyy-MM-dd');
             if (dateRange?.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd');
-            if (direction) params.call_direction = direction;
-            if (agent) params.agent_name = agent;
+            if (direction && direction !== 'all') params.call_direction = direction;
+            if (agent && agent !== 'all') params.agent_name = agent;
 
             const response = await getCallRecords(params);
             
@@ -112,7 +111,7 @@ export default function CallMonitoringPage() {
                                     <SelectValue placeholder="All Directions" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">All</SelectItem>
+                                    <SelectItem value="all">All</SelectItem>
                                     <SelectItem value="inbound">Inbound</SelectItem>
                                     <SelectItem value="outbound">Outbound</SelectItem>
                                 </SelectContent>
@@ -125,7 +124,7 @@ export default function CallMonitoringPage() {
                                     <SelectValue placeholder="All Agents" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">All</SelectItem>
+                                    <SelectItem value="all">All</SelectItem>
                                     {users.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
