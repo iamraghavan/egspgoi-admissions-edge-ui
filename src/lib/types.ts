@@ -7,6 +7,7 @@ export type UserPreferences = {
   language: 'en' | 'es' | 'fr';
   timezone: string;
   theme: 'light' | 'dark' | 'system';
+  date_format: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY/MM/DD';
 };
 
 export type User = {

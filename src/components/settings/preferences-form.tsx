@@ -19,6 +19,7 @@ const preferencesSchema = z.object({
   language: z.enum(['en', 'es', 'fr']),
   timezone: z.string().min(1, { message: 'Timezone is required.' }),
   theme: z.enum(['light', 'dark', 'system']),
+  date_format: z.enum(['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD']),
 });
 
 const timezones = [
@@ -49,6 +50,7 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
       language: user.preferences?.language || 'en',
       timezone: user.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       theme: user.preferences?.theme || 'system',
+      date_format: user.preferences?.date_format || 'DD/MM/YYYY',
     },
   });
 
@@ -94,7 +96,7 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FormField
                 control={form.control}
                 name="currency"
@@ -156,6 +158,28 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
                             {timezones.filter(tz => tz !== detectedTimezone).map(tz => (
                                 <SelectItem key={tz} value={tz}>{tz}</SelectItem>
                             ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
+                name="date_format"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Date Format</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select date format" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                            <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                            <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />

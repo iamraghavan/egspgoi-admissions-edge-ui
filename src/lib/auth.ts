@@ -109,7 +109,7 @@ export function getProfile(): UserProfile | null {
     return null;
 }
 
-export async function updateUserSettings(payload: { preferences: UserPreferences }): Promise<User> {
+export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/users/auth/settings`, {
         method: 'PUT',
         headers: getAuthHeaders(),
@@ -126,19 +126,23 @@ export async function updateUserSettings(payload: { preferences: UserPreferences
         throw new Error(errorData.message || 'Failed to update settings');
     }
 
-    const updatedUser = await response.json();
+    const { settings } = await response.json();
 
     // Update local storage
     if (typeof window !== 'undefined') {
         const storedUser = localStorage.getItem('userProfile');
         if (storedUser) {
             const userProfile = JSON.parse(storedUser);
-            userProfile.preferences = updatedUser.preferences;
+            // The API returns a `settings` object, which corresponds to `preferences` in our frontend model.
+            userProfile.preferences = { ...userProfile.preferences, ...settings };
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            return userProfile;
         }
     }
     
-    return updatedUser;
+    // This part should ideally not be reached if a user is logged in
+    const currentUser = getProfile();
+    return { ...currentUser, preferences: settings } as User;
 }
 
 

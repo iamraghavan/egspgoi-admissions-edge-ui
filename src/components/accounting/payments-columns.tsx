@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react"
 import { Badge } from "../ui/badge"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "../ui/button"
+import { formatCurrency } from "@/lib/formatters"
 
 const LeadCell = ({ row }: { row: any }) => {
     const payment = row.original as PaymentRecord;
@@ -65,12 +67,7 @@ export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
         },
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("amount"))
-          const formatted = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(amount)
-    
-          return <div className="text-right font-medium">{formatted}</div>
+          return <div className="text-right font-medium">{formatCurrency(amount)}</div>
         },
     },
     {

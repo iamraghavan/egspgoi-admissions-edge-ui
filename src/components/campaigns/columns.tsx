@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { format } from "date-fns"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { formatCurrency } from "@/lib/formatters"
 
 const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -69,12 +70,8 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
     },
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("budget"))
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
  
-      return <div className="text-right font-medium">{formatted}</div>
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>
     },
   },
   {
