@@ -96,6 +96,7 @@ export const getLeads = async (cursor: string | null = null): Promise<PaginatedL
     let response: Response;
     const limit = 20;
     const url = new URL(`${API_BASE_URL}/leads`);
+    url.searchParams.append('tableName', 'leads');
     url.searchParams.append('limit', limit.toString());
     if (cursor) {
         url.searchParams.append('cursor', cursor);
@@ -520,3 +521,6 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     
 
 
+
+
+  
