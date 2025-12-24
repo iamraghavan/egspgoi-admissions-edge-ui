@@ -2,6 +2,13 @@
 
 export type Role = "Super Admin" | "Marketing Manager" | "Admission Manager" | "Finance" | "Admission Executive";
 
+export type UserPreferences = {
+  currency: 'INR' | 'USD' | 'EUR';
+  language: 'en' | 'es' | 'fr';
+  timezone: string;
+  theme: 'light' | 'dark' | 'system';
+};
+
 export type User = {
   id: string;
   name: string;
@@ -9,6 +16,7 @@ export type User = {
   avatarUrl: string;
   role: Role;
   phone?: string;
+  preferences?: UserPreferences;
 };
 
 export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost" | "Failed" | "On Board";

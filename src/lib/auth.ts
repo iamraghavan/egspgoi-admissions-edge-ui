@@ -1,6 +1,9 @@
 
+
 // This is a placeholder for actual authentication logic.
 // In a real application, this would interact with a backend API.
+
+import type { User, UserPreferences } from './types';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
 
@@ -11,6 +14,7 @@ interface UserProfile {
     email: string;
     role: string;
     phone?: string;
+    preferences?: UserPreferences;
 }
 
 export function getAuthHeaders() {
@@ -103,6 +107,33 @@ export function getProfile(): UserProfile | null {
         }
     }
     return null;
+}
+
+export async function updateUserSettings(preferences: UserPreferences): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/users/auth/settings`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ preferences }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while updating settings' }));
+        throw new Error(errorData.message || 'Failed to update settings');
+    }
+
+    const updatedUser = await response.json();
+
+    // Update local storage
+    if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('userProfile');
+        if (storedUser) {
+            const userProfile = JSON.parse(storedUser);
+            userProfile.preferences = updatedUser.preferences;
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        }
+    }
+    
+    return updatedUser;
 }
 
 
