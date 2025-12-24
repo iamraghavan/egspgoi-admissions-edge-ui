@@ -109,15 +109,20 @@ export function getProfile(): UserProfile | null {
     return null;
 }
 
-export async function updateUserSettings(preferences: UserPreferences): Promise<User> {
+export async function updateUserSettings(payload: { preferences: UserPreferences }): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/users/auth/settings`, {
         method: 'PUT',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ preferences }),
+        body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred while updating settings' }));
+        let errorData;
+        try {
+            errorData = await response.json();
+        } catch (e) {
+            errorData = { message: 'Server error. Please try again later.' };
+        }
         throw new Error(errorData.message || 'Failed to update settings');
     }
 

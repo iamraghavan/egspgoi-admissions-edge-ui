@@ -55,7 +55,7 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
   const onSubmit = async (values: z.infer<typeof preferencesSchema>) => {
     setIsSubmitting(true);
     try {
-      const updatedUser = await updateUserSettings(values as UserPreferences);
+      const updatedUser = await updateUserSettings({ preferences: values });
       toast({
         title: 'Settings Updated',
         description: 'Your preferences have been saved.',
