@@ -1,15 +1,12 @@
 
-
 'use client';
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings, User as UserIcon, Megaphone, FileText, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Bell, Search, Menu, Settings } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
-import Link from 'next/link';
-import { AppLogo } from '../icons';
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +23,8 @@ import { logout } from '@/lib/auth';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarContext } from '../ui/sidebar';
-import { cn } from '@/lib/utils';
+import { AppSidebarContent } from './app-sidebar';
+import { UserIcon, Megaphone, FileText } from 'lucide-react';
 
 
 // Debounce function
@@ -58,7 +56,6 @@ export default function AppHeader() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { isSidebarOpen, setSidebarOpen } = useContext(SidebarContext);
   
   const handleLogout = useCallback(() => {
     logout();
@@ -120,15 +117,23 @@ export default function AppHeader() {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-       <Button
-          variant="outline"
-          size="icon"
-          className="shrink-0 md:hidden"
-          onClick={() => setSidebarOpen(!isSidebarOpen)}
-        >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
+        <div className='md:hidden'>
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        >
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Toggle navigation menu</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="flex flex-col p-0">
+                    <AppSidebarContent />
+                </SheetContent>
+            </Sheet>
+        </div>
 
 
       <div className="w-full flex-1">
