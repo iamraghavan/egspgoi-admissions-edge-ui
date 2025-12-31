@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    --background: 240 5% 96%; /* Light Gray */
-    --foreground: 222 47% 11%; /* Dark Blue-Gray */
+    --background: 0 0% 100%; /* White */
+    --foreground: 224 71% 4%; /* Near Black */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 222 47% 11%; /* Dark Blue-Gray */
+    --card-foreground: 224 71% 4%; /* Near Black */
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 222 47% 11%; /* Dark Blue-Gray */
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
 
     --primary: 328 100% 34%; /* Magenta */
     --primary-foreground: 0 0% 98%; /* White */
 
     --secondary: 240 5% 96%; /* Light Gray */
-    --secondary-foreground: 222 47% 11%; /* Dark Blue-Gray */
+    --secondary-foreground: 224 71% 4%; /* Near Black */
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 240 5% 96%; /* Light Gray */
+    --muted-foreground: 240 4% 46%; /* Medium Gray */
 
-    --accent: 240 5% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 240 5% 96%; /* Light Gray */
+    --accent-foreground: 224 71% 4%; /* Near Black */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 328 100% 34%; /* Magenta */
+    --ring: 328 100% 34%;
     --radius: 0.5rem;
   }
 
@@ -38,8 +38,8 @@
     --background: 222 47% 11%; /* Dark Blue-Gray */
     --foreground: 0 0% 98%; /* White */
 
-    --card: 222 47% 15%; /* Slightly lighter dark blue */
-    --card-foreground: 0 0% 98%;
+    --card: 222 47% 15%; /* Slightly Lighter Dark Blue */
+    --card-foreground: 0 0% 98%; /* White */
 
     --popover: 222 47% 15%;
     --popover-foreground: 0 0% 98%;
@@ -47,20 +47,20 @@
     --primary: 328 100% 34%; /* Magenta */
     --primary-foreground: 0 0% 98%;
     
-    --secondary: 222 47% 15%;
+    --secondary: 222 47% 20%; /* Darker Blue for secondary elements */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 222 47% 15%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 222 47% 20%;
+    --muted-foreground: 240 4% 65%; /* Lighter Gray for muted text */
 
-    --accent: 222 47% 15%;
+    --accent: 222 47% 20%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 222 47% 20%;
-    --input: 222 47% 20%;
+    --border: 222 47% 25%;
+    --input: 222 47% 25%;
     --ring: 328 100% 34%;
   }
 }
