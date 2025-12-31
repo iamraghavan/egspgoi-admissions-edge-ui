@@ -12,6 +12,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(to right, #af005e, #00176e)',
+      },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',

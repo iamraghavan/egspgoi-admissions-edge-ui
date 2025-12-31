@@ -13,7 +13,7 @@
     --popover: 0 0% 100%; /* White */
     --popover-foreground: 222 47% 11%; /* Dark Blue-Gray */
 
-    --primary: 217 91% 60%; /* Tata Blue */
+    --primary: 328 100% 34%; /* Magenta */
     --primary-foreground: 0 0% 98%; /* White */
 
     --secondary: 240 5% 96%; /* Light Gray */
@@ -30,7 +30,7 @@
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 217 91% 60%; /* Tata Blue */
+    --ring: 328 100% 34%; /* Magenta */
     --radius: 0.5rem;
   }
 
@@ -44,7 +44,7 @@
     --popover: 222 47% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 217 91% 60%; /* Tata Blue */
+    --primary: 328 100% 34%; /* Magenta */
     --primary-foreground: 0 0% 98%;
     
     --secondary: 222 47% 15%;
@@ -61,7 +61,7 @@
 
     --border: 222 47% 20%;
     --input: 222 47% 20%;
-    --ring: 217 91% 60%;
+    --ring: 328 100% 34%;
   }
 }
 
