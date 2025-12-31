@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { getUserById, addLeadNote, updateLeadStatus, initiateCall } from "@/lib/data";
 import { Lead, User, LeadStatus, Note } from "@/lib/types";
-import { GripVertical, Mail, MessageSquare, Phone, Loader2, ArrowUpRight } from 'lucide-react';
+import { GripVertical, MessageSquare, Loader2 } from 'lucide-react';
 import {
   Kanban,
   KanbanBoard,
@@ -13,29 +13,21 @@ import {
   KanbanColumnContent,
   KanbanColumnHandle,
   KanbanItem,
-  KanbanItemHandle,
   KanbanOverlay,
   type KanbanMoveEvent,
 } from '@/components/ui/kanban';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
-import { format, formatDistanceToNow } from 'date-fns';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { formatDistanceToNow } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../ui/dialog';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { KanbanCard } from './kanban-card';
 
-interface KanbanLead extends Lead {
+export interface KanbanLead extends Lead {
     priority: 'low' | 'medium' | 'high';
     assignee?: User;
 }
@@ -67,82 +59,6 @@ const columnToStatusMap: Record<KanbanColumnKey, LeadStatus> = {
     'Failed': 'Failed'
 }
 
-interface LeadCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
-  lead: KanbanLead;
-  onAddNote: (lead: KanbanLead) => void;
-  onInitiateCall: (leadId: string) => void;
-  onNavigate: (leadId: string) => void;
-  isCalling: boolean;
-}
-
-function LeadCard({ lead, asHandle, onAddNote, onInitiateCall, onNavigate, isCalling, ...props }: LeadCardProps) {
-  const cardContent = (
-    <div className="rounded-md border bg-card p-3 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex flex-col gap-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={() => onNavigate(lead.id)} className="text-left">
-            <span className="font-medium text-sm leading-tight hover:underline">{lead.name}</span>
-          </button>
-           {lead.assignee && (
-             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                    <Avatar className="size-6">
-                        {lead.assignee.avatarUrl && <AvatarImage src={lead.assignee.avatarUrl} />}
-                        <AvatarFallback>{lead.assignee.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Assigned to {lead.assignee.name}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-         <p className="text-xs text-muted-foreground">
-            Last contact: {lead.last_contacted_at ? format(new Date(lead.last_contacted_at), 'PP') : 'N/A'}
-        </p>
-        <div className="flex items-center justify-between text-muted-foreground mt-2">
-            <Badge
-                variant={lead.priority === 'high' ? 'destructive' : lead.priority === 'medium' ? 'default' : 'secondary'}
-                className="pointer-events-none h-5 rounded-sm px-1.5 text-[11px] capitalize shrink-0"
-            >
-                {lead.priority}
-            </Badge>
-            <div className='flex items-center gap-1'>
-                <TooltipProvider>
-                     <Tooltip>
-                        <TooltipTrigger asChild>
-                             <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onNavigate(lead.id)}>
-                                <ArrowUpRight className="size-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>View Details</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                             <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onInitiateCall(lead.id)} disabled={isCalling}>
-                                {isCalling ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />}
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Call {lead.name}</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip><TooltipTrigger asChild><Button asChild variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary"><a href={`mailto:${lead.email}`}><Mail className="size-4"/></a></Button></TooltipTrigger><TooltipContent><p>Email {lead.name}</p></TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-primary" onClick={() => onAddNote(lead)}><MessageSquare className="size-4"/></Button></TooltipTrigger><TooltipContent><p>Add Note</p></TooltipContent></Tooltip>
-                </TooltipProvider>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <KanbanItem value={lead.id} {...props}>
-      {asHandle ? <KanbanItemHandle>{cardContent}</KanbanItemHandle> : cardContent}
-    </KanbanItem>
-  );
-}
-
 interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
   leads: KanbanLead[];
   isOverlay?: boolean;
@@ -154,22 +70,30 @@ interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>
 
 function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, onNavigate, callingLeadId, ...props }: LeadColumnProps) {
   return (
-        <KanbanColumn value={value} {...props} className="rounded-lg border bg-muted p-2.5 shadow-inner flex flex-col">
+        <KanbanColumn value={value} {...props} className="rounded-lg bg-muted/50 p-2.5 flex flex-col">
           <div className="flex items-center justify-between mb-2.5 p-1">
             <div className="flex items-center gap-2.5">
               <span className="font-semibold text-sm">{COLUMN_TITLES[value as KanbanColumnKey]}</span>
               <Badge variant="secondary">{leads.length}</Badge>
             </div>
             <KanbanColumnHandle asChild>
-              <Button variant="ghost" size="sm" className="size-7">
+              <Button variant="ghost" size="sm" className="size-7 p-0 text-muted-foreground">
                 <GripVertical className="size-4" />
               </Button>
             </KanbanColumnHandle>
           </div>
-          <ScrollArea className="flex-grow">
-            <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-1 -m-1">
+          <ScrollArea className="flex-grow -m-1">
+            <KanbanColumnContent value={value} className="flex flex-col gap-2.5 p-1">
                 {leads.filter(lead => lead && lead.id).map((lead) => (
-                <LeadCard key={lead.id} lead={lead} asHandle={!isOverlay} onAddNote={onAddNote} onInitiateCall={onInitiateCall} onNavigate={onNavigate} isCalling={callingLeadId === lead.id} />
+                    <KanbanItem key={lead.id} value={lead.id}>
+                        <KanbanCard 
+                            lead={lead} 
+                            onAddNote={onAddNote} 
+                            onInitiateCall={onInitiateCall} 
+                            onNavigate={onNavigate}
+                            isCalling={callingLeadId === lead.id}
+                        />
+                    </KanbanItem>
                 ))}
             </KanbanColumnContent>
           </ScrollArea>
@@ -374,7 +298,7 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
   return (
     <div className="overflow-x-auto -mx-4 px-4">
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
-        <KanbanBoard className="grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-5 min-w-[1000px]">
+        <KanbanBoard className="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 min-w-[1000px]">
           {Object.entries(columns).map(([columnValue, leads]) => (
             <LeadColumn key={columnValue} value={columnValue} leads={leads} onAddNote={handleAddNoteClick} onInitiateCall={handleInitiateCall} onNavigate={handleNavigate} callingLeadId={callingLeadId}/>
           ))}
