@@ -56,7 +56,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", isCollapsed && "w-full justify-start gap-2 px-2")}>
+        <Button variant="ghost" className={cn("relative h-10 rounded-full w-full justify-center p-0", !isCollapsed && "justify-start gap-2 px-2")}>
           <Avatar className="h-8 w-8">
             {user ? (
                 <AvatarFallback>
@@ -67,9 +67,9 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
             )}
           </Avatar>
            {!isCollapsed && user && (
-                <div className="flex flex-col space-y-1 items-start">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
+                <div className="flex flex-col space-y-1 items-start truncate">
+                    <p className="text-sm font-medium leading-none truncate">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground truncate">
                         {user.email}
                     </p>
                 </div>

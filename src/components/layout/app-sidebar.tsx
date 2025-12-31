@@ -13,7 +13,7 @@ import type { User } from '@/lib/types';
 import { SidebarContext } from '../ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { PanelLeftClose, PanelRightClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { UserNav } from './user-nav';
 
 
@@ -92,15 +92,15 @@ export default function AppSidebar() {
        <div className={cn("flex h-14 items-center border-b px-4", isExpanded ? "justify-between" : "justify-center")}>
             <Link href="/" className={cn("flex items-center gap-2 font-semibold", !isExpanded && "sr-only")}>
               <AppLogo className="h-6 w-6 text-primary" />
-              <span>Admissions Edge</span>
+              <span className="truncate">Admissions Edge</span>
             </Link>
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full"
+                className="rounded-full h-8 w-8"
                 onClick={() => setManuallyToggled(!isManuallyToggled)}
             >
-                {isExpanded ? <PanelLeftClose className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+                {isManuallyToggled ? <PanelLeftClose className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
             </Button>
           </div>
           <Nav />
