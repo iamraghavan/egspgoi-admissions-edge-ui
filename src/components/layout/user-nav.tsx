@@ -16,13 +16,18 @@ import { useEffect, useState } from "react"
 import { getProfile, logout } from "@/lib/auth"
 import { Skeleton } from "../ui/skeleton"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 interface UserProfile {
   name: string;
   email: string;
 }
 
-export function UserNav() {
+interface UserNavProps {
+    isCollapsed?: boolean;
+}
+
+export function UserNav({ isCollapsed = false }: UserNavProps) {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
 
@@ -42,7 +47,6 @@ export function UserNav() {
         }
       } catch (error) {
         console.error("Failed to fetch user profile", error);
-        // If fetching fails, token might be invalid, log out user
         handleLogout();
       }
     }
@@ -52,12 +56,24 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback>
-              {user ? user.name.charAt(0).toUpperCase() : <Skeleton className="h-10 w-10 rounded-full" />}
-            </AvatarFallback>
+        <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", isCollapsed && "w-full justify-start gap-2 px-2")}>
+          <Avatar className="h-8 w-8">
+            {user ? (
+                <AvatarFallback>
+                {user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+            ) : (
+                <Skeleton className="h-8 w-8 rounded-full" />
+            )}
           </Avatar>
+           {!isCollapsed && user && (
+                <div className="flex flex-col space-y-1 items-start">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                    </p>
+                </div>
+            )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

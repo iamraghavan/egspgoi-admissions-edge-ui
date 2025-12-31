@@ -84,11 +84,12 @@ const roleSlugMap: Record<string, Role> = {
     'ae': 'Admission Executive',
 };
 
-export default function Nav({ isMobile }: { isMobile: boolean }) {
+export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname();
   const params = useParams();
   const { encryptedPortalId, role: roleSlug, encryptedUserId } = params as { encryptedPortalId: string; role: string; encryptedUserId: string };
-  const { isSidebarOpen } = useContext(SidebarContext);
+  const { isManuallyToggled, isHovering } = useContext(SidebarContext);
+  const isExpanded = isManuallyToggled || isHovering;
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
 
@@ -98,7 +99,7 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
     const href = item.href(encryptedPortalId, roleSlug, encryptedUserId);
     const isActive = pathname.startsWith(href);
 
-    if (!isSidebarOpen && !isMobile) {
+    if (!isExpanded && !isMobile) {
         return (
              <TooltipProvider key={item.title}>
                 <Tooltip>
@@ -106,9 +107,9 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
                          <Link
                             href={href}
                             className={cn(
-                            "flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                            isActive && "bg-primary/10 text-primary",
-                            "h-12 w-12"
+                            "flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary",
+                            isActive && "text-primary bg-muted",
+                            "h-9 w-9"
                             )}
                         >
                             <item.icon className="h-5 w-5" />
@@ -128,27 +129,18 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
             href={href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-primary/10 text-primary",
+              isActive && "bg-muted text-primary",
               isMobile && "text-base"
             )}
           >
             <item.icon className="h-4 w-4" />
-            <span className={cn("truncate", (isSidebarOpen || isMobile) ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
+            <span className={cn("truncate", (isExpanded || isMobile) ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
           </Link>
     )
   }
 
   return (
-    <nav className={cn("grid items-start gap-1 text-sm font-medium", isMobile ? "p-4" : "px-2 lg:px-4 py-4")}>
-      {isMobile && (
-         <Link
-          href="#"
-          className="mb-4 flex items-center gap-2 text-lg font-semibold"
-        >
-          <AppLogo className="h-6 w-6 text-primary" />
-          <span>Admissions Edge</span>
-        </Link>
-      )}
+    <nav className={cn("grid items-start gap-1 text-sm font-medium", isMobile ? "p-4" : "p-2 py-4")}>
       {visibleNavItems.map(renderLink)}
     </nav>
   );

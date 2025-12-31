@@ -4,20 +4,25 @@
 import React, { createContext, useState, ReactNode } from 'react';
 
 interface SidebarContextType {
-  isSidebarOpen: boolean;
-  setSidebarOpen: (isOpen: boolean) => void;
+  isManuallyToggled: boolean;
+  setManuallyToggled: (isOpen: boolean) => void;
+  isHovering: boolean;
+  setHovering: (isHovering: boolean) => void;
 }
 
 export const SidebarContext = createContext<SidebarContextType>({
-  isSidebarOpen: true,
-  setSidebarOpen: () => {},
+  isManuallyToggled: true,
+  setManuallyToggled: () => {},
+  isHovering: false,
+  setHovering: () => {},
 });
 
 export const SidebarProvider = ({ children }: { children: ReactNode }) => {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isManuallyToggled, setManuallyToggled] = useState(false);
+  const [isHovering, setHovering] = useState(false);
 
   return (
-    <SidebarContext.Provider value={{ isSidebarOpen, setSidebarOpen }}>
+    <SidebarContext.Provider value={{ isManuallyToggled, setManuallyToggled, isHovering, setHovering }}>
       {children}
     </SidebarContext.Provider>
   );

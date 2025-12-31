@@ -18,14 +18,13 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import { globalSearch } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { logout } from '@/lib/auth';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { SidebarContext } from '../ui/sidebar';
 import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
-
+import { SidebarContext } from '../ui/sidebar';
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -55,6 +54,7 @@ export default function AppHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const params = useParams();
   const { toast } = useToast();
   
   const handleLogout = useCallback(() => {
@@ -102,7 +102,7 @@ export default function AppHeader() {
   }, [searchQuery, debouncedSearch]);
 
   const handleSelect = (url: string) => {
-    const {encryptedPortalId, role, encryptedUserId} = router.query as {encryptedPortalId: string, role: string, encryptedUserId: string};
+    const {encryptedPortalId, role, encryptedUserId} = params as {encryptedPortalId: string, role: string, encryptedUserId: string};
     
     // a bit of a hack to make the search result links work
     const dynamicUrl = url
@@ -116,24 +116,18 @@ export default function AppHeader() {
   }
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-        <div className='md:hidden'>
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0"
-                        >
-                        <Menu className="h-5 w-5" />
-                        <span className="sr-only">Toggle navigation menu</span>
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="flex flex-col p-0">
-                    <AppSidebarContent />
-                </SheetContent>
-            </Sheet>
-        </div>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <Sheet>
+            <SheetTrigger asChild>
+                <Button size="icon" variant="outline" className="sm:hidden">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Toggle Menu</span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="sm:max-w-xs p-0">
+                <AppSidebarContent isMobile={true} />
+            </SheetContent>
+        </Sheet>
 
 
       <div className="w-full flex-1">
@@ -160,7 +154,7 @@ export default function AppHeader() {
                 {searchResults.length > 0 && !isLoading && (
                    <CommandGroup heading="Results">
                     {searchResults.map((item, index) => (
-                      <React.Fragment key={item.id}>
+                      <React.Fragment key={`${item.id}-${item.type}`}>
                         <CommandItem
                           onSelect={() => handleSelect(item.url)}
                           value={`${item.name}-${item.type}`}
