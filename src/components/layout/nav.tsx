@@ -100,11 +100,10 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
 
     if (!isSidebarOpen && !isMobile) {
         return (
-             <TooltipProvider>
+             <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                          <Link
-                            key={item.title}
                             href={href}
                             className={cn(
                             "flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
