@@ -4,7 +4,7 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings, User as UserIcon, Megaphone, FileText } from 'lucide-react';
+import { Bell, Search, Menu, Settings, User as UserIcon, Megaphone, FileText, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Separator } from '../ui/separator';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { globalSearch } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
@@ -25,6 +25,9 @@ import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/auth';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SidebarContext } from '../ui/sidebar';
+import { cn } from '@/lib/utils';
+
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -55,6 +58,7 @@ export default function AppHeader() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { isSidebarOpen, setSidebarOpen } = useContext(SidebarContext);
   
   const handleLogout = useCallback(() => {
     logout();
@@ -116,29 +120,16 @@ export default function AppHeader() {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-      <div className="flex items-center gap-2 md:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0"
-            >
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col p-0">
-             <div className="flex h-16 items-center border-b px-6">
-                <Link href="/" className="flex items-center gap-2 font-semibold">
-                  <AppLogo className="h-6 w-6 text-primary" />
-                  <span className=''>Admissions Edge</span>
-                </Link>
-              </div>
-            <Nav isMobile={true} />
-          </SheetContent>
-        </Sheet>
-      </div>
+       <Button
+          variant="outline"
+          size="icon"
+          className="shrink-0 md:hidden"
+          onClick={() => setSidebarOpen(!isSidebarOpen)}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle navigation menu</span>
+        </Button>
+
 
       <div className="w-full flex-1">
         <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
