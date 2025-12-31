@@ -4,64 +4,64 @@
 
 @layer base {
   :root {
-    --background: 220 13% 96%; /* Light Gray */
-    --foreground: 215 28% 17%; /* Squid Ink */
+    --background: 240 5% 96%; /* Light Gray */
+    --foreground: 222 47% 11%; /* Dark Blue-Gray */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 215 28% 17%; /* Squid Ink */
+    --card-foreground: 222 47% 11%; /* Dark Blue-Gray */
 
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 215 28% 17%; /* Squid Ink */
+    --popover-foreground: 222 47% 11%; /* Dark Blue-Gray */
 
-    --primary: 36 100% 50%; /* Smile Orange */
-    --primary-foreground: 215 28% 17%; /* Squid Ink */
+    --primary: 217 91% 60%; /* Tata Blue */
+    --primary-foreground: 0 0% 98%; /* White */
 
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 215 28% 17%;
+    --secondary: 240 5% 96%; /* Light Gray */
+    --secondary-foreground: 222 47% 11%; /* Dark Blue-Gray */
 
-    --muted: 220 13% 91%;
-    --muted-foreground: 215 18% 43%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    --accent: 220 13% 91%;
-    --accent-foreground: 215 28% 17%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 13% 89%;
-    --input: 220 13% 89%;
-    --ring: 36 100% 50%; /* Smile Orange */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 217 91% 60%; /* Tata Blue */
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 215 28% 17%; /* Squid Ink */
+    --background: 222 47% 11%; /* Dark Blue-Gray */
     --foreground: 0 0% 98%; /* White */
 
-    --card: 215 28% 22%; /* Slightly lighter Squid Ink */
+    --card: 222 47% 15%; /* Slightly lighter dark blue */
     --card-foreground: 0 0% 98%;
 
-    --popover: 215 28% 22%;
+    --popover: 222 47% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 36 100% 50%; /* Smile Orange */
-    --primary-foreground: 215 28% 17%; /* Squid Ink */
+    --primary: 217 91% 60%; /* Tata Blue */
+    --primary-foreground: 0 0% 98%;
     
-    --secondary: 215 28% 22%;
+    --secondary: 222 47% 15%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 215 28% 22%;
-    --muted-foreground: 220 13% 69%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 240 4% 46%;
 
-    --accent: 215 28% 22%;
+    --accent: 222 47% 15%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 36 100% 50%; /* Smile Orange */
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 217 91% 60%;
   }
 }
 

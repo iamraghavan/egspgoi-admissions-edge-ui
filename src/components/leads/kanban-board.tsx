@@ -154,7 +154,7 @@ interface LeadColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>
 
 function LeadColumn({ value, leads, isOverlay, onAddNote, onInitiateCall, onNavigate, callingLeadId, ...props }: LeadColumnProps) {
   return (
-        <KanbanColumn value={value} {...props} className="rounded-lg border bg-muted/50 p-2.5 shadow-inner flex flex-col">
+        <KanbanColumn value={value} {...props} className="rounded-lg border bg-muted p-2.5 shadow-inner flex flex-col">
           <div className="flex items-center justify-between mb-2.5 p-1">
             <div className="flex items-center gap-2.5">
               <span className="font-semibold text-sm">{COLUMN_TITLES[value as KanbanColumnKey]}</span>
@@ -440,10 +440,3 @@ export default function KanbanBoardComponent({ leads, isLoading, setLeads }: Kan
     </div>
   );
 }
-
-    
-
-    
-
-    
-

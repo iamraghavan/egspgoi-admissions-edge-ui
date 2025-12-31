@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -85,11 +86,11 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <nav className={cn("grid items-start gap-2 text-sm font-medium", isMobile ? "p-4" : "px-2 lg:px-4 py-4")}>
+    <nav className={cn("grid items-start gap-1 text-sm font-medium", isMobile ? "p-4" : "px-2 lg:px-4 py-4")}>
       {isMobile && (
          <Link
           href="#"
-          className="mb-4 flex items-center gap-2 text-lg font-semibold text-white"
+          className="mb-4 flex items-center gap-2 text-lg font-semibold"
         >
           <AppLogo className="h-6 w-6 text-primary" />
           <span>Admissions Edge</span>
@@ -97,15 +98,15 @@ export default function Nav({ isMobile }: { isMobile: boolean }) {
       )}
       {visibleNavItems.map((item) => {
         const href = item.href(encryptedPortalId, roleSlug, encryptedUserId);
-        const isActive = pathname === href;
+        const isActive = pathname.startsWith(href);
         return (
           <Link
             key={item.title}
             href={href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all duration-200 ease-in-out hover:text-white hover:bg-gray-700/50",
-              isActive ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "text-gray-300 hover:text-white",
-              isMobile && "text-base text-white hover:bg-gray-700/50"
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+              isActive && "bg-primary/10 text-primary",
+              isMobile && "text-base"
             )}
           >
             <item.icon className="h-4 w-4" />

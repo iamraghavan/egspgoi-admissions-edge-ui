@@ -115,24 +115,24 @@ export default function AppHeader() {
   }
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-gray-700 bg-[#232F3E] px-4 lg:h-[60px] lg:px-6 text-white">
+    <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
       <div className="flex items-center gap-2 md:hidden">
         <Sheet>
           <SheetTrigger asChild>
             <Button
               variant="outline"
               size="icon"
-              className="shrink-0 bg-transparent text-white hover:bg-gray-700/50 hover:text-white border-gray-600"
+              className="shrink-0"
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col p-0 bg-[#232f3e] text-white border-r-0">
-             <div className="flex h-16 items-center border-b border-gray-700 px-6">
+          <SheetContent side="left" className="flex flex-col p-0">
+             <div className="flex h-16 items-center border-b px-6">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                   <AppLogo className="h-6 w-6 text-primary" />
-                  <span className='text-white'>Admissions Edge</span>
+                  <span className=''>Admissions Edge</span>
                 </Link>
               </div>
             <Nav isMobile={true} />
@@ -145,13 +145,13 @@ export default function AppHeader() {
           <PopoverTrigger asChild>
             <form className="w-full">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search leads, campaigns..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full appearance-none bg-[#161d26] border-gray-700 text-white placeholder-gray-400 pl-8 shadow-none focus:ring-primary"
+                  className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
                 />
               </div>
             </form>
@@ -195,8 +195,8 @@ export default function AppHeader() {
         <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-                  <Bell className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Bell className="h-5 w-5" />
                   <span className="sr-only">Toggle notifications</span>
                 </Button>
               </TooltipTrigger>
@@ -206,8 +206,8 @@ export default function AppHeader() {
             </Tooltip>
              <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-gray-700/50">
-                  <Settings className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Settings className="h-5 w-5" />
                    <span className="sr-only">Settings</span>
                 </Button>
               </TooltipTrigger>
@@ -215,7 +215,7 @@ export default function AppHeader() {
                 <p>Settings</p>
               </TooltipContent>
             </Tooltip>
-          <Separator orientation='vertical' className='h-8 bg-gray-600 mx-2' />
+          <Separator orientation='vertical' className='h-8 mx-2' />
           <UserNav />
         </div>
       </TooltipProvider>
