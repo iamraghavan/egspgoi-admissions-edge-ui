@@ -7,6 +7,7 @@ import AppSidebar from '@/components/layout/app-sidebar';
 import AppHeader from '@/components/layout/app-header';
 import { SidebarProvider, SidebarContext } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+import InfoMarquee from '@/components/layout/info-marquee';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -20,6 +21,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
         "sm:pl-14", // Default collapsed width
         isExpanded && "sm:pl-56" // Expanded width
       )}>
+        <InfoMarquee />
         <AppHeader />
         <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-4 md:gap-8">
           <div className="flex flex-col gap-4 lg:gap-6 h-full">
