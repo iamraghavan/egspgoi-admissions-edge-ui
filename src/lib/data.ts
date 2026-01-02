@@ -55,14 +55,12 @@ type ApiPaginatedResponse = {
 }
 
 export const getLeads = async (cursor: string | null = null): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
-    const url = new URL('https://cms-egspgoi.vercel.app/api/v1/leads');
-    url.searchParams.append('limit', '20');
+    let url = '/leads?limit=20';
     if (cursor) {
-        url.searchParams.append('cursor', cursor);
+        url += `&cursor=${cursor}`;
     }
     
-    // We use fetch directly here as we are constructing the URL with base
-    const { data, error } = await apiClient<ApiPaginatedResponse>(url.pathname + url.search, { method: 'GET' });
+    const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
     if(error){
         return { leads: [], meta: null, error };
@@ -205,7 +203,7 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
     }
     return { data: null, error: { message: "Lead not found or unexpected format" }};
 };
-export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"]);
+export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost", "Failed", "On Board"]);
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
     const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/campaigns');
