@@ -319,20 +319,32 @@ export const getAdSpends = async (): Promise<AdSpend[]> => {
 }
 
 export const getUserById = async (id: string): Promise<User | null> => {
-    const { data, error } = await apiClient<{data: User}>(`/users/${id}`);
+    if (!id) return null;
+    const { data, error } = await apiClient<{data: any}>(`/users/${id}`);
     if (error) {
         return null;
     }
-    return data?.data || null;
+    const user = data?.data;
+    if (!user) return null;
+    return {
+        ...user,
+        role: user.role_id,
+        avatarUrl: user.avatarUrl || ''
+    };
 };
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<{ data: User[] }>('/users?type=agent');
+    const { data, error } = await apiClient<{ data: any[] }>('/users?type=agent');
     if (error) {
         console.error("Failed to fetch users:", error.message);
         return [];
     }
-    return data?.data || [];
+    const users = data?.data || [];
+    return users.map(user => ({
+        ...user,
+        role: user.role_id,
+        avatarUrl: user.avatarUrl || ''
+    }));
 }
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');

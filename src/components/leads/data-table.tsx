@@ -107,7 +107,7 @@ export default function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     getUsers().then(users => {
-      setAvailableAgents(users.filter(u => u.role === 'Admission Executive' || u.role === 'Admission Manager'));
+      setAvailableAgents(users);
     });
   }, []);
 

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -54,10 +55,7 @@ export default function LeadDetailPage() {
     }, [fetchLeadDetails]);
 
     useEffect(() => {
-        getUsers().then((data) => {
-            const admissionAgents = data.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');
-            setUsers(admissionAgents);
-        });
+        getUsers().then(setUsers);
     }, []);
 
     if (loading) {
