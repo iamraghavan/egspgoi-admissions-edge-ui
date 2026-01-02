@@ -8,12 +8,15 @@ import { apiClient } from './api-client';
 const parseCustomDate = (dateString: string | null | undefined): string => {
     if (!dateString) return new Date().toISOString();
     try {
+        // First, try standard ISO parsing
         if (!isNaN(new Date(dateString).getTime())) {
             return new Date(dateString).toISOString();
         }
 
+        // Then, try the custom 'DD/MM/YYYY - hh:mm:ss aa' format
         const [datePart, timePart] = dateString.split(' - ');
         if (!datePart || !timePart) {
+             // Fallback for other potential simple date formats without time
              const parsed = new Date(dateString);
              if(!isNaN(parsed.getTime())) return parsed.toISOString();
              throw new Error("Unrecognized date format");
@@ -30,14 +33,15 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
             hours = '00';
         }
         
+        // Use UTC to avoid timezone shifts during conversion
         const isoDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds || '00')));
         if (isNaN(isoDate.getTime())) {
-             throw new Error("Could not construct a valid date");
+             throw new Error("Could not construct a valid date from parts");
         }
         return isoDate.toISOString();
     } catch (e) {
         console.error("Could not parse date:", dateString, e);
-        return new Date().toISOString();
+        return new Date().toISOString(); // Fallback to current date on parsing failure
     }
 };
 
@@ -51,14 +55,14 @@ type ApiPaginatedResponse = {
 }
 
 export const getLeads = async (cursor: string | null = null): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
-    const url = new URL('/leads');
-    url.searchParams.append('tableName', 'leads');
+    const url = new URL('https://cms-egspgoi.vercel.app/api/v1/leads');
     url.searchParams.append('limit', '20');
     if (cursor) {
         url.searchParams.append('cursor', cursor);
     }
     
-    const { data, error } = await apiClient<ApiPaginatedResponse>(url.toString(), { method: 'GET' });
+    // We use fetch directly here as we are constructing the URL with base
+    const { data, error } = await apiClient<ApiPaginatedResponse>(url.pathname + url.search, { method: 'GET' });
 
     if(error){
         return { leads: [], meta: null, error };
@@ -203,30 +207,26 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
 };
 export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"]);
 
-export const getCampaigns = async (): Promise<{data: Campaign[], error: any}> => {
-    const { data, error } = await apiClient<any>('/campaigns');
-    if(error) return { data: [], error };
-    const campaigns = data.data.map((c: any) => ({
+export const getCampaigns = async (): Promise<Campaign[]> => {
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/campaigns');
+    if(error) throw new Error(error.message);
+    return data!.data.map((c: any) => ({
         ...c,
         startDate: c.start_date,
         endDate: c.end_date,
         budget: c.settings?.budget_daily || 0,
     })) as Campaign[];
-    return { data: campaigns, error: null };
 };
 
-export const getCampaignById = async (id: string): Promise<{data: Campaign | null, error: any}> => {
+export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const { data, error } = await apiClient<any>(`/campaigns/${id}`);
-    if(error) return { data: null, error };
+    if(error) throw new Error(error.message);
     const campaign = data.data;
     return { 
-        data: {
-            ...campaign,
-            startDate: campaign.start_date,
-            endDate: campaign.end_date,
-            budget: campaign.settings?.budget_daily || 0,
-        }, 
-        error: null 
+        ...campaign,
+        startDate: campaign.start_date,
+        endDate: campaign.end_date,
+        budget: campaign.settings?.budget_daily || 0,
     };
 };
 
@@ -245,62 +245,63 @@ export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status
     }
 };
 
-export const getCalls = async (): Promise<{data: Call[], error: any}> => {
+export const getCalls = async (): Promise<Call[]> => {
     // Mock data for now
     const calls: Call[] = [
         { id: 'call-1', leadId: 'lead-2', agentId: 'user-2', duration: 320, timestamp: subHours(new Date(), 26).toISOString(), recordingUrl: '#' },
         { id: 'call-2', leadId: 'lead-3', agentId: 'user-2', duration: 450, timestamp: subHours(new Date(), 49).toISOString(), recordingUrl: '#' },
     ];
-    return Promise.resolve({ data: calls, error: null });
+    return Promise.resolve(calls);
 }
 
-export const getLiveCalls = async (): Promise<{data: LiveCall[], error: any}> => {
+export const getLiveCalls = async (): Promise<LiveCall[]> => {
     const liveCalls: LiveCall[] = [
         { callId: 'live-1', leadName: 'John Doe', agentName: 'Michael Smith', startTime: Date.now() - 1000 * 45 },
         { callId: 'live-2', leadName: 'Jane Smith', agentName: 'Sarah Johnson', startTime: Date.now() - 1000 * 123 },
     ];
-    return Promise.resolve({ data: liveCalls, error: null });
+    return Promise.resolve(liveCalls);
 }
 
-export const getBudgetRequests = async (): Promise<{data: BudgetRequest[], error: any}> => {
+export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
      const budgetRequests: BudgetRequest[] = [
         { id: 'br-1', campaignId: 'camp-1', amount: 10000, status: 'Approved', submittedBy: 'user-3', decisionBy: 'user-4', submittedAt: subDays(new Date(), 10).toISOString(), decisionAt: subDays(new Date(), 9).toISOString() },
         { id: 'br-2', campaignId: 'camp-2', amount: 20000, status: 'Pending', submittedBy: 'user-3', submittedAt: subDays(new Date(), 2).toISOString() },
     ];
-    return Promise.resolve({ data: budgetRequests, error: null });
+    return Promise.resolve(budgetRequests);
 }
 
-export const getPaymentRecords = async (): Promise<{data: PaymentRecord[], error: any}> => {
+export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
     const paymentRecords: PaymentRecord[] = [
         { id: 'pay-1', leadId: 'lead-5', amount: 1500, date: subDays(new Date(), 5).toISOString(), method: 'Credit Card', status: 'Completed' },
         { id: 'pay-2', leadId: 'lead-3', amount: 250, date: subDays(new Date(), 3).toISOString(), method: 'Bank Transfer', status: 'Completed' },
     ];
-    return Promise.resolve({ data: paymentRecords, error: null });
+    return Promise.resolve(paymentRecords);
 }
 
-export const getAdSpends = async (): Promise<{data: AdSpend[], error: any}> => {
+export const getAdSpends = async (): Promise<AdSpend[]> => {
      const adSpends: AdSpend[] = [
         { id: 'ad-1', campaignId: 'camp-1', platform: 'Google', amount: 500, date: subDays(new Date(), 1).toISOString() },
         { id: 'ad-2', campaignId: 'camp-1', platform: 'Facebook', amount: 350, date: subDays(new Date(), 1).toISOString() },
     ];
-    return Promise.resolve({ data: adSpends, error: null });
+    return Promise.resolve(adSpends);
 }
 
-export const getUserById = async (id: string): Promise<{data: User | null, error: any}> => {
-    const users: User[] = [
-      { id: 'user-1', name: 'Sarah Johnson', email: 'sarah@example.com', avatarUrl: '', role: 'Admission Manager' },
-      { id: 'user-2', name: 'Michael Smith', email: 'michael@example.com', avatarUrl: '', role: 'Admission Executive' },
-      { id: 'user-3', name: 'Emily Davis', email: 'emily@example.com', avatarUrl: '', role: 'Marketing Manager' },
-      { id: 'user-4', name: 'David Chen', email: 'david@example.com', avatarUrl: '', role: 'Finance' },
-    ];
-    return Promise.resolve({ data: users.find(user => user.id === id) || null, error: null })
+export const getUserById = async (id: string): Promise<User | null> => {
+    const { data, error } = await apiClient<{data: User}>(`/users/${id}`);
+    if (error) {
+        console.error(`Failed to fetch user ${id}:`, error.message);
+        return null;
+    }
+    return data?.data || null;
 };
-export const getUsers = async (): Promise<{data: User[], error: any}> => {
-    const users: User[] = [
-      { id: 'user-1', name: 'Sarah Johnson', email: 'sarah@example.com', avatarUrl: '', role: 'Admission Manager' },
-      { id: 'user-2', name: 'Michael Smith', email: 'michael@example.com', avatarUrl: '', role: 'Admission Executive' },
-    ];
-    return Promise.resolve({ data: users, error: null });
+
+export const getUsers = async (): Promise<User[]> => {
+    const { data, error } = await apiClient<{ data: User[] }>('/users');
+    if (error) {
+        console.error("Failed to fetch users:", error.message);
+        return [];
+    }
+    return data?.data || [];
 }
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
@@ -308,7 +309,7 @@ export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Ad
 export const getDashboardStats = async () => {
     // This would in reality be a single API call
   const { leads } = await getLeads();
-  const { data: campaigns } = await getCampaigns();
+  const campaigns = await getCampaigns();
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return {
     newLeads: newLeadsCount,
@@ -349,10 +350,10 @@ export async function globalSearch(query: string): Promise<any[]> {
     if (error) {
         // The error is already handled by apiClient, but we can log it or re-throw
         console.error("Search failed:", error.message);
-        return [];
+        throw new Error(error.message);
     }
     
-    const results = data;
+    const results = data.data;
     const flattenedResults = [];
     if (results.leads && Array.isArray(results.leads)) {
         flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/leads/${item.id}` })));
@@ -403,14 +404,14 @@ type GetCallRecordsParams = {
 };
 
 export const getCallRecords = async (params: GetCallRecordsParams): Promise<any> => {
-    const url = new URL('/smartflo/call/records');
+    const url = new URL('https://cms-egspgoi.vercel.app/api/v1/smartflo/call/records');
     Object.entries(params).forEach(([key, value]) => {
-        if (value && key !== 'call_direction' || (key === 'call_direction' && value !== 'all')) {
+        if (value && (key !== 'call_direction' || (key === 'call_direction' && value !== 'all'))) {
             url.searchParams.append(key, value.toString());
         }
     });
-
-    const { data, error } = await apiClient(url.toString(), {
+    
+    const { data, error } = await apiClient(url.pathname + url.search, {
         method: 'GET',
     });
     if(error) throw new Error(error.message);

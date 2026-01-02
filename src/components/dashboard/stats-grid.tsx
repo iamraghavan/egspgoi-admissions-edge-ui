@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,13 +43,6 @@ const StatCard = ({ title, value, icon: Icon, percentage, loading }: { title: st
 export default function StatsGrid() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -58,20 +52,7 @@ export default function StatsGrid() {
             setStats(fetchedStats);
         } catch (error: any) {
             console.error("Failed to fetch dashboard stats", error);
-            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                toast({
-                    variant: "destructive",
-                    title: "Session Expired",
-                    description: "Your session has expired. Please log in again.",
-                });
-                handleLogout();
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Failed to fetch stats",
-                    description: error.message || "An unexpected error occurred.",
-                });
-            }
+            // This component won't handle session errors directly anymore
         } finally {
             setLoading(false);
         }

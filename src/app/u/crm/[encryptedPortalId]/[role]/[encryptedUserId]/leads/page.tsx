@@ -47,10 +47,10 @@ export default function LeadsPage() {
       <LeadsDataTable
         columns={leadColumns}
         data={leads}
-        onLoadMore={() => fetchLeads(nextCursor)}
+        loading={loading}
+        onLoadMore={nextCursor ? () => fetchLeads(nextCursor) : undefined}
         canLoadMore={!!nextCursor}
         isFetchingMore={isFetchingMore}
-        loading={loading}
         refreshData={fetchLeads}
       />
     </div>

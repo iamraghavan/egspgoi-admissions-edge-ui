@@ -10,32 +10,36 @@ import { ArrowUpDown, MoreHorizontal, Phone, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
-import { getUsers, initiateCall, deleteLead } from "@/lib/data"
+import { getUsers, initiateCall, deleteLead, getUserById } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
-
-async function getAssignedToUser(userId: string) {
-    const users = await getUsers();
-    return users.find(u => u.id === userId);
-}
+import { format } from 'date-fns';
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
-    const [user, setUser] = useState<User | undefined>(undefined);
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
     
     useEffect(() => {
         if (lead.agent_id) {
-            getAssignedToUser(lead.agent_id).then(setUser);
+            getUserById(lead.agent_id).then(({data}) => {
+                setUser(data);
+                setLoading(false);
+            });
+        } else {
+            setLoading(false);
         }
     }, [lead.agent_id]);
 
-    if (!lead.agent_id) {
+    if (loading) {
+         return <div className="h-10 w-24 animate-pulse bg-muted rounded-md" />;
+    }
+
+    if (!lead.agent_id || !user) {
         return <Badge variant="outline">Unassigned</Badge>;
     }
-    
-    if (!user) return <div className="h-10 w-24 animate-pulse bg-muted rounded-md" />;
 
     return (
         <div className="flex items-center gap-2">
@@ -108,7 +112,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
     header: "Last Contacted",
     cell: ({ row }) => {
       const date = new Date(row.getValue("last_contacted_at"))
-      return <div>{date.toLocaleDateString()}</div>
+      return <div>{format(date, "PPP")}</div>
     },
   },
   {

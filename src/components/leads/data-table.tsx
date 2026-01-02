@@ -38,6 +38,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { courseData } from '@/lib/course-data';
 import * as XLSX from 'xlsx';
 import { ArrowLeft, Upload } from 'lucide-react';
+import PageHeader from "../page-header"
+import { Breadcrumbs, BreadcrumbItem } from "../ui/breadcrumbs"
 
 
 interface DataTableProps<TData, TValue> {
@@ -231,88 +233,93 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true,
+    manualPagination: true, // This is important for server-side pagination
   })
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar 
-        table={table} 
-        onCreateLead={() => setCreateDialogOpen(true)}
-        onUploadLeads={() => setUploadDialogOpen(true)}
-        />
+        <Breadcrumbs>
+            <BreadcrumbItem href="/u/crm/egspgoi/portal/placeholder/sa/dashboard">Dashboard</BreadcrumbItem>
+            <BreadcrumbItem>Leads</BreadcrumbItem>
+        </Breadcrumbs>
+      <PageHeader title="Leads" description="Manage and track all your prospective students."/>
       <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b-0">
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell colSpan={columns.length} className="h-12 text-center">
-                           <div className="animate-pulse bg-muted/50 rounded-md h-8 w-full" />
+        <DataTableToolbar 
+            table={table} 
+            onCreateLead={() => setCreateDialogOpen(true)}
+            onUploadLeads={() => setUploadDialogOpen(true)}
+            />
+        <div className="border-t">
+            <Table>
+            <TableHeader className="bg-muted/50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b-0">
+                    {headerGroup.headers.map((header) => {
+                    return (
+                        <TableHead key={header.id}>
+                        {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                            )}
+                        </TableHead>
+                    )
+                    })}
+                </TableRow>
+                ))}
+            </TableHeader>
+            <TableBody>
+                {loading ? (
+                    Array.from({ length: 10 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell colSpan={columns.length} className="h-12 text-center">
+                            <div className="animate-pulse bg-muted/50 rounded-md h-8 w-full" />
+                            </TableCell>
+                        </TableRow>
+                    ))
+                ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                    <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    >
+                    {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                        {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                        )}
                         </TableCell>
+                    ))}
                     </TableRow>
                 ))
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                ) : (
+                <TableRow>
+                    <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                    >
+                    No results.
                     </TableCell>
-                  ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                )}
+            </TableBody>
+            </Table>
+        </div>
       </div>
       <div className="flex items-center justify-between">
-          <DataTablePagination table={table} />
-          <div className="flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
+          <div className="flex-1 text-sm text-muted-foreground">
               {table.getFilteredSelectedRowModel().rows.length} of{" "}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
-            {onLoadMore && canLoadMore && (
-               <Button
+              {data.length} row(s) selected.
+          </div>
+          {onLoadMore && canLoadMore && (
+                <Button
                 variant="outline"
                 size="sm"
                 onClick={onLoadMore}
                 disabled={isFetchingMore}
-              >
+                >
                 {isFetchingMore ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -321,9 +328,8 @@ export default function DataTable<TData, TValue>({
                 ) : (
                     'Load More'
                 )}
-              </Button>
+                </Button>
             )}
-          </div>
       </div>
       <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
         setCreateDialogOpen(isOpen);
