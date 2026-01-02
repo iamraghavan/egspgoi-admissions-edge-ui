@@ -28,7 +28,7 @@ export function DataTableToolbar<TData>({
   const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between p-4">
       <div className="flex flex-1 items-center space-x-2">
         <Input
           placeholder="Filter leads by name..."
