@@ -327,7 +327,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 };
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<{ data: User[] }>('/users');
+    const { data, error } = await apiClient<{ data: User[] }>('/users?type=agent');
     if (error) {
         console.error("Failed to fetch users:", error.message);
         return [];
