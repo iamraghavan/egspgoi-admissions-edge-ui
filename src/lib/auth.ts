@@ -1,10 +1,8 @@
 
 
-// This is a placeholder for actual authentication logic.
-// In a real application, this would interact with a backend API.
-
 import type { User, UserPreferences } from './types';
 import { apiClient } from './api-client';
+import { startSessionTimer, stopSessionTimer } from './session-timer';
 
 // Mock implementation of a profile object you might get from an API
 interface UserProfile {
@@ -61,6 +59,7 @@ export async function login(email: string, password: string): Promise<{ accessTo
             if (typeof window !== 'undefined') {
                 localStorage.setItem('accessToken', responseData.accessToken);
                 localStorage.setItem('userProfile', JSON.stringify(responseData.user));
+                startSessionTimer(responseData.accessToken); // Start the session timer
             }
             return { accessToken: responseData.accessToken, user: responseData.user };
         } else {
@@ -90,6 +89,7 @@ export async function refreshToken(): Promise<void> {
     if (responseData && responseData.accessToken) {
         if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', responseData.accessToken);
+            startSessionTimer(responseData.accessToken); // Reset the session timer with the new token
         }
     } else {
         throw new Error('Refresh response did not include a new accessToken.');
@@ -115,14 +115,14 @@ export function getProfile(): UserProfile | null {
     return null;
 }
 
-export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<{data: User | null, error: any}> {
+export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<any> {
     const result = await apiClient<{ settings: UserPreferences }>(`/users/auth/settings`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     });
 
     if (result.error) {
-        return { data: null, error: result.error };
+        throw new Error(result.error.message);
     }
 
     if (result.data?.settings) {
@@ -133,12 +133,12 @@ export async function updateUserSettings(payload: { preferences: Partial<UserPre
                 const userProfile = JSON.parse(storedUser);
                 userProfile.preferences = { ...userProfile.preferences, ...result.data.settings };
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                return { data: userProfile, error: null };
+                return userProfile;
             }
         }
     }
     
-    return { data: getProfile() as User, error: null };
+    return getProfile() as User;
 }
 
 
@@ -146,4 +146,5 @@ export function logout() {
     if (typeof window === 'undefined') return;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userProfile');
+    stopSessionTimer(); // Stop the session timer on logout
 }
