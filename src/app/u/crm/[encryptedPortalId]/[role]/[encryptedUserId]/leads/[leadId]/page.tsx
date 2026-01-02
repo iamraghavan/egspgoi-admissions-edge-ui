@@ -54,7 +54,6 @@ export default function LeadDetailPage() {
     }, [fetchLeadDetails]);
 
     useEffect(() => {
-        // In a real app, you might want to fetch only relevant users.
         getUsers().then((data) => setUsers(data));
     }, []);
 
