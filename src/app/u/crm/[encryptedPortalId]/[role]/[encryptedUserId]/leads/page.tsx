@@ -243,28 +243,16 @@ export default function LeadsPage() {
 
   return (
     <div className="flex flex-col gap-8 h-full">
-    <PageHeader title="Leads" description="Manage and track all your prospective students.">
-        <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Upload
-        </Button>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Lead
-        </Button>
-        </div>
-    </PageHeader>
-    
-    <LeadsDataTable 
-        columns={leadColumns} 
+      <LeadsDataTable
+        columns={leadColumns}
         data={leads}
-        searchKey="name"
-        searchPlaceholder="Filter leads by name..."
         onLoadMore={() => fetchLeads(nextCursor)}
         canLoadMore={!!nextCursor}
         isFetchingMore={isFetchingMore}
-    />
+        loading={loading}
+        onCreateLead={() => setCreateDialogOpen(true)}
+        onUploadLeads={() => setUploadDialogOpen(true)}
+      />
 
     <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
         setCreateDialogOpen(isOpen);
@@ -435,3 +423,5 @@ export default function LeadsPage() {
     </div>
   );
 }
+
+    

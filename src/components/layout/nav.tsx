@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -69,7 +70,7 @@ const navItems: NavItem[] = [
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
-    title: 'Settings',
+    title: 'Preferences',
     href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/settings`,
     icon: Settings,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
@@ -145,3 +146,5 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     </nav>
   );
 }
+
+    

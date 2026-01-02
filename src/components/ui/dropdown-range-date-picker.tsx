@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -61,7 +62,7 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal h-8",
             !selected && "text-muted-foreground"
           )}
         >
@@ -145,3 +146,4 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
 
 export { DropdownRangeDatePicker };
 
+    
