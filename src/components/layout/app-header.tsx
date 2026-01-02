@@ -184,7 +184,7 @@ export default function AppHeader() {
       </div>
 
       <TooltipProvider>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full" onClick={openDialer}>
