@@ -490,6 +490,23 @@ export const hangupCall = async (callId: string): Promise<any> => {
     return response.json();
 };
 
+export const dialNumber = async (numberToDial: string): Promise<any> => {
+    const profile = getProfile();
+    const agentNumber = profile?.phone || "918064522110";
+
+    const response = await fetch(`${API_BASE_URL}/smartflo/call/dial`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ agent_number: agentNumber, customer_number: numberToDial }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+        throw new Error(errorData.message || 'Failed to dial number');
+    }
+    return response.json();
+}
+
 type GetCallRecordsParams = {
   from_date: string;
   to_date: string;

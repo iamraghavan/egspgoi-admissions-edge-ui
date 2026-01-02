@@ -8,6 +8,8 @@ import AppHeader from '@/components/layout/app-header';
 import { SidebarProvider, SidebarContext } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import InfoMarquee from '@/components/layout/info-marquee';
+import { DialerProvider } from '@/hooks/use-dialer';
+import { DialerSheet } from '@/components/calls/dialer-sheet';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -31,6 +33,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+      <DialerSheet />
     </div>
   )
 }
@@ -38,7 +41,9 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
 export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <CrmLayoutContent>{children}</CrmLayoutContent>
+      <DialerProvider>
+        <CrmLayoutContent>{children}</CrmLayoutContent>
+      </DialerProvider>
     </SidebarProvider>
   );
 }

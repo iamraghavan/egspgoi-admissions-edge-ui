@@ -3,7 +3,7 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings } from 'lucide-react';
+import { Bell, Search, Menu, Settings, Headset } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
 import { SidebarContext } from '../ui/sidebar';
+import { useDialer } from '@/hooks/use-dialer';
 
 // Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -56,6 +57,7 @@ export default function AppHeader() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { openDialer } = useDialer();
   
   const handleLogout = useCallback(() => {
     logout();
@@ -183,6 +185,17 @@ export default function AppHeader() {
 
       <TooltipProvider>
         <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={openDialer}>
+                  <Headset className="h-5 w-5" />
+                  <span className="sr-only">Open Dialer</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Open Dialer</p>
+              </TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
