@@ -340,12 +340,12 @@ const roleIdToNameMap: Record<string, Role> = {
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<{ data: any[] }>('/users?type=agent');
+    const { data, error } = await apiClient<any[]>('/users?type=agent');
     if (error) {
         console.error("Failed to fetch users:", error.message);
         return [];
     }
-    const users = data?.data || [];
+    const users = data || [];
     return users.map(user => ({
       id: user.id,
       name: user.name,
