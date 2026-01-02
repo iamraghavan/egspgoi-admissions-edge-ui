@@ -333,6 +333,12 @@ export const getUserById = async (id: string): Promise<User | null> => {
     };
 };
 
+const roleIdToNameMap: Record<string, Role> = {
+    "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
+    "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
+};
+
+
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<{ data: any[] }>('/users?type=agent');
     if (error) {
@@ -342,7 +348,7 @@ export const getUsers = async (): Promise<User[]> => {
     const users = data?.data || [];
     return users.map(user => ({
         ...user,
-        role: user.role_id,
+        role: roleIdToNameMap[user.role_id] || 'Admission Executive',
         avatarUrl: user.avatarUrl || ''
     }));
 }
