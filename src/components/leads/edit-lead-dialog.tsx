@@ -30,7 +30,7 @@ const leadSchema = z.object({
   phone: z.string().min(10, { message: "Phone number is required." }),
   college: z.string().min(1, { message: "College is required." }),
   course: z.string().min(1, { message: "Course is required." }),
-  status: z.enum(["New", "Contacted", "Qualified", "Proposal", "On Board", "Failed"]),
+  status: z.enum(["New", "Contacted", "Interested", "Enrolled", "Failed"]),
 });
 
 export function EditLeadDialog({ isOpen, onOpenChange, lead, onLeadUpdate }: EditLeadDialogProps) {
@@ -202,7 +202,7 @@ export function EditLeadDialog({ isOpen, onOpenChange, lead, onLeadUpdate }: Edi
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {["New", "Contacted", "Qualified", "Proposal", "On Board", "Failed"].map(status => (
+                            {["New", "Contacted", "Interested", "Enrolled", "Failed"].map(status => (
                                 <SelectItem key={status} value={status}>{status}</SelectItem>
                             ))}
                         </SelectContent>

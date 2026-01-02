@@ -28,9 +28,8 @@ import { Separator } from "@/components/ui/separator"
 export const statuses = [
     { value: "New", label: "New" },
     { value: "Contacted", label: "Contacted" },
-    { value: "Qualified", label: "Qualified" },
-    { value: "Proposal", label: "Proposal" },
-    { value: "On Board", label: "On Board" },
+    { value: "Interested", label: "Interested" },
+    { value: "Enrolled", label: "Enrolled" },
     { value: "Failed", label: "Failed" },
 ]
 
@@ -159,5 +158,3 @@ export function DataTableFacetedFilter<TData, TValue>({
     </Popover>
   )
 }
-
-    

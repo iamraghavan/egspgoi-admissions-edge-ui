@@ -19,14 +19,14 @@ interface GanttRowProps {
 
 export function GanttRow({ lead, timeline, isOdd }: GanttRowProps) {
   const startDate = new Date(lead.created_at);
-  const endDate = lead.status === 'On Board' || lead.status === 'Failed' 
+  const endDate = lead.status === 'Enrolled' || lead.status === 'Failed' 
     ? new Date(lead.last_contacted_at) 
     : new Date();
 
   const startOffset = timeline.getPositionFromDate(startDate);
   const endOffset = timeline.getPositionFromDate(endDate);
   const width = Math.max(0, endOffset - startOffset);
-  const barColor = lead.status === 'On Board' ? 'bg-green-500' : lead.status === 'Failed' ? 'bg-red-500' : 'bg-blue-500';
+  const barColor = lead.status === 'Enrolled' ? 'bg-green-500' : lead.status === 'Failed' ? 'bg-red-500' : 'bg-blue-500';
 
   return (
     <div className={cn("relative h-10 border-t", isOdd && "bg-muted/50")}>

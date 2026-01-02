@@ -20,7 +20,7 @@ export type User = {
   preferences?: UserPreferences;
 };
 
-export type LeadStatus = "New" | "Contacted" | "Qualified" | "Proposal" | "Won" | "Lost" | "Failed" | "On Board";
+export type LeadStatus = "New" | "Contacted" | "Interested" | "Enrolled" | "Failed";
 
 export type Note = {
   id?: string;
