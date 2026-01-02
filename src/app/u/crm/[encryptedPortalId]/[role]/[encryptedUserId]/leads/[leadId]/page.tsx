@@ -41,15 +41,7 @@ export default function LeadDetailPage() {
             if (fetchedLead.agent_id) {
                 // This can also be moved to the api-client if we always need the user object
                 const user = await getUserById(fetchedLead.agent_id);
-                if (user) {
-                    setAssignedUser(user);
-                } else {
-                     toast({
-                        variant: "destructive",
-                        title: "Failed to fetch assigned agent",
-                        description: "Could not fetch assigned agent details.",
-                    });
-                }
+                setAssignedUser(user || undefined);
             }
         } else {
             toast({

@@ -291,7 +291,7 @@ export const getAdSpends = async (): Promise<AdSpend[]> => {
 export const getUserById = async (id: string): Promise<User | null> => {
     const { data, error } = await apiClient<{data: User}>(`/users/${id}`);
     if (error) {
-        console.error(`Failed to fetch user ${id}:`, error.message);
+        // Silently fail if user not found, as it might be an old assignment
         return null;
     }
     return data?.data || null;
