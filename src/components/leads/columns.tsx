@@ -24,8 +24,8 @@ const AssignedToCell = ({ row }: { row: any }) => {
     
     useEffect(() => {
         if (lead.agent_id) {
-            getUserById(lead.agent_id).then(({data}) => {
-                setUser(data);
+            getUserById(lead.agent_id).then((data) => {
+                if(data) setUser(data);
                 setLoading(false);
             });
         } else {

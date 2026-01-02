@@ -40,14 +40,14 @@ export default function LeadDetailPage() {
             setLead(fetchedLead);
             if (fetchedLead.agent_id) {
                 // This can also be moved to the api-client if we always need the user object
-                const {data: user, error: userError} = await getUserById(fetchedLead.agent_id);
+                const user = await getUserById(fetchedLead.agent_id);
                 if (user) {
                     setAssignedUser(user);
-                } else if (userError) {
+                } else {
                      toast({
                         variant: "destructive",
                         title: "Failed to fetch assigned agent",
-                        description: userError.message || "An unexpected error occurred.",
+                        description: "Could not fetch assigned agent details.",
                     });
                 }
             }
@@ -66,7 +66,7 @@ export default function LeadDetailPage() {
 
     useEffect(() => {
         // In a real app, you might want to fetch only relevant users.
-        getUsers().then(({data}) => setUsers(data));
+        getUsers().then((data) => setUsers(data));
     }, []);
 
     const availableAgents = users.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');
