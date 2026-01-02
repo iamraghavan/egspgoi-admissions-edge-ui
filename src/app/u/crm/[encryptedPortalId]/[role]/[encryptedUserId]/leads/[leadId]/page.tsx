@@ -54,10 +54,11 @@ export default function LeadDetailPage() {
     }, [fetchLeadDetails]);
 
     useEffect(() => {
-        getUsers().then((data) => setUsers(data));
+        getUsers().then((data) => {
+            const admissionAgents = data.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');
+            setUsers(admissionAgents);
+        });
     }, []);
-
-    const availableAgents = users.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');
 
     if (loading) {
         return (
@@ -92,7 +93,7 @@ export default function LeadDetailPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <LeadDetailHeader lead={lead} onLeadUpdate={fetchLeadDetails} availableAgents={availableAgents}/>
+            <LeadDetailHeader lead={lead} onLeadUpdate={fetchLeadDetails} availableAgents={users}/>
             <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 grid gap-6">
                     <LeadContactInfo lead={lead} />
