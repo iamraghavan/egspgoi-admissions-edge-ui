@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Phone, Delete, Loader2 } from 'lucide-react';
 import { useDialer } from '@/hooks/use-dialer';
@@ -35,6 +35,13 @@ export function DialerSheet() {
   const handleKeyPress = (key: string) => {
     if (phoneNumber.length < 15) {
       setPhoneNumber(phoneNumber + key);
+    }
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedValue = e.target.value.replace(/[^0-9*#]/g, '');
+    if (sanitizedValue.length <= 15) {
+        setPhoneNumber(sanitizedValue);
     }
   };
 
@@ -93,7 +100,7 @@ export function DialerSheet() {
                     <div className='col-span-2 relative'>
                         <Input
                             value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            onChange={handlePhoneNumberChange}
                             placeholder="Enter Number"
                             className="h-8 border-0 border-b rounded-none px-0 focus-visible:ring-0"
                         />
