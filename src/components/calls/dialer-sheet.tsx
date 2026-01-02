@@ -5,15 +5,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Phone, Delete, Loader2, LayoutGrid, PhoneMissed, PhoneOutgoing, User } from 'lucide-react';
+import { Phone, Delete, Loader2 } from 'lucide-react';
 import { useDialer } from '@/hooks/use-dialer';
 import { useToast } from '@/hooks/use-toast';
 import { dialNumber } from '@/lib/data';
 import { getProfile } from '@/lib/auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialpad } from '@/components/icons';
-import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const dialerKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
 
@@ -82,93 +78,77 @@ export function DialerSheet() {
 
   return (
     <Sheet open={isDialerOpen} onOpenChange={handleClose}>
-      <SheetContent className="flex flex-col p-0" side="left">
-        <Tabs defaultValue="dialpad" className="w-full h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-3 h-16 rounded-none p-0">
-                <TabsTrigger value="dialpad" className="h-full rounded-none data-[state=active]:bg-[#F36F21] data-[state=active]:text-white">
-                    <Dialpad className="w-6 h-6" />
-                </TabsTrigger>
-                <TabsTrigger value="history" className="h-full rounded-none data-[state=active]:bg-[#F36F21] data-[state=active]:text-white">
-                    <Phone className="w-6 h-6" />
-                </TabsTrigger>
-                <TabsTrigger value="missed" className="h-full rounded-none data-[state=active]:bg-[#F36F21] data-[state=active]:text-white">
-                    <PhoneMissed className="w-6 h-6" />
-                </TabsTrigger>
-            </TabsList>
-            <TabsContent value="dialpad" className="flex-grow flex flex-col p-4 m-0">
-                <div className="space-y-4 text-sm mb-4">
-                    <div className="grid grid-cols-3 items-center">
-                        <span className="text-muted-foreground">Welcome:</span>
-                        <span className="col-span-2 text-primary font-semibold">{userName}</span>
-                    </div>
-                     <div className="grid grid-cols-3 items-center">
-                        <span className="text-muted-foreground">To:</span>
-                        <div className='col-span-2 relative'>
-                            <Input
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="Enter Number"
-                                className="h-8 border-0 border-b rounded-none px-0 focus-visible:ring-0"
-                            />
-                            {phoneNumber.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
-                                onClick={handleBackspace}
-                            >
-                                <Delete className="h-5 w-5 text-muted-foreground" />
-                            </Button>
-                            )}
-                        </div>
-                    </div>
-                     <div className="grid grid-cols-3 items-center">
-                        <span className="text-muted-foreground">Mode:</span>
-                        <p className="col-span-2">Agent Phone Number</p>
-                    </div>
-                     <div className="grid grid-cols-3 items-center">
-                        <span className="text-muted-foreground">From:</span>
-                        <p className="col-span-2">{userPhone}</p>
-                    </div>
+      <SheetContent className="flex flex-col p-4" side="left">
+        <SheetHeader>
+          <SheetTitle>Dialer</SheetTitle>
+        </SheetHeader>
+        <div className="flex-grow flex flex-col pt-4">
+            <div className="space-y-4 text-sm mb-4">
+                <div className="grid grid-cols-3 items-center">
+                    <span className="text-muted-foreground">Welcome:</span>
+                    <span className="col-span-2 text-primary font-semibold">{userName}</span>
                 </div>
-
-                <div className="flex-grow flex flex-col justify-center">
-                    <div className="grid grid-cols-3 gap-4 my-4">
-                        {dialerKeys.map((key) => (
+                 <div className="grid grid-cols-3 items-center">
+                    <span className="text-muted-foreground">To:</span>
+                    <div className='col-span-2 relative'>
+                        <Input
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="Enter Number"
+                            className="h-8 border-0 border-b rounded-none px-0 focus-visible:ring-0"
+                        />
+                        {phoneNumber.length > 0 && (
                         <Button
-                            key={key}
-                            variant="outline"
-                            className="h-16 w-16 text-xl font-bold rounded-full mx-auto"
-                            onClick={() => handleKeyPress(key)}
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                            onClick={handleBackspace}
                         >
-                            {key}
+                            <Delete className="h-5 w-5 text-muted-foreground" />
                         </Button>
-                        ))}
+                        )}
                     </div>
                 </div>
-                
-                <div className="flex justify-center mt-auto pb-4">
-                    <Button
-                        size="icon"
-                        className="w-16 h-16 rounded-full bg-[#F36F21] hover:bg-[#F36F21]/90 text-white"
-                        onClick={handleCall}
-                        disabled={isCalling}
-                    >
-                        {isCalling ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                        ) : (
-                        <Phone className="h-6 w-6" />
-                        )}
-                    </Button>
+                 <div className="grid grid-cols-3 items-center">
+                    <span className="text-muted-foreground">Mode:</span>
+                    <p className="col-span-2">Agent Phone Number</p>
                 </div>
-            </TabsContent>
-            <TabsContent value="history" className="p-4 m-0">
-                <p className="text-center text-muted-foreground">Call history not available.</p>
-            </TabsContent>
-            <TabsContent value="missed" className="p-4 m-0">
-                 <p className="text-center text-muted-foreground">No missed calls.</p>
-            </TabsContent>
-        </Tabs>
+                 <div className="grid grid-cols-3 items-center">
+                    <span className="text-muted-foreground">From:</span>
+                    <p className="col-span-2">{userPhone}</p>
+                </div>
+            </div>
+
+            <div className="flex-grow flex flex-col justify-center">
+                <div className="grid grid-cols-3 gap-4 my-4">
+                    {dialerKeys.map((key) => (
+                    <Button
+                        key={key}
+                        variant="outline"
+                        className="h-16 w-16 text-xl font-bold rounded-full mx-auto"
+                        onClick={() => handleKeyPress(key)}
+                    >
+                        {key}
+                    </Button>
+                    ))}
+                </div>
+            </div>
+            
+            <div className="flex justify-center mt-auto pb-4">
+                <Button
+                    size="icon"
+                    className="w-16 h-16 rounded-full"
+                    onClick={handleCall}
+                    disabled={isCalling}
+                >
+                    {isCalling ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                    <Phone className="h-6 w-6" />
+                    )}
+                </Button>
+            </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
