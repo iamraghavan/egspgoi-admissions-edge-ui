@@ -347,9 +347,11 @@ export const getUsers = async (): Promise<User[]> => {
     }
     const users = data?.data || [];
     return users.map(user => ({
-        ...user,
-        role: roleIdToNameMap[user.role_id] || 'Admission Executive',
-        avatarUrl: user.avatarUrl || ''
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: roleIdToNameMap[user.role_id] || 'Admission Executive',
+      avatarUrl: user.avatarUrl || '',
     }));
 }
 
@@ -464,3 +466,6 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     if(error) throw new Error(error.message);
     return data;
 };
+
+
+    
