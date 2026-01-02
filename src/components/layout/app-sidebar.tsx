@@ -13,8 +13,9 @@ import type { User } from '@/lib/types';
 import { SidebarContext } from '../ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { PanelLeft, PanelRight } from 'lucide-react';
 import { UserNav } from './user-nav';
+import { SheetContent } from '../ui/sheet';
 
 
 export function AppSidebarContent({ isMobile = false }: { isMobile?: boolean }) {
@@ -100,7 +101,7 @@ export default function AppSidebar() {
                 className="rounded-full h-8 w-8"
                 onClick={() => setManuallyToggled(!isManuallyToggled)}
             >
-                {isManuallyToggled ? <PanelLeftClose className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+                {isManuallyToggled ? <PanelLeft className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
             </Button>
           </div>
           <Nav />
