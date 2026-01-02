@@ -72,6 +72,13 @@ export const getLeads = async (cursor: string | null = null): Promise<{ leads: L
             agent_id: lead.assigned_to,
             created_at: parseCustomDate(lead.created_at),
             last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
+            assigned_user: lead.assigned_user ? {
+                id: lead.assigned_user.id,
+                name: lead.assigned_user.name,
+                email: lead.assigned_user.email,
+                avatarUrl: lead.assigned_user.avatarUrl || '', // Make sure this property exists or handle its absence
+                role: lead.assigned_user.role_id, // This needs mapping if role name is required
+            } : null,
             notes: (lead.notes || []).map((note: any) => ({
                 ...note,
                 author_name: note.author_name || 'Unknown',
@@ -194,6 +201,13 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
             data: {
                 ...lead,
                 agent_id: lead.assigned_to,
+                assigned_user: lead.assigned_user ? {
+                    id: lead.assigned_user.id,
+                    name: lead.assigned_user.name,
+                    email: lead.assigned_user.email,
+                    avatarUrl: lead.assigned_user.avatarUrl || '', // Make sure this property exists or handle its absence
+                    role: lead.assigned_user.role_id, // This needs mapping if role name is required
+                } : null,
                 created_at: parseCustomDate(lead.created_at),
                 last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
                 notes: (lead.notes || []).map((note: any) => ({

@@ -48,6 +48,7 @@ export type Lead = {
   assigned_to: string | null;
   created_at: string;
   notes?: Note[];
+  assigned_user: User | null;
 };
 
 export type PaginatedLeadsResponse = {

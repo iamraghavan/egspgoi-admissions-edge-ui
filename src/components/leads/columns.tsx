@@ -19,32 +19,16 @@ import { format } from 'date-fns';
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-    
-    useEffect(() => {
-        if (lead.agent_id) {
-            getUserById(lead.agent_id).then((data) => {
-                if(data) setUser(data);
-                setLoading(false);
-            });
-        } else {
-            setLoading(false);
-        }
-    }, [lead.agent_id]);
+    const user = lead.assigned_user;
 
-    if (loading) {
-         return <div className="h-10 w-24 animate-pulse bg-muted rounded-md" />;
-    }
-
-    if (!lead.agent_id || !user) {
+    if (!user) {
         return <Badge variant="outline">Unassigned</Badge>;
     }
 
     return (
         <div className="flex items-center gap-2">
             <Avatar className="w-8 h-8">
-                <AvatarImage src={user.avatarUrl} alt={user.name} />
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <span>{user.name}</span>
@@ -103,9 +87,13 @@ export const leadColumns: ColumnDef<Lead>[] = [
     ),
   },
   {
-    accessorKey: "agent_id",
+    accessorKey: "assigned_user",
     header: "Assigned To",
     cell: AssignedToCell,
+  },
+    {
+    accessorKey: "district",
+    header: "District",
   },
   {
     accessorKey: "last_contacted_at",

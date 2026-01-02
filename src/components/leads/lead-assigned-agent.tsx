@@ -1,10 +1,11 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { User } from "@/lib/types";
 
 interface LeadAssignedAgentProps {
-    user?: User;
+    user?: User | null;
 }
 
 export function LeadAssignedAgent({ user }: LeadAssignedAgentProps) {

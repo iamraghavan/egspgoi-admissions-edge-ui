@@ -20,7 +20,7 @@ export default function LeadDetailPage() {
     const { toast } = useToast();
     
     const [lead, setLead] = useState<Lead | null>(null);
-    const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
+    const [assignedUser, setAssignedUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
 
@@ -38,10 +38,8 @@ export default function LeadDetailPage() {
             });
         } else if (fetchedLead) {
             setLead(fetchedLead);
-            if (fetchedLead.agent_id) {
-                // This can also be moved to the api-client if we always need the user object
-                const user = await getUserById(fetchedLead.agent_id);
-                setAssignedUser(user || undefined);
+            if (fetchedLead.assigned_user) {
+                setAssignedUser(fetchedLead.assigned_user);
             }
         } else {
             toast({
