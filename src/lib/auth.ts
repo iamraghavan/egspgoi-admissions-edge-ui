@@ -4,8 +4,7 @@
 // In a real application, this would interact with a backend API.
 
 import type { User, UserPreferences } from './types';
-
-const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
+import { apiClient } from './api-client';
 
 // Mock implementation of a profile object you might get from an API
 interface UserProfile {
@@ -37,7 +36,7 @@ export function getAuthHeaders() {
  * @returns A promise that resolves with the login response data.
  */
 export async function login(email: string, password: string): Promise<{ accessToken: string, user: UserProfile }> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`https://cms-egspgoi.vercel.app/api/v1/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -78,15 +77,22 @@ export async function login(email: string, password: string): Promise<{ accessTo
  * @returns A promise that resolves when the token is refreshed.
  */
 export async function refreshToken(): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    const response = await fetch(`https://cms-egspgoi.vercel.app/api/v1/auth/refresh`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
         throw new Error('Failed to refresh token');
+    }
+
+     const responseData = await response.json();
+    if (responseData && responseData.accessToken) {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', responseData.accessToken);
+        }
+    } else {
+        throw new Error('Refresh response did not include a new accessToken.');
     }
 }
 
@@ -109,40 +115,30 @@ export function getProfile(): UserProfile | null {
     return null;
 }
 
-export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/auth/settings`, {
+export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<{data: User | null, error: any}> {
+    const result = await apiClient<{ settings: UserPreferences }>(`/users/auth/settings`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
         body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-        let errorData;
-        try {
-            errorData = await response.json();
-        } catch (e) {
-            errorData = { message: 'Server error. Please try again later.' };
-        }
-        throw new Error(errorData.message || 'Failed to update settings');
+    if (result.error) {
+        return { data: null, error: result.error };
     }
 
-    const { settings } = await response.json();
-
-    // Update local storage
-    if (typeof window !== 'undefined') {
-        const storedUser = localStorage.getItem('userProfile');
-        if (storedUser) {
-            const userProfile = JSON.parse(storedUser);
-            // The API returns a `settings` object, which corresponds to `preferences` in our frontend model.
-            userProfile.preferences = { ...userProfile.preferences, ...settings };
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            return userProfile;
+    if (result.data?.settings) {
+        // Update local storage
+        if (typeof window !== 'undefined') {
+            const storedUser = localStorage.getItem('userProfile');
+            if (storedUser) {
+                const userProfile = JSON.parse(storedUser);
+                userProfile.preferences = { ...userProfile.preferences, ...result.data.settings };
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                return { data: userProfile, error: null };
+            }
         }
     }
     
-    // This part should ideally not be reached if a user is logged in
-    const currentUser = getProfile();
-    return { ...currentUser, preferences: settings } as User;
+    return { data: getProfile() as User, error: null };
 }
 
 

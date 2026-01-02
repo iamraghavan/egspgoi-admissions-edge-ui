@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import StatsGrid from '@/components/dashboard/stats-grid';
 import LeadsChart from '@/components/dashboard/leads-chart';
@@ -23,18 +23,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getProfile } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import { logout, getProfile } from '@/lib/auth';
 
 export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const params = useParams();
-  const pathname = usePathname();
   const { encryptedPortalId, encryptedUserId, role } = params as { encryptedPortalId: string; encryptedUserId: string; role: string };
-  const router = useRouter();
-  const { toast } = useToast();
   const [userName, setUserName] = useState<string>('User');
+  const { toast } = useToast();
 
    useEffect(() => {
     const profile = getProfile();
@@ -43,39 +41,23 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    router.push('/');
-  }, [router]);
-
   useEffect(() => {
     const fetchRecentLeads = async () => {
-      try {
-        setLoading(true);
-        const { leads: allLeads } = await getLeads();
+      setLoading(true);
+      const { leads: allLeads, error } = await getLeads();
+      if (error) {
+        toast({
+            variant: "destructive",
+            title: "Failed to fetch leads",
+            description: error.message || "An unexpected error occurred.",
+        });
+      } else {
         setRecentLeads(allLeads.slice(0, 5));
-      } catch (error: any) {
-        if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-            toast({
-                variant: "destructive",
-                title: "Session Expired",
-                description: "Your session has expired. Please log in again.",
-            });
-            handleLogout();
-        } else {
-            console.error("Failed to fetch recent leads", error);
-            toast({
-                variant: "destructive",
-                title: "Failed to fetch leads",
-                description: error.message || "An unexpected error occurred.",
-            });
-        }
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
     fetchRecentLeads();
-  }, [toast, handleLogout]);
+  }, [toast]);
 
   return (
     <div className="flex flex-col gap-6">

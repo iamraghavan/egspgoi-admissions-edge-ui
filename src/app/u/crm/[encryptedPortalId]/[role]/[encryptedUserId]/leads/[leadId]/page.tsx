@@ -1,12 +1,12 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { getLeadById, getUserById, getUsers } from "@/lib/data";
 import type { Lead, User } from "@/lib/types";
 import { useToast } from '@/hooks/use-toast';
-import { logout } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeadDetailHeader } from '@/components/leads/lead-detail-header';
 import { LeadContactInfo } from '@/components/leads/lead-contact-info';
@@ -17,7 +17,6 @@ import { LeadMetadata } from '@/components/leads/lead-metadata';
 
 export default function LeadDetailPage() {
     const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
-    const router = useRouter();
     const { toast } = useToast();
     
     const [lead, setLead] = useState<Lead | null>(null);
@@ -25,49 +24,41 @@ export default function LeadDetailPage() {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
 
-    const handleLogout = useCallback(() => {
-        logout();
-        router.push('/');
-    }, [router]);
-
     const fetchLeadDetails = useCallback(async () => {
         if (!params.leadId) return;
 
-        try {
-            setLoading(true);
-            const fetchedLead = await getLeadById(params.leadId);
-            
-            if (fetchedLead) {
-                setLead(fetchedLead);
-                if (fetchedLead.agent_id) {
-                    const user = await getUserById(fetchedLead.agent_id);
+        setLoading(true);
+        const { data: fetchedLead, error } = await getLeadById(params.leadId);
+        
+        if (error) {
+             toast({
+                variant: "destructive",
+                title: "Failed to fetch lead",
+                description: error.message || "An unexpected error occurred.",
+            });
+        } else if (fetchedLead) {
+            setLead(fetchedLead);
+            if (fetchedLead.agent_id) {
+                // This can also be moved to the api-client if we always need the user object
+                const {data: user, error: userError} = await getUserById(fetchedLead.agent_id);
+                if (user) {
                     setAssignedUser(user);
+                } else if (userError) {
+                     toast({
+                        variant: "destructive",
+                        title: "Failed to fetch assigned agent",
+                        description: userError.message || "An unexpected error occurred.",
+                    });
                 }
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Lead not found",
-                });
             }
-        } catch (error: any) {
-            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                toast({
-                    variant: "destructive",
-                    title: "Session Expired",
-                    description: "Your session has expired. Please log in again.",
-                });
-                handleLogout();
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Failed to fetch lead",
-                    description: error.message || "An unexpected error occurred.",
-                });
-            }
-        } finally {
-            setLoading(false);
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Lead not found",
+            });
         }
-    }, [params.leadId, toast, handleLogout]);
+        setLoading(false);
+    }, [params.leadId, toast]);
 
     useEffect(() => {
         fetchLeadDetails();
@@ -75,7 +66,7 @@ export default function LeadDetailPage() {
 
     useEffect(() => {
         // In a real app, you might want to fetch only relevant users.
-        getUsers().then(setUsers);
+        getUsers().then(({data}) => setUsers(data));
     }, []);
 
     const availableAgents = users.filter(user => user.role === 'Admission Executive' || user.role === 'Admission Manager');

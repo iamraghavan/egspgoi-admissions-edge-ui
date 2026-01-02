@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -10,6 +11,8 @@ import { cn } from '@/lib/utils';
 import InfoMarquee from '@/components/layout/info-marquee';
 import { DialerProvider } from '@/hooks/use-dialer';
 import { DialerSheet } from '@/components/calls/dialer-sheet';
+import { SessionTimeoutProvider } from '@/hooks/use-session-timeout';
+import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -34,6 +37,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
         </main>
       </div>
       <DialerSheet />
+      <SessionTimeoutDialog />
     </div>
   )
 }
@@ -42,7 +46,9 @@ export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <DialerProvider>
-        <CrmLayoutContent>{children}</CrmLayoutContent>
+        <SessionTimeoutProvider>
+          <CrmLayoutContent>{children}</CrmLayoutContent>
+        </SessionTimeoutProvider>
       </DialerProvider>
     </SidebarProvider>
   );
