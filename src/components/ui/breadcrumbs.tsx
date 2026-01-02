@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { cn } from "@/lib/utils";
@@ -38,24 +39,45 @@ const Breadcrumbs = React.forwardRef<HTMLElement, BreadcrumbsProps>(
 Breadcrumbs.displayName = "Breadcrumbs";
 
 
-interface BreadcrumbItemProps extends React.ComponentProps<typeof Link> {
+interface BreadcrumbItemProps {
+    href?: string;
     isCurrent?: boolean;
+    children: React.ReactNode;
+    className?: string;
 }
 
-const BreadcrumbItem = React.forwardRef<HTMLAnchorElement, BreadcrumbItemProps>(
-  ({ className, isCurrent, ...props }, ref) => {
+const BreadcrumbItem = React.forwardRef<HTMLLIElement, BreadcrumbItemProps>(
+  ({ href, isCurrent, className, children, ...props }, ref) => {
+    
+    const content = href ? (
+        <Link
+            href={href}
+            aria-current={isCurrent ? "page" : undefined}
+            className={cn(
+                "transition-colors hover:text-foreground",
+                isCurrent && "font-semibold text-foreground",
+                className
+            )}
+            {...props}
+        >
+         {children}
+        </Link>
+    ) : (
+        <span
+            aria-current={isCurrent ? "page" : undefined}
+            className={cn(
+                 isCurrent && "font-semibold text-foreground",
+                 className
+            )}
+            {...props}
+        >
+            {children}
+        </span>
+    )
+    
     return (
         <li className="inline-flex items-center gap-1.5">
-             <Link
-                ref={ref}
-                aria-current={isCurrent ? "page" : undefined}
-                className={cn(
-                    "transition-colors hover:text-foreground",
-                    isCurrent ? "font-semibold text-foreground" : "",
-                    className
-                )}
-                {...props}
-            />
+           {content}
         </li>
     );
   }

@@ -40,6 +40,7 @@ import * as XLSX from 'xlsx';
 import { ArrowLeft, Upload } from 'lucide-react';
 import PageHeader from "../page-header"
 import { Breadcrumbs, BreadcrumbItem } from "../ui/breadcrumbs"
+import { useParams } from "next/navigation"
 
 
 interface DataTableProps<TData, TValue> {
@@ -79,6 +80,7 @@ export default function DataTable<TData, TValue>({
   const [availableCourses, setAvailableCourses] = React.useState<string[]>([]);
   
   const { toast } = useToast();
+  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
 
   const [uploadStep, setUploadStep] = React.useState<'select' | 'verify'>('select');
   const [parsedData, setParsedData] = React.useState<any[]>([]);
@@ -239,8 +241,8 @@ export default function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
         <Breadcrumbs>
-            <BreadcrumbItem href="/u/crm/egspgoi/portal/placeholder/sa/dashboard">Dashboard</BreadcrumbItem>
-            <BreadcrumbItem>Leads</BreadcrumbItem>
+            <BreadcrumbItem href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`}>Dashboard</BreadcrumbItem>
+            <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
         </Breadcrumbs>
       <PageHeader title="Leads" description="Manage and track all your prospective students."/>
       <div className="rounded-md border bg-card">
