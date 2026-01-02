@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown, MoreHorizontal, Phone, Trash2 } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
 import { getUsers, initiateCall, deleteLead, getUserById } from "@/lib/data"
@@ -142,12 +142,12 @@ export const leadColumns: ColumnDef<Lead>[] = [
         }
       };
 
-      const handleDelete = async () => {
+      const handleDelete = async (type: 'soft' | 'hard') => {
         try {
-            await deleteLead(lead.id);
+            await deleteLead(lead.id, type);
             toast({
                 title: "Lead Deleted",
-                description: `${lead.name} has been deleted.`,
+                description: `${lead.name} has been ${type === 'soft' ? 'soft' : 'permanently'} deleted.`,
             });
             // This is a way to trigger a re-fetch in the parent component
             (table.options.meta as any)?.refreshData();
@@ -184,10 +184,20 @@ export const leadColumns: ColumnDef<Lead>[] = [
               Initiate Call
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Lead
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => handleDelete('soft')}>
+                        Soft Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
+                        Hard Delete (Permanent)
+                    </DropdownMenuItem>
+                </DropdownMenuSubContent>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
       )

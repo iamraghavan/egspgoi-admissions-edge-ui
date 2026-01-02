@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, PaginatedLeadsResponse } from './types';
+import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import { subDays, subHours } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -173,8 +173,12 @@ export const transferLead = async (leadId: string, newAgentId: string): Promise<
     return data;
 };
 
-export const deleteLead = async (leadId: string): Promise<void> => {
-    const { error } = await apiClient(`/leads/${leadId}`, {
+export const deleteLead = async (leadId: string, type: 'soft' | 'hard' = 'soft'): Promise<void> => {
+    let url = `/leads/${leadId}`;
+    if (type === 'hard') {
+        url += '?type=hard';
+    }
+    const { error } = await apiClient(url, {
         method: 'DELETE',
     });
     if(error) throw new Error(error.message);
