@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, Campaign, Call, LeadStatus, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import { subDays, subHours } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -73,11 +73,9 @@ export const getLeads = async (cursor: string | null = null): Promise<{ leads: L
             created_at: parseCustomDate(lead.created_at),
             last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
             assigned_user: lead.assigned_user ? {
-                id: lead.assigned_user.id,
-                name: lead.assigned_user.name,
-                email: lead.assigned_user.email,
-                avatarUrl: lead.assigned_user.avatarUrl || '', // Make sure this property exists or handle its absence
-                role: lead.assigned_user.role_id, // This needs mapping if role name is required
+                ...lead.assigned_user,
+                avatarUrl: lead.assigned_user.avatarUrl || '',
+                role: lead.assigned_user.role_id, 
             } : null,
             notes: (lead.notes || []).map((note: any) => ({
                 ...note,
@@ -134,18 +132,30 @@ export const uploadLeads = async (file: File): Promise<{ message: string }> => {
   return data!;
 };
 
+export const getLeadNotes = async (leadId: string): Promise<Note[]> => {
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/leads/${leadId}/notes`);
+    if(error) throw new Error(error.message);
+    
+    return (data?.data || []).map((note: any) => ({
+        ...note,
+        author_name: note.author?.name || 'Unknown',
+        created_at: parseCustomDate(note.created_at),
+    })).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+};
+
+
 export const addLeadNote = async (leadId: string, content: string): Promise<Note> => {
-    const { data, error } = await apiClient<Note>(`/leads/${leadId}/notes`, {
+    const { data, error } = await apiClient<{ success: boolean; data: any }>(`/leads/${leadId}/notes`, {
         method: 'POST',
         body: JSON.stringify({ content }),
     });
 
     if(error) throw new Error(error.message);
-    const newNote = data!;
+    const newNote = data!.data;
     const currentUser = getProfile();
     return {
         ...newNote,
-        author_name: newNote.author_name || currentUser?.name || 'Unknown',
+        author_name: newNote.author?.name || currentUser?.name || 'Unknown',
         created_at: parseCustomDate(newNote.created_at)
     };
 };
@@ -180,6 +190,15 @@ export const transferLead = async (leadId: string, newAgentId: string): Promise<
     return data;
 };
 
+export const bulkTransferLeads = async (leadIds: string[], newAgentId: string): Promise<any> => {
+    const { data, error } = await apiClient('/leads/bulk-transfer', {
+        method: 'POST',
+        body: JSON.stringify({ lead_ids: leadIds, new_agent_id: newAgentId })
+    });
+    if(error) throw new Error(error.message);
+    return data;
+};
+
 export const deleteLead = async (leadId: string, type: 'soft' | 'hard' = 'soft'): Promise<void> => {
     let url = `/leads/${leadId}`;
     if (type === 'hard') {
@@ -202,17 +221,15 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
                 ...lead,
                 agent_id: lead.assigned_to,
                 assigned_user: lead.assigned_user ? {
-                    id: lead.assigned_user.id,
-                    name: lead.assigned_user.name,
-                    email: lead.assigned_user.email,
-                    avatarUrl: lead.assigned_user.avatarUrl || '', // Make sure this property exists or handle its absence
-                    role: lead.assigned_user.role_id, // This needs mapping if role name is required
+                    ...lead.assigned_user,
+                    avatarUrl: lead.assigned_user.avatarUrl || '',
+                    role: lead.assigned_user.role_id,
                 } : null,
                 created_at: parseCustomDate(lead.created_at),
                 last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
                 notes: (lead.notes || []).map((note: any) => ({
                     ...note,
-                    author_name: note.author_name || 'Unknown',
+                    author_name: note.author?.name || 'Unknown',
                     created_at: parseCustomDate(note.created_at),
                 })),
             },
@@ -262,7 +279,6 @@ export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status
 };
 
 export const getCalls = async (): Promise<Call[]> => {
-    // Mock data for now
     const calls: Call[] = [
         { id: 'call-1', leadId: 'lead-2', agentId: 'user-2', duration: 320, timestamp: subHours(new Date(), 26).toISOString(), recordingUrl: '#' },
         { id: 'call-2', leadId: 'lead-3', agentId: 'user-2', duration: 450, timestamp: subHours(new Date(), 49).toISOString(), recordingUrl: '#' },
@@ -305,7 +321,6 @@ export const getAdSpends = async (): Promise<AdSpend[]> => {
 export const getUserById = async (id: string): Promise<User | null> => {
     const { data, error } = await apiClient<{data: User}>(`/users/${id}`);
     if (error) {
-        // Silently fail if user not found, as it might be an old assignment
         return null;
     }
     return data?.data || null;
@@ -323,7 +338,6 @@ export const getUsers = async (): Promise<User[]> => {
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
 export const getDashboardStats = async () => {
-    // This would in reality be a single API call
   const { leads } = await getLeads();
   const campaigns = await getCampaigns();
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
@@ -364,7 +378,6 @@ export async function globalSearch(query: string): Promise<any[]> {
     });
 
     if (error) {
-        // The error is already handled by apiClient, but we can log it or re-throw
         console.error("Search failed:", error.message);
         throw new Error(error.message);
     }

@@ -7,20 +7,25 @@ import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { statuses } from "./data-table-faceted-filter"
-import { X, PlusCircle, Upload } from "lucide-react"
+import { X, PlusCircle, Upload, Users } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   onCreateLead: () => void;
   onUploadLeads: () => void;
+  onBulkTransfer: () => void;
 }
 
 export function DataTableToolbar<TData>({
   table,
   onCreateLead,
-  onUploadLeads
+  onUploadLeads,
+  onBulkTransfer
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
+  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
 
   return (
     <div className="flex items-center justify-between">
@@ -52,6 +57,25 @@ export function DataTableToolbar<TData>({
         )}
       </div>
       <div className="flex items-center space-x-2">
+         {isRowSelected && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                    Bulk Actions
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                    {table.getFilteredSelectedRowModel().rows.length} lead(s) selected
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onBulkTransfer}>
+                    <Users className="mr-2 h-4 w-4" />
+                    Transfer Leads
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+         )}
          <Button variant="outline" size="sm" className="h-8" onClick={onUploadLeads}>
             <Upload className="mr-2 h-4 w-4" />
             Bulk Upload
@@ -65,5 +89,3 @@ export function DataTableToolbar<TData>({
     </div>
   )
 }
-
-    

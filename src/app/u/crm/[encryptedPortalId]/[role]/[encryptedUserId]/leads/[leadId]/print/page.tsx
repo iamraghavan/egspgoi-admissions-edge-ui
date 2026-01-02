@@ -46,13 +46,16 @@ export default function LeadPrintPage() {
 
             try {
                 setLoading(true);
-                const fetchedLead = await getLeadById(params.leadId);
+                const { data: fetchedLead, error } = await getLeadById(params.leadId);
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
                 
                 if (fetchedLead) {
                     setLead(fetchedLead);
-                    if (fetchedLead.agent_id) {
-                        const user = await getUserById(fetchedLead.agent_id);
-                        setAssignedUser(user);
+                    if (fetchedLead.agent_id && fetchedLead.assigned_user) {
+                        setAssignedUser(fetchedLead.assigned_user);
                     }
                 } else {
                     toast({ variant: "destructive", title: "Lead not found" });

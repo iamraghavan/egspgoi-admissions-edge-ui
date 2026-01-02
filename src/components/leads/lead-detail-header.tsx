@@ -20,7 +20,7 @@ interface LeadDetailHeaderProps {
 }
 
 export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDetailHeaderProps) {
-  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
   const { toast } = useToast();
   const [isCalling, setCalling] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
@@ -44,12 +44,16 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
       setCalling(false);
     }
   };
+  
+  const printUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
+  const leadsUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads`;
+
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-4">
         <Button variant="outline" size="icon" asChild>
-          <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads`}>
+          <Link href={leadsUrl}>
             <ArrowLeft className="h-4 w-4" />
             <span className="sr-only">Back to leads</span>
           </Link>
@@ -58,7 +62,7 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
         <Badge variant="outline" className="capitalize text-sm ml-2">{lead.status}</Badge>
         <div className="ml-auto flex items-center gap-2">
            <Button variant="outline" size="sm" asChild>
-             <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}/print`} target="_blank">
+             <Link href={printUrl} target="_blank">
                  <Printer className="mr-2 h-4 w-4" />
                  Print
              </Link>

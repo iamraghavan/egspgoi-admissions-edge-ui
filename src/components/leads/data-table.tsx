@@ -30,7 +30,7 @@ import { Loader2 } from "lucide-react"
 import { DataTableToolbar } from "./data-table-toolbar"
 import { DataTablePagination } from "./data-table-pagination"
 import { useToast } from "@/hooks/use-toast"
-import { createLead, uploadLeads } from "@/lib/data"
+import { createLead, uploadLeads, getUsers, bulkTransferLeads } from "@/lib/data"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,7 @@ import { ArrowLeft, Upload } from 'lucide-react';
 import PageHeader from "../page-header"
 import { Breadcrumbs, BreadcrumbItem } from "../ui/breadcrumbs"
 import { useParams } from "next/navigation"
+import { Lead, User } from "@/lib/types"
 
 
 interface DataTableProps<TData, TValue> {
@@ -72,12 +73,15 @@ export default function DataTable<TData, TValue>({
 
   const [isCreateDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [isUploadDialogOpen, setUploadDialogOpen] = React.useState(false);
+  const [isBulkTransferOpen, setBulkTransferOpen] = React.useState(false);
   const [isSubmitting, setSubmitting] = React.useState(false);
   const [uploadFile, setUploadFile] = React.useState<File | null>(null);
   const formRef = React.useRef<HTMLFormElement>(null);
   
   const [selectedCollege, setSelectedCollege] = React.useState('');
   const [availableCourses, setAvailableCourses] = React.useState<string[]>([]);
+  const [availableAgents, setAvailableAgents] = React.useState<User[]>([]);
+  const [selectedAgent, setSelectedAgent] = React.useState<string>('');
   
   const { toast } = useToast();
   const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
@@ -100,6 +104,12 @@ export default function DataTable<TData, TValue>({
       setAvailableCourses([]);
     }
   }, [selectedCollege]);
+
+  React.useEffect(() => {
+    getUsers().then(users => {
+      setAvailableAgents(users.filter(u => u.role === 'Admission Executive' || u.role === 'Admission Manager'));
+    });
+  }, []);
 
 
   const handleCreateLead = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -204,6 +214,34 @@ export default function DataTable<TData, TValue>({
     }
   };
 
+  const handleBulkTransfer = async () => {
+    if (!selectedAgent) {
+      toast({ variant: "destructive", title: "No agent selected" });
+      return;
+    }
+    setSubmitting(true);
+    const selectedLeadIds = table.getFilteredSelectedRowModel().rows.map(row => (row.original as Lead).id);
+
+    try {
+        await bulkTransferLeads(selectedLeadIds, selectedAgent);
+        toast({
+            title: "Leads Transferred",
+            description: `${selectedLeadIds.length} leads have been transferred.`,
+        });
+        refreshData();
+        table.resetRowSelection();
+        setBulkTransferOpen(false);
+    } catch (error: any) {
+         toast({
+            variant: "destructive",
+            title: "Transfer Failed",
+            description: error.message,
+        });
+    } finally {
+        setSubmitting(false);
+    }
+  }
+
   const handleCloseUploadDialog = () => {
     setUploadDialogOpen(false);
     setUploadFile(null);
@@ -235,13 +273,15 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true, // This is important for server-side pagination
+    manualPagination: true,
   })
+
+  const breadcrumbUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`;
 
   return (
     <div className="space-y-4">
         <Breadcrumbs>
-            <BreadcrumbItem href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`}>Dashboard</BreadcrumbItem>
+            <BreadcrumbItem href={breadcrumbUrl}>Dashboard</BreadcrumbItem>
             <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
         </Breadcrumbs>
       <PageHeader title="Leads" description="Manage and track all your prospective students."/>
@@ -250,6 +290,7 @@ export default function DataTable<TData, TValue>({
             table={table} 
             onCreateLead={() => setCreateDialogOpen(true)}
             onUploadLeads={() => setUploadDialogOpen(true)}
+            onBulkTransfer={() => setBulkTransferOpen(true)}
             />
         <div className="border-t">
             <Table>
@@ -485,6 +526,37 @@ export default function DataTable<TData, TValue>({
             </DialogFooter>
             </>
         )}
+        </DialogContent>
+    </Dialog>
+
+    <Dialog open={isBulkTransferOpen} onOpenChange={setBulkTransferOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Bulk Transfer Leads</DialogTitle>
+                <DialogDescription>
+                    Transfer {table.getFilteredSelectedRowModel().rows.length} selected leads to a new agent.
+                </DialogDescription>
+            </DialogHeader>
+             <div className="py-4">
+                <Label htmlFor="agent-select">New Agent</Label>
+                <Select onValueChange={setSelectedAgent}>
+                    <SelectTrigger id="agent-select">
+                        <SelectValue placeholder="Select an agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableAgents.map(agent => (
+                            <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setBulkTransferOpen(false)}>Cancel</Button>
+                <Button onClick={handleBulkTransfer} disabled={isSubmitting || !selectedAgent}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Confirm Transfer
+                </Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
     </div>
