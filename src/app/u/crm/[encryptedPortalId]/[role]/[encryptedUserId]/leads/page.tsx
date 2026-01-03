@@ -21,7 +21,7 @@ export default function LeadsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const fetchLeads = useCallback(async (
-    { cursor, isNewSearch, searchFilters }: { cursor?: string | null; isNewSearch?: boolean, searchFilters?: { dateRange?: DateRange } } = {}
+    { cursor, isNewSearch, range }: { cursor?: string | null; isNewSearch?: boolean; range?: DateRange } = {}
   ) => {
     if (cursor) {
         setIsFetchingMore(true);
@@ -32,8 +32,6 @@ export default function LeadsPage() {
     const filters: { cursor?: string; from_date?: string; to_date?: string } = {};
     if (cursor) filters.cursor = cursor;
     
-    const range = searchFilters?.dateRange;
-
     if (range?.from) filters.from_date = format(range.from, 'yyyy-MM-dd');
     if (range?.to) filters.to_date = format(range.to, 'yyyy-MM-dd');
     
@@ -55,15 +53,15 @@ export default function LeadsPage() {
   }, [toast]);
   
   useEffect(() => {
-    fetchLeads({ isNewSearch: true, searchFilters: { dateRange } });
+    fetchLeads({ isNewSearch: true, range: dateRange });
   }, []);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
   }
 
-  const handleSearch = (filters: { dateRange?: DateRange }) => {
-    fetchLeads({ isNewSearch: true, searchFilters: filters });
+  const handleSearch = () => {
+    fetchLeads({ isNewSearch: true, range: dateRange });
   }
 
   return (
@@ -72,7 +70,7 @@ export default function LeadsPage() {
         columns={leadColumns}
         data={leads}
         loading={loading}
-        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, searchFilters: { dateRange } }) : undefined}
+        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
         canLoadMore={!!nextCursor}
         isFetchingMore={isFetchingMore}
         refreshData={handleSearch}
