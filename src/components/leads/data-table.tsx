@@ -27,7 +27,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { DataTableToolbar } from "./data-table-toolbar"
-import { DataTablePagination } from "./data-table-pagination"
 import { useToast } from "@/hooks/use-toast"
 import { createLead, uploadLeads, getUsers, bulkTransferLeads } from "@/lib/data"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -295,6 +294,7 @@ export default function DataTable<TData, TValue>({
             onCreateLead={() => setCreateDialogOpen(true)}
             onUploadLeads={() => setUploadDialogOpen(true)}
             onBulkTransfer={() => setBulkTransferOpen(true)}
+            dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onSearch={refreshData}
             />

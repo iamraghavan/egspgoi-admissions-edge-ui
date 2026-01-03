@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { statuses } from "./data-table-faceted-filter"
-import { X, PlusCircle, Upload, Users, Search, Calendar as CalendarIcon } from "lucide-react"
+import { X, PlusCircle, Upload, Users, Search } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import type { DateRange } from "react-day-picker"
-import { useState } from "react"
+import { DateRangePicker } from 'react-date-range';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { DateRangePicker } from "react-date-range"
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import type { DateRange } from "react-day-picker"
 
 
 interface DataTableToolbarProps<TData> {
@@ -36,28 +36,24 @@ export function DataTableToolbar<TData>({
   onDateRangeChange,
   onSearch,
 }: DataTableToolbarProps<TData>) {
-  const [currentDateRange, setCurrentDateRange] = useState<DateRange | undefined>(dateRange);
 
   const handleDateChange = (ranges: any) => {
     const { selection } = ranges;
     const newRange = { from: selection.startDate, to: selection.endDate };
-    setCurrentDateRange(newRange);
     onDateRangeChange(newRange);
   }
 
-  const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange
-
-  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
+  const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange;
+  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0;
   
   const resetFilters = () => {
     table.resetColumnFilters();
-    setCurrentDateRange(undefined);
     onDateRangeChange(undefined);
     onSearch({});
   }
   
   const handleSearchClick = () => {
-    onSearch({ dateRange: currentDateRange });
+    onSearch({ dateRange });
   }
 
   return (
@@ -111,8 +107,8 @@ export function DataTableToolbar<TData>({
                 moveRangeOnFirstSelection={false}
                 months={2}
                 ranges={[{
-                    startDate: currentDateRange?.from,
-                    endDate: currentDateRange?.to,
+                    startDate: dateRange?.from,
+                    endDate: dateRange?.to,
                     key: 'selection'
                 }]}
                 direction="horizontal"

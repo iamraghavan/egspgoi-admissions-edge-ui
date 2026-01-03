@@ -32,7 +32,7 @@ export default function LeadsPage() {
     const filters: { cursor?: string; from_date?: string; to_date?: string } = {};
     if (cursor) filters.cursor = cursor;
     
-    const range = searchFilters?.dateRange || dateRange;
+    const range = searchFilters?.dateRange;
 
     if (range?.from) filters.from_date = format(range.from, 'yyyy-MM-dd');
     if (range?.to) filters.to_date = format(range.to, 'yyyy-MM-dd');
@@ -52,10 +52,10 @@ export default function LeadsPage() {
     }
     setLoading(false);
     setIsFetchingMore(false);
-  }, [toast, dateRange]);
+  }, [toast]);
   
   useEffect(() => {
-    fetchLeads({ isNewSearch: true });
+    fetchLeads({ isNewSearch: true, searchFilters: { dateRange } });
   }, []);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
@@ -63,7 +63,6 @@ export default function LeadsPage() {
   }
 
   const handleSearch = (filters: { dateRange?: DateRange }) => {
-    setDateRange(filters.dateRange);
     fetchLeads({ isNewSearch: true, searchFilters: filters });
   }
 
@@ -73,7 +72,7 @@ export default function LeadsPage() {
         columns={leadColumns}
         data={leads}
         loading={loading}
-        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor }) : undefined}
+        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, searchFilters: { dateRange } }) : undefined}
         canLoadMore={!!nextCursor}
         isFetchingMore={isFetchingMore}
         refreshData={handleSearch}
