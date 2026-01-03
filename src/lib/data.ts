@@ -1,7 +1,7 @@
 
 
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
-import { subDays, subHours } from 'date-fns';
+import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
 
@@ -55,12 +55,12 @@ type ApiPaginatedResponse = {
 }
 
 export const getLeads = async (
-    filters: { cursor?: string | null, from_date?: string, to_date?: string } = {}
+    filters: { cursor?: string | null, startDate?: Date, endDate?: Date } = {}
 ): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
     const params = new URLSearchParams({ limit: '20' });
     if (filters.cursor) params.append('cursor', filters.cursor);
-    if (filters.from_date) params.append('from_date', filters.from_date);
-    if (filters.to_date) params.append('to_date', filters.to_date);
+    if (filters.startDate) params.append('startDate', format(filters.startDate, 'yyyy-MM-dd'));
+    if (filters.endDate) params.append('endDate', format(filters.endDate, 'yyyy-MM-dd'));
 
     const url = `/leads?${params.toString()}`;
     
@@ -469,5 +469,7 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     return data;
 };
 
+
+    
 
     

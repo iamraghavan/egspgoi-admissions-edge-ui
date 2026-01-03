@@ -9,7 +9,6 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
 import { getLeads } from '@/lib/data';
 import type { DateRange } from 'react-day-picker';
-import { format } from 'date-fns';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -29,11 +28,10 @@ export default function LeadsPage() {
         setLoading(true);
     }
 
-    const filters: { cursor?: string; from_date?: string; to_date?: string } = {};
+    const filters: { cursor?: string; startDate?: Date, endDate?: Date } = {};
     if (cursor) filters.cursor = cursor;
-    
-    if (range?.from) filters.from_date = format(range.from, 'yyyy-MM-dd');
-    if (range?.to) filters.to_date = format(range.to, 'yyyy-MM-dd');
+    if (range?.from) filters.startDate = range.from;
+    if (range?.to) filters.endDate = range.to;
     
 
     const { leads: fetchedLeads, meta, error } = await getLeads(filters);
@@ -54,7 +52,7 @@ export default function LeadsPage() {
   
   useEffect(() => {
     fetchLeads({ isNewSearch: true, range: dateRange });
-  }, []);
+  }, [fetchLeads]);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
@@ -80,3 +78,5 @@ export default function LeadsPage() {
     </div>
   );
 }
+
+    
