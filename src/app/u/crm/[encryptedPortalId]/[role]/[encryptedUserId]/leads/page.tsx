@@ -1,5 +1,7 @@
 
 'use client';
+import 'react-date-range/dist/styles.css'; 
+import 'react-date-range/dist/theme/default.css'; 
 import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
 import { useToast } from '@/hooks/use-toast';

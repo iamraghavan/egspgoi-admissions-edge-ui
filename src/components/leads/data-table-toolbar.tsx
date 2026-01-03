@@ -7,10 +7,15 @@ import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { statuses } from "./data-table-faceted-filter"
-import { X, PlusCircle, Upload, Users } from "lucide-react"
+import { X, PlusCircle, Upload, Users, Calendar as CalendarIcon } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { DropdownRangeDatePicker } from "../ui/dropdown-range-date-picker"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DateRange } from "react-day-picker"
+import { DateRangePicker } from 'react-date-range'
+import { useState } from "react"
+import { format } from 'date-fns'
+import { cn } from "@/lib/utils"
+
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -31,10 +36,21 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange
   const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
-  
+  const [pickerRange, setPickerRange] = useState([{
+    startDate: dateRange?.from,
+    endDate: dateRange?.to,
+    key: 'selection'
+  }]);
+
   const resetFilters = () => {
     table.resetColumnFilters();
     onDateRangeChange(undefined);
+    setPickerRange([{ startDate: undefined, endDate: undefined, key: 'selection' }]);
+  }
+
+  const handleSelect = (ranges: any) => {
+      setPickerRange([ranges.selection]);
+      onDateRangeChange({from: ranges.selection.startDate, to: ranges.selection.endDate});
   }
 
   return (
@@ -55,7 +71,43 @@ export function DataTableToolbar<TData>({
             options={statuses}
           />
         )}
-        <DropdownRangeDatePicker selected={dateRange} onSelect={onDateRangeChange} className="h-8" />
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                    "w-[260px] justify-start text-left font-normal h-8 border-dashed",
+                    !dateRange && "text-muted-foreground"
+                    )}
+                >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                    dateRange.to ? (
+                        <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                        </>
+                    ) : (
+                        format(dateRange.from, "LLL dd, y")
+                    )
+                    ) : (
+                    <span>Pick a date</span>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+                <DateRangePicker
+                    onChange={handleSelect}
+                    showSelectionPreview={true}
+                    moveRangeOnFirstSelection={false}
+                    months={2}
+                    ranges={pickerRange}
+                    direction="horizontal"
+                />
+            </PopoverContent>
+        </Popover>
+
         {isFiltered && (
           <Button
             variant="ghost"
