@@ -54,11 +54,15 @@ type ApiPaginatedResponse = {
     }
 }
 
-export const getLeads = async (cursor: string | null = null): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
-    let url = '/leads?limit=20';
-    if (cursor) {
-        url += `&cursor=${cursor}`;
-    }
+export const getLeads = async (
+    filters: { cursor?: string | null, from_date?: string, to_date?: string } = {}
+): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
+    const params = new URLSearchParams({ limit: '20' });
+    if (filters.cursor) params.append('cursor', filters.cursor);
+    if (filters.from_date) params.append('from_date', filters.from_date);
+    if (filters.to_date) params.append('to_date', filters.to_date);
+
+    const url = `/leads?${params.toString()}`;
     
     const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
@@ -238,7 +242,7 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
     }
     return { data: null, error: { message: "Lead not found or unexpected format" }};
 };
-export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Qualified", "Proposal", "Won", "Lost", "Failed", "On Board"]);
+export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Interested", "Enrolled", "Failed"]);
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
     const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/campaigns');
@@ -340,16 +344,14 @@ const roleIdToNameMap: Record<string, Role> = {
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<any[]>('/users?type=agent');
+    const { data, error } = await apiClient<any[]>(`/users?type=agent`);
     if (error) {
         console.error("Failed to fetch users:", error.message);
         return [];
     }
     const users = data || [];
     return users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      ...user,
       role: roleIdToNameMap[user.role_id] || 'Admission Executive',
       avatarUrl: user.avatarUrl || '',
     }));

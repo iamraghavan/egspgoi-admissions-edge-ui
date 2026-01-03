@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -42,6 +41,7 @@ import PageHeader from "../page-header"
 import { Breadcrumbs, BreadcrumbItem } from "../ui/breadcrumbs"
 import { useParams } from "next/navigation"
 import { Lead, User } from "@/lib/types"
+import type { DateRange } from "react-day-picker"
 
 
 interface DataTableProps<TData, TValue> {
@@ -51,7 +51,9 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void
   canLoadMore?: boolean
   isFetchingMore?: boolean
-  refreshData: () => void;
+  refreshData: (filters?: { dateRange?: DateRange }) => void;
+  dateRange: DateRange | undefined;
+  setDateRange: (dateRange?: DateRange) => void;
 }
 
 export default function DataTable<TData, TValue>({
@@ -61,7 +63,9 @@ export default function DataTable<TData, TValue>({
   onLoadMore,
   canLoadMore,
   isFetchingMore,
-  refreshData
+  refreshData,
+  dateRange,
+  setDateRange
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -260,7 +264,7 @@ export default function DataTable<TData, TValue>({
       columnFilters,
     },
     meta: {
-        refreshData
+        refreshData: () => refreshData({ dateRange }),
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -291,6 +295,8 @@ export default function DataTable<TData, TValue>({
             onCreateLead={() => setCreateDialogOpen(true)}
             onUploadLeads={() => setUploadDialogOpen(true)}
             onBulkTransfer={() => setBulkTransferOpen(true)}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
             />
         <div className="border-t">
             <Table>

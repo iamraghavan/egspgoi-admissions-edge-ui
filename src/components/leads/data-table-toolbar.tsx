@@ -9,23 +9,33 @@ import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { statuses } from "./data-table-faceted-filter"
 import { X, PlusCircle, Upload, Users } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
+import { DropdownRangeDatePicker } from "../ui/dropdown-range-date-picker"
+import type { DateRange } from "react-day-picker"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   onCreateLead: () => void;
   onUploadLeads: () => void;
   onBulkTransfer: () => void;
+  dateRange?: DateRange;
+  onDateRangeChange: (dateRange?: DateRange) => void;
 }
 
 export function DataTableToolbar<TData>({
   table,
   onCreateLead,
   onUploadLeads,
-  onBulkTransfer
+  onBulkTransfer,
+  dateRange,
+  onDateRangeChange,
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+  const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange
   const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
+  
+  const resetFilters = () => {
+    table.resetColumnFilters();
+    onDateRangeChange(undefined);
+  }
 
   return (
     <div className="flex items-center justify-between p-4">
@@ -45,10 +55,11 @@ export function DataTableToolbar<TData>({
             options={statuses}
           />
         )}
+        <DropdownRangeDatePicker selected={dateRange} onSelect={onDateRangeChange} className="h-8" />
         {isFiltered && (
           <Button
             variant="ghost"
-            onClick={() => table.resetColumnFilters()}
+            onClick={resetFilters}
             className="h-8 px-2 lg:px-3"
           >
             Reset

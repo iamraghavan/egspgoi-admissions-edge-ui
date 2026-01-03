@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -19,16 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
 type DropdownRangeDatePickerProps = {
   selected?: DateRange;
   onSelect?: (range?: DateRange) => void;
+  className?: string;
 };
 
-function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePickerProps) {
+function DropdownRangeDatePicker({ selected, onSelect, className }: DropdownRangeDatePickerProps) {
   const today = new Date();
   const [month, setMonth] = React.useState(selected?.from?.getMonth() ?? today.getMonth());
   const [year, setYear] = React.useState(selected?.from?.getFullYear() ?? today.getFullYear());
@@ -38,13 +38,19 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
 
   const formattedValue = selected?.from
     ? selected.to
-      ? `${format(selected.from, "PPP")} - ${format(selected.to, "PPP")}`
-      : format(selected.from, "PPP")
-    : "Pick a date range";
+      ? `${format(selected.from, "LLL dd, y")} - ${format(selected.to, "LLL dd, y")}`
+      : format(selected.from, "LLL dd, y")
+    : "Select date range";
     
   const handleSelect = (range?: DateRange) => {
     if(onSelect) {
       onSelect(range);
+    }
+  }
+  
+  const handleClear = () => {
+    if (onSelect) {
+      onSelect(undefined);
     }
   }
 
@@ -62,12 +68,19 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-normal h-8",
-            !selected && "text-muted-foreground"
+            "w-full justify-start text-left font-normal h-8 border-dashed",
+            !selected && "text-muted-foreground",
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
           <span className="truncate overflow-hidden">{formattedValue}</span>
+           {selected && (
+            <X className="ml-auto h-4 w-4" onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+            }}/>
+           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-4" align="start">
@@ -118,21 +131,14 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
               setYear(date.getFullYear());
             }}
             className="rounded-md border"
+            numberOfMonths={2}
           />
 
-           <div className="flex justify-between pt-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleSelect(undefined)}
-              disabled={!selected}
-            >
-              Clear
-            </Button>
+           <div className="flex justify-end pt-2">
             <PopoverClose asChild>
               <Button
                 size="sm"
-                disabled={!selected}
+                onClick={() => setIsOpen(false)}
               >
                 Apply
               </Button>
@@ -145,5 +151,3 @@ function DropdownRangeDatePicker({ selected, onSelect }: DropdownRangeDatePicker
 }
 
 export { DropdownRangeDatePicker };
-
-    
