@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { statuses } from "./data-table-faceted-filter"
-import { X, PlusCircle, Upload, Users, Search } from "lucide-react"
+import { X, PlusCircle, Upload, Users, Search, Calendar as CalendarIcon } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { DateRange } from "react-day-picker"
 import { useState } from "react"
-import { DropdownRangeDatePicker } from "../ui/dropdown-range-date-picker"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DateRangePicker } from "react-date-range"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 
 interface DataTableToolbarProps<TData> {
@@ -19,6 +22,7 @@ interface DataTableToolbarProps<TData> {
   onCreateLead: () => void;
   onUploadLeads: () => void;
   onBulkTransfer: () => void;
+  dateRange?: DateRange;
   onDateRangeChange: (dateRange?: DateRange) => void;
   onSearch: (filters: { dateRange?: DateRange }) => void;
 }
@@ -28,26 +32,32 @@ export function DataTableToolbar<TData>({
   onCreateLead,
   onUploadLeads,
   onBulkTransfer,
+  dateRange,
   onDateRangeChange,
   onSearch,
 }: DataTableToolbarProps<TData>) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange
-  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
-  
-  const handleDateChange = (newRange: DateRange | undefined) => {
-    setDateRange(newRange);
+  const [currentDateRange, setCurrentDateRange] = useState<DateRange | undefined>(dateRange);
+
+  const handleDateChange = (ranges: any) => {
+    const { selection } = ranges;
+    const newRange = { from: selection.startDate, to: selection.endDate };
+    setCurrentDateRange(newRange);
     onDateRangeChange(newRange);
   }
 
+  const isFiltered = table.getState().columnFilters.length > 0 || !!dateRange
+
+  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
+  
   const resetFilters = () => {
     table.resetColumnFilters();
-    handleDateChange(undefined);
+    setCurrentDateRange(undefined);
+    onDateRangeChange(undefined);
     onSearch({});
   }
   
   const handleSearchClick = () => {
-    onSearch({ dateRange });
+    onSearch({ dateRange: currentDateRange });
   }
 
   return (
@@ -68,10 +78,47 @@ export function DataTableToolbar<TData>({
             options={statuses}
           />
         )}
-        <DropdownRangeDatePicker
-          selected={dateRange}
-          onSelect={handleDateChange}
-        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+                id="date"
+                variant={"outline"}
+                size="sm"
+                className={cn(
+                "h-8 justify-start text-left font-normal",
+                !dateRange && "text-muted-foreground"
+                )}
+            >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                    dateRange.to ? (
+                        <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                        </>
+                    ) : (
+                        format(dateRange.from, "LLL dd, y")
+                    )
+                ) : (
+                    <span>Pick a date</span>
+                )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <DateRangePicker
+                onChange={handleDateChange}
+                showSelectionPreview={true}
+                moveRangeOnFirstSelection={false}
+                months={2}
+                ranges={[{
+                    startDate: currentDateRange?.from,
+                    endDate: currentDateRange?.to,
+                    key: 'selection'
+                }]}
+                direction="horizontal"
+            />
+          </PopoverContent>
+        </Popover>
         <Button onClick={handleSearchClick} size="sm" className="h-8">
             <Search className="mr-2 h-4 w-4" />
             Search

@@ -56,10 +56,15 @@ export default function LeadsPage() {
   
   useEffect(() => {
     fetchLeads({ isNewSearch: true });
-  }, [fetchLeads]);
+  }, []);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
+  }
+
+  const handleSearch = (filters: { dateRange?: DateRange }) => {
+    setDateRange(filters.dateRange);
+    fetchLeads({ isNewSearch: true, searchFilters: filters });
   }
 
   return (
@@ -71,7 +76,7 @@ export default function LeadsPage() {
         onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor }) : undefined}
         canLoadMore={!!nextCursor}
         isFetchingMore={isFetchingMore}
-        refreshData={(filters) => fetchLeads({ isNewSearch: true, searchFilters: filters })}
+        refreshData={handleSearch}
         dateRange={dateRange}
         setDateRange={handleDateRangeChange}
       />
