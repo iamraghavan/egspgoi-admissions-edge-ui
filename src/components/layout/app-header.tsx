@@ -26,15 +26,7 @@ import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
 import { SidebarContext } from '../ui/sidebar';
 import { useDialer } from '@/hooks/use-dialer';
-
-// Debounce function
-const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<F>): void => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
+import { debounce } from '@/lib/utils';
 
 const getIconForType = (type: string) => {
     switch (type) {
