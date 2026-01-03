@@ -51,7 +51,7 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void
   canLoadMore?: boolean
   isFetchingMore?: boolean
-  refreshData: (filters?: { dateRange?: DateRange }) => void;
+  refreshData: (filters: { dateRange?: DateRange }) => void;
   dateRange: DateRange | undefined;
   setDateRange: (dateRange?: DateRange) => void;
 }
@@ -134,7 +134,7 @@ export default function DataTable<TData, TValue>({
         title: "Lead Created",
         description: `${newLead.name} has been successfully added.`,
       });
-      refreshData();
+      refreshData({ dateRange });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -206,7 +206,7 @@ export default function DataTable<TData, TValue>({
         description: response.message || `${uploadFile.name} has been uploaded and is being processed.`,
       });
       handleCloseUploadDialog();
-      refreshData();
+      refreshData({ dateRange });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -232,7 +232,7 @@ export default function DataTable<TData, TValue>({
             title: "Leads Transferred",
             description: `${selectedLeadIds.length} leads have been transferred.`,
         });
-        refreshData();
+        refreshData({ dateRange });
         table.resetRowSelection();
         setBulkTransferOpen(false);
     } catch (error: any) {
@@ -295,8 +295,8 @@ export default function DataTable<TData, TValue>({
             onCreateLead={() => setCreateDialogOpen(true)}
             onUploadLeads={() => setUploadDialogOpen(true)}
             onBulkTransfer={() => setBulkTransferOpen(true)}
-            dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            onSearch={refreshData}
             />
         <div className="border-t">
             <Table>
