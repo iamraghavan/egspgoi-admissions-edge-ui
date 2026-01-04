@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import StatsGrid from '@/components/dashboard/stats-grid';
-import LeadsChart from '@/components/dashboard/leads-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getLeads } from '@/lib/data';
 import type { Lead } from '@/lib/types';
@@ -25,6 +24,12 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getProfile } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import dynamic from 'next/dynamic';
+
+const LeadsChart = dynamic(() => import('@/components/dashboard/leads-chart'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[300px]" />,
+});
 
 export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);

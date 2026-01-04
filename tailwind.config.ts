@@ -11,7 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['var(--font-inter)', 'sans-serif'],
+        heading: ['var(--font-space-grotesk)', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(to right, #af005e, #00176e)',
