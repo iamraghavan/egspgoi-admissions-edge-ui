@@ -6,16 +6,17 @@ import { Lead, User } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal, Phone, Trash2 } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Phone, Trash2, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
-import { getUsers, initiateCall, deleteLead, getUserById } from "@/lib/data"
+import { getUsers, initiateCall, deleteLead, getUserById, updateLeadStatus } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { format } from 'date-fns';
+import type { LeadStatus } from "@/lib/types";
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
@@ -111,6 +112,24 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const { toast } = useToast();
       const [isCalling, setIsCalling] = useState(false);
 
+      const handleUpdateStatus = async (status: LeadStatus) => {
+        try {
+            await updateLeadStatus(lead.id, status);
+            toast({
+                title: "Status Updated",
+                description: `${lead.name}'s status updated to ${status}.`,
+            });
+            // This is a way to trigger a re-fetch in the parent component
+            (table.options.meta as any)?.refreshData();
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Status Update Failed",
+                description: error.message,
+            });
+        }
+      }
+
       const handleCall = async () => {
         setIsCalling(true);
         try {
@@ -148,6 +167,8 @@ export const leadColumns: ColumnDef<Lead>[] = [
         }
       };
 
+      const leadStatuses: LeadStatus[] = ["New", "Contacted", "Interested", "Enrolled", "Failed"];
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -160,6 +181,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
                 <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
                     View lead details
                 </Link>
             </DropdownMenuItem>
@@ -167,6 +189,18 @@ export const leadColumns: ColumnDef<Lead>[] = [
               Copy email address
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                    Update Status
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                    {leadStatuses.map(status => (
+                        <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(status)}>
+                            {status}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuItem onClick={handleCall} disabled={isCalling}>
               {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
               Initiate Call
