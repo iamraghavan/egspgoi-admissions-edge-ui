@@ -171,58 +171,60 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const leadStatuses: LeadStatus[] = ["New", "Contacted", "Interested", "Enrolled", "Failed"];
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
+        <div className="flex items-center justify-center gap-2">
+            <Button variant="ghost" size="icon" asChild>
                 <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View lead details
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View Details</span>
                 </Link>
-            </DropdownMenuItem>
-             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
-              Copy email address
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                    Update Status
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                    {leadStatuses.map(status => (
-                        <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(status)}>
-                            {status}
+            </Button>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
+                Copy email address
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        Update Status
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                        {leadStatuses.map(status => (
+                            <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(status)}>
+                                {status}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem onClick={handleCall} disabled={isCalling}>
+                {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                Initiate Call
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                        <DropdownMenuItem onClick={() => handleDelete('soft')}>
+                            Soft Delete
                         </DropdownMenuItem>
-                    ))}
-                </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuItem onClick={handleCall} disabled={isCalling}>
-              {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
-              Initiate Call
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                    <DropdownMenuItem onClick={() => handleDelete('soft')}>
-                        Soft Delete
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
-                        Hard Delete (Permanent)
-                    </DropdownMenuItem>
-                </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                        <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
+                            Hard Delete (Permanent)
+                        </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                </DropdownMenuSub>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       )
     },
   },
