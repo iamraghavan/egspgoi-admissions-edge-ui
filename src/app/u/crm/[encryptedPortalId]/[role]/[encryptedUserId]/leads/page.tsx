@@ -9,6 +9,8 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
 import { getLeads } from '@/lib/data';
 import type { DateRange } from 'react-day-picker';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GanttChart } from '@/components/gantt/gantt-chart';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -51,8 +53,8 @@ export default function LeadsPage() {
   }, [toast]);
   
   useEffect(() => {
-    fetchLeads({ isNewSearch: true, range: undefined });
-  }, []);
+    fetchLeads({ isNewSearch: true, range: dateRange });
+  }, [fetchLeads, dateRange]);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
@@ -64,19 +66,28 @@ export default function LeadsPage() {
 
   return (
     <div className="flex flex-col gap-8 h-full">
-      <LeadsDataTable
-        columns={leadColumns}
-        data={leads}
-        loading={loading}
-        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
-        canLoadMore={!!nextCursor}
-        isFetchingMore={isFetchingMore}
-        refreshData={handleSearch}
-        dateRange={dateRange}
-        setDateRange={handleDateRangeChange}
-      />
+       <Tabs defaultValue="table" className="h-full flex flex-col">
+        <TabsList>
+          <TabsTrigger value="table">Data Table</TabsTrigger>
+          <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
+        </TabsList>
+        <TabsContent value="table" className="flex-grow">
+            <LeadsDataTable
+                columns={leadColumns}
+                data={leads}
+                loading={loading}
+                onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
+                canLoadMore={!!nextCursor}
+                isFetchingMore={isFetchingMore}
+                refreshData={handleSearch}
+                dateRange={dateRange}
+                setDateRange={handleDateRangeChange}
+            />
+        </TabsContent>
+        <TabsContent value="gantt" className="flex-grow">
+            <GanttChart leads={leads} isLoading={loading} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-
-    
