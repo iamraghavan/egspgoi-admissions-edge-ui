@@ -106,6 +106,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
   },
   {
     id: "actions",
+    header: () => <div className="text-center">Actions</div>,
     cell: ({ row, table }) => {
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
