@@ -27,6 +27,8 @@ export type Note = {
   content: string;
   author_id: string;
   author_name?: string;
+  author_role?: string;
+  author_email?: string;
   created_at: string;
 };
 

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -84,7 +85,7 @@ export function LeadNotes({ lead, onNoteAdded }: LeadNotesProps) {
                                 <div className="flex-1">
                                     <p className="text-sm">{note.content}</p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        Added by {note.author_name} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                                        Added by {note.author_name} {note.author_role ? `(${note.author_role})` : ''} - {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                                     </p>
                                 </div>
                             </li>
