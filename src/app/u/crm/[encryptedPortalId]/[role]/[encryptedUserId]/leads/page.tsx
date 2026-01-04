@@ -51,8 +51,8 @@ export default function LeadsPage() {
   }, [toast]);
   
   useEffect(() => {
-    fetchLeads({ isNewSearch: true, range: dateRange });
-  }, [fetchLeads]);
+    fetchLeads({ isNewSearch: true, range: undefined });
+  }, []);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
