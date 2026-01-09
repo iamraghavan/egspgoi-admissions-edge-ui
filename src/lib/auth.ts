@@ -150,7 +150,7 @@ export async function getProfile(): Promise<UserProfile | null> {
 }
 
 export async function updateUserProfile(payload: Partial<User>): Promise<User> {
-    const { data, error } = await apiClient<any>('/users/auth/profile', {
+    const { data, error } = await apiClient<any>('/users/me', {
         method: 'PATCH',
         body: JSON.stringify(payload),
     });
