@@ -36,7 +36,10 @@ export function ActiveCallBar() {
         try {
             await hangupCall(activeCall.callId);
             toast({ title: 'Call Ended' });
+            
+            // End the call and trigger the refetch callback after a delay
             endCall();
+
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Hang Up Failed', description: error.message });
         } finally {

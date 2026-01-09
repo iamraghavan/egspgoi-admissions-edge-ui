@@ -39,7 +39,9 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
       startCall({
           callId: callData.call_id,
           leadName: lead.name,
-          startTime: Date.now()
+          startTime: Date.now(),
+          leadId: lead.id,
+          onHangup: onLeadUpdate
       });
     } catch (error: any) {
       toast({

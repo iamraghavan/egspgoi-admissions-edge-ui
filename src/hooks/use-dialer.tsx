@@ -7,6 +7,8 @@ type ActiveCall = {
   callId: string;
   leadName: string;
   startTime: number;
+  leadId: string;
+  onHangup?: () => void;
 };
 
 interface DialerContextType {
@@ -32,8 +34,14 @@ export function DialerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const endCall = useCallback(() => {
+    if (activeCall && activeCall.onHangup) {
+      // Wait 5 seconds before triggering the refetch to allow for webhook processing
+      setTimeout(() => {
+        activeCall.onHangup!();
+      }, 5000);
+    }
     setActiveCall(null);
-  }, []);
+  }, [activeCall]);
 
   return (
     <DialerContext.Provider value={{ isDialerOpen, openDialer, closeDialer, activeCall, startCall, endCall }}>
