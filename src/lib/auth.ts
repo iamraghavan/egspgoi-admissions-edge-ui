@@ -12,6 +12,9 @@ interface UserProfile {
     role: string;
     phone?: string;
     preferences?: UserPreferences;
+    designation?: string;
+    agent_number?: string;
+    caller_id?: string;
 }
 
 export function getAuthHeaders() {
@@ -135,6 +138,9 @@ export async function getProfile(): Promise<UserProfile | null> {
                 role: apiProfile.data.role.name,
                 phone: apiProfile.data.phone,
                 preferences: apiProfile.data.preferences,
+                designation: apiProfile.data.designation,
+                agent_number: apiProfile.data.agent_number,
+                caller_id: apiProfile.data.caller_id,
             };
             localStorage.setItem('userProfile', JSON.stringify(fullProfile));
             return fullProfile;
@@ -143,6 +149,32 @@ export async function getProfile(): Promise<UserProfile | null> {
     
     return profile;
 }
+
+export async function updateUserProfile(payload: Partial<User>): Promise<User> {
+    const { data, error } = await apiClient<any>('/users/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+    });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    
+    const updatedUser = data.data;
+
+    // Update local storage
+    if (typeof window !== 'undefined') {
+        const storedUser = await getProfile();
+        if (storedUser) {
+            const newUserProfile = { ...storedUser, ...updatedUser };
+            localStorage.setItem('userProfile', JSON.stringify(newUserProfile));
+            return newUserProfile as User;
+        }
+    }
+    
+    return await getProfile() as User;
+}
+
 
 export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<any> {
     const result = await apiClient<{ settings: UserPreferences }>(`/users/auth/settings`, {

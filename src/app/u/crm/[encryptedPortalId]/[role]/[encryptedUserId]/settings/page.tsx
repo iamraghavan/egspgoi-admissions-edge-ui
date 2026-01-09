@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import PageHeader from "@/components/page-header";
 import { PreferencesForm } from '@/components/settings/preferences-form';
+import { ProfileForm } from '@/components/settings/profile-form';
 import { getProfile } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { User } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SettingsPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -37,7 +39,18 @@ export default function SettingsPage() {
                     <Skeleton className="h-64 w-full" />
                 </div>
             ) : user ? (
-                <PreferencesForm user={user} onUpdate={handleUpdate} />
+                 <Tabs defaultValue="profile" className="space-y-4">
+                    <TabsList>
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="profile">
+                        <ProfileForm user={user} onUpdate={handleUpdate} />
+                    </TabsContent>
+                    <TabsContent value="preferences">
+                        <PreferencesForm user={user} onUpdate={handleUpdate} />
+                    </TabsContent>
+                </Tabs>
             ) : (
                 <p>Could not load user profile.</p>
             )}
