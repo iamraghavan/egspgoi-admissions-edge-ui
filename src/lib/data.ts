@@ -82,8 +82,12 @@ export const getLeads = async (
                 role: lead.assigned_user.role_id, 
             } : null,
             notes: (lead.notes || []).map((note: any) => ({
-                ...note,
+                id: note.note_id,
+                content: note.content,
+                author_id: note.author_id,
                 author_name: note.author_name || 'Unknown',
+                author_role: note.author_role,
+                author_email: note.author_email,
                 created_at: parseCustomDate(note.created_at),
             })),
         }));
@@ -160,12 +164,11 @@ export const addLeadNote = async (leadId: string, content: string): Promise<Note
 
     if(error) throw new Error(error.message);
     const newNote = data!.data;
-    const currentUser = getProfile();
     return {
         id: newNote.note_id,
         content: newNote.content,
         author_id: newNote.author_id,
-        author_name: newNote.author_name || currentUser?.name || 'Unknown',
+        author_name: newNote.author_name || 'Unknown',
         author_role: newNote.author_role,
         author_email: newNote.author_email,
         created_at: parseCustomDate(newNote.created_at)
@@ -240,8 +243,12 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
                 created_at: parseCustomDate(lead.created_at),
                 last_contacted_at: parseCustomDate(lead.updated_at || lead.created_at),
                 notes: (lead.notes || []).map((note: any) => ({
-                    ...note,
-                    author_name: note.author?.name || 'Unknown',
+                    id: note.note_id,
+                    content: note.content,
+                    author_id: note.author_id,
+                    author_name: note.author_name || 'Unknown',
+                    author_role: note.author_role,
+                    author_email: note.author_email,
                     created_at: parseCustomDate(note.created_at),
                 })),
             },
