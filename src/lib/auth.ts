@@ -98,21 +98,50 @@ export async function refreshToken(): Promise<void> {
 
 /**
  * Fetches the current user's profile from localStorage.
+ * If the profile in localStorage is missing a phone number, it fetches the full profile from the API.
  * @returns The user's profile or null if not found.
  */
-export function getProfile(): UserProfile | null {
-    if (typeof window !== 'undefined') {
-        const storedUser = localStorage.getItem('userProfile');
-        if (storedUser) {
-            try {
-                return JSON.parse(storedUser) as UserProfile;
-            } catch (error) {
-                console.error("Failed to parse user profile from localStorage", error);
-                return null;
-            }
+export async function getProfile(): Promise<UserProfile | null> {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const storedUser = localStorage.getItem('userProfile');
+    let profile: UserProfile | null = null;
+
+    if (storedUser) {
+        try {
+            profile = JSON.parse(storedUser) as UserProfile;
+        } catch (error) {
+            console.error("Failed to parse user profile from localStorage", error);
+            return null;
         }
     }
-    return null;
+    
+    // If profile exists but phone is missing, fetch from API
+    if (profile && !profile.phone) {
+        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/users/auth/me');
+        if (error) {
+            console.error("Failed to fetch full user profile:", error.message);
+            // Return the stale profile from local storage, the caller might handle it
+            return profile;
+        }
+        
+        if (apiProfile?.success && apiProfile.data) {
+            const fullProfile: UserProfile = {
+                id: apiProfile.data.id,
+                name: apiProfile.data.name,
+                email: apiProfile.data.email,
+                role: apiProfile.data.role.name,
+                phone: apiProfile.data.phone,
+                preferences: apiProfile.data.preferences,
+            };
+            localStorage.setItem('userProfile', JSON.stringify(fullProfile));
+            return fullProfile;
+        }
+    }
+    
+    return profile;
 }
 
 export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<any> {
@@ -128,9 +157,9 @@ export async function updateUserSettings(payload: { preferences: Partial<UserPre
     if (result.data?.settings) {
         // Update local storage
         if (typeof window !== 'undefined') {
-            const storedUser = localStorage.getItem('userProfile');
+            const storedUser = await getProfile();
             if (storedUser) {
-                const userProfile = JSON.parse(storedUser);
+                const userProfile = storedUser;
                 userProfile.preferences = { ...userProfile.preferences, ...result.data.settings };
                 localStorage.setItem('userProfile', JSON.stringify(userProfile));
                 return userProfile;
@@ -138,7 +167,7 @@ export async function updateUserSettings(payload: { preferences: Partial<UserPre
         }
     }
     
-    return getProfile() as User;
+    return await getProfile();
 }
 
 

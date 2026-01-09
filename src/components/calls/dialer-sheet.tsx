@@ -23,13 +23,16 @@ export function DialerSheet() {
 
 
   useEffect(() => {
-    if (isDialerOpen) {
-      const profile = getProfile();
-      if (profile) {
-        setUserName(profile.name);
-        setUserPhone(profile.phone || '');
+    const fetchProfile = async () => {
+      if (isDialerOpen) {
+        const profile = await getProfile();
+        if (profile) {
+          setUserName(profile.name);
+          setUserPhone(profile.phone || '');
+        }
       }
     }
+    fetchProfile();
   }, [isDialerOpen]);
 
   const handleKeyPress = (key: string) => {

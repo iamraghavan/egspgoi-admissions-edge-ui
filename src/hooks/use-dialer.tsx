@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { createContext, useState, useContext, ReactNode, useCallback, useRef, useEffect } from 'react';
@@ -46,8 +47,8 @@ export function DialerProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const startPollingForCall = useCallback((lead: Lead) => {
-    const agentProfile = getProfile();
+  const startPollingForCall = useCallback(async (lead: Lead) => {
+    const agentProfile = await getProfile();
     if (!agentProfile?.phone) {
         toast({ variant: 'destructive', title: 'Polling Error', description: 'Agent phone number not found.' });
         setCallStatus('idle');
@@ -56,7 +57,7 @@ export function DialerProvider({ children }: { children: ReactNode }) {
 
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const liveCalls = await getLiveCalls(agentProfile.phone);
+        const liveCalls = await getLiveCalls(agentProfile.phone!);
         const matchedCall = liveCalls.find(call => call.customer_number === lead.phone);
 
         if (matchedCall && matchedCall.call_id) {

@@ -40,10 +40,13 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
    useEffect(() => {
-    const profile = getProfile();
-    if (profile && profile.name) {
-      setUserName(profile.name.split(' ')[0]);
+    const fetchProfile = async () => {
+        const profile = await getProfile();
+        if (profile && profile.name) {
+          setUserName(profile.name.split(' ')[0]);
+        }
     }
+    fetchProfile();
   }, []);
 
   useEffect(() => {
