@@ -12,6 +12,7 @@ import type { Lead, User } from '@/lib/types';
 import { initiateCall } from '@/lib/data';
 import { EditLeadDialog } from './edit-lead-dialog';
 import { TransferLeadDialog } from './transfer-lead-dialog';
+import { useDialer } from '@/hooks/use-dialer';
 
 interface LeadDetailHeaderProps {
   lead: Lead;
@@ -25,14 +26,20 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
   const [isCalling, setCalling] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [isTransferOpen, setTransferOpen] = useState(false);
+  const { startCall, activeCall } = useDialer();
 
   const handleInitiateCall = async () => {
     setCalling(true);
     try {
-      await initiateCall(lead.id);
+      const callData = await initiateCall(lead.id);
       toast({
         title: "Call Initiated",
         description: `A call is being connected to ${lead.name}.`,
+      });
+      startCall({
+          callId: callData.call_id,
+          leadName: lead.name,
+          startTime: Date.now()
       });
     } catch (error: any) {
       toast({
@@ -67,7 +74,7 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
                  Print
              </Link>
            </Button>
-          <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling}>
+          <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling || !!activeCall}>
             {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
             Call Lead
           </Button>

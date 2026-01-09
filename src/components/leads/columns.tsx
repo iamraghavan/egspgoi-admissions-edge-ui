@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { format } from 'date-fns';
 import type { LeadStatus } from "@/lib/types";
+import { useDialer } from "@/hooks/use-dialer"
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
@@ -111,6 +112,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
       const { toast } = useToast();
+      const { startCall, activeCall } = useDialer();
       const [isCalling, setIsCalling] = useState(false);
 
       const handleUpdateStatus = async (status: LeadStatus) => {
@@ -134,10 +136,15 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const handleCall = async () => {
         setIsCalling(true);
         try {
-            await initiateCall(lead.id);
+            const callData = await initiateCall(lead.id);
             toast({
                 title: "Call Initiated",
                 description: `Calling ${lead.name}...`,
+            });
+            startCall({
+                callId: callData.call_id,
+                leadName: lead.name,
+                startTime: Date.now(),
             });
         } catch (error: any) {
             toast({
@@ -203,7 +210,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
                         ))}
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuItem onClick={handleCall} disabled={isCalling}>
+                <DropdownMenuItem onClick={handleCall} disabled={isCalling || !!activeCall}>
                 {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
                 Initiate Call
                 </DropdownMenuItem>

@@ -15,6 +15,7 @@ import { SessionTimeoutProvider, useSessionTimeout } from '@/hooks/use-session-t
 import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
 import { setSessionTimeoutContext } from '@/lib/session-context';
 import { initializeSessionTimer } from '@/lib/session-timer';
+import { ActiveCallBar } from '@/components/calls/active-call-bar';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -48,6 +49,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
         </main>
       </div>
       <DialerSheet />
+      <ActiveCallBar />
       <SessionTimeoutDialog />
     </div>
   )

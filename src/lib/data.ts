@@ -193,7 +193,7 @@ export const initiateCall = async (leadId: string): Promise<any> => {
     });
 
     if(error) throw new Error(error.message);
-    return data;
+    return data?.data;
 };
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
