@@ -120,7 +120,7 @@ export async function getProfile(): Promise<UserProfile | null> {
     
     // If profile exists but phone is missing, fetch from API
     if (profile && !profile.phone) {
-        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/users/me');
+        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/auth/me');
         if (error) {
             console.error("Failed to fetch full user profile:", error.message);
             // Return the stale profile from local storage, the caller might handle it
