@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -52,7 +51,19 @@ export default function LeadDetailPage() {
 
     useEffect(() => {
         fetchLeadDetails();
-    }, [fetchLeadDetails]);
+
+        const handleRefresh = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            if (customEvent.detail.leadId === params.leadId) {
+                fetchLeadDetails();
+            }
+        }
+
+        window.addEventListener('leadDataShouldRefresh', handleRefresh);
+        return () => {
+            window.removeEventListener('leadDataShouldRefresh', handleRefresh);
+        }
+    }, [fetchLeadDetails, params.leadId]);
 
     useEffect(() => {
         getUsers().then(setUsers);

@@ -15,20 +15,20 @@ function formatDuration(seconds: number) {
 }
 
 export function ActiveCallBar() {
-    const { activeCall, endCall } = useDialer();
+    const { activeCall, endCall, callStatus } = useDialer();
     const [duration, setDuration] = useState(0);
     const [isHangingUp, setIsHangingUp] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
-        if (activeCall) {
+        if (callStatus === 'connected' && activeCall) {
             setDuration(Math.floor((Date.now() - activeCall.startTime) / 1000));
             const timer = setInterval(() => {
                 setDuration(prev => prev + 1);
             }, 1000);
             return () => clearInterval(timer);
         }
-    }, [activeCall]);
+    }, [activeCall, callStatus]);
 
     const handleHangUp = async () => {
         if (!activeCall) return;
@@ -36,10 +36,7 @@ export function ActiveCallBar() {
         try {
             await hangupCall(activeCall.callId);
             toast({ title: 'Call Ended' });
-            
-            // End the call and trigger the refetch callback after a delay
             endCall();
-
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Hang Up Failed', description: error.message });
         } finally {
@@ -47,26 +44,38 @@ export function ActiveCallBar() {
         }
     };
 
-    if (!activeCall) return null;
+    if (callStatus === 'idle') return null;
 
     return (
         <div className="fixed bottom-4 right-4 z-50 bg-background border shadow-lg rounded-lg p-4 w-80 flex items-center justify-between">
-            <div>
-                <p className="font-semibold">{activeCall.leadName}</p>
-                <p className="text-sm text-muted-foreground">In call... {formatDuration(duration)}</p>
-            </div>
-            <Button
-                variant="destructive"
-                size="icon"
-                onClick={handleHangUp}
-                disabled={isHangingUp}
-            >
-                {isHangingUp ? (
+            {callStatus === 'connecting' ? (
+                 <div className="flex items-center gap-3">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                    <PhoneOff className="h-5 w-5" />
-                )}
-            </Button>
+                    <div>
+                        <p className="font-semibold">Connecting...</p>
+                        <p className="text-sm text-muted-foreground">Please wait</p>
+                    </div>
+                </div>
+            ) : activeCall ? (
+                <>
+                    <div>
+                        <p className="font-semibold">{activeCall.leadName}</p>
+                        <p className="text-sm text-muted-foreground">In call... {formatDuration(duration)}</p>
+                    </div>
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={handleHangUp}
+                        disabled={isHangingUp}
+                    >
+                        {isHangingUp ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <PhoneOff className="h-5 w-5" />
+                        )}
+                    </Button>
+                </>
+            ) : null}
         </div>
     );
 }

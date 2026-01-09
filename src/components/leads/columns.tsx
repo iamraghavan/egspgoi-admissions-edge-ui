@@ -112,7 +112,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
       const { toast } = useToast();
-      const { startCall, activeCall } = useDialer();
+      const { startCall, activeCall, callStatus } = useDialer();
       const [isCalling, setIsCalling] = useState(false);
 
       const handleUpdateStatus = async (status: LeadStatus) => {
@@ -136,16 +136,12 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const handleCall = async () => {
         setIsCalling(true);
         try {
-            const callData = await initiateCall(lead.id);
+            await initiateCall(lead.id);
             toast({
                 title: "Call Initiated",
                 description: `Calling ${lead.name}...`,
             });
-            startCall({
-                callId: callData.call_id,
-                leadName: lead.name,
-                startTime: Date.now(),
-            });
+            startCall(lead);
         } catch (error: any) {
             toast({
                 variant: "destructive",
@@ -210,7 +206,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
                         ))}
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuItem onClick={handleCall} disabled={isCalling || !!activeCall}>
+                <DropdownMenuItem onClick={handleCall} disabled={isCalling || callStatus !== 'idle'}>
                 {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
                 Initiate Call
                 </DropdownMenuItem>

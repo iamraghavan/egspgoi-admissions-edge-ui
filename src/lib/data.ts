@@ -1,5 +1,4 @@
 
-
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
@@ -305,12 +304,13 @@ export const getCalls = async (): Promise<Call[]> => {
     return Promise.resolve(calls);
 }
 
-export const getLiveCalls = async (): Promise<LiveCall[]> => {
-    const liveCalls: LiveCall[] = [
-        { callId: 'live-1', leadName: 'John Doe', agentName: 'Michael Smith', startTime: Date.now() - 1000 * 45 },
-        { callId: 'live-2', leadName: 'Jane Smith', agentName: 'Sarah Johnson', startTime: Date.now() - 1000 * 123 },
-    ];
-    return Promise.resolve(liveCalls);
+export const getLiveCalls = async (agentNumber: string): Promise<any[]> => {
+    const { data, error } = await apiClient<any>(`/smartflo/live-calls?agent_number=${agentNumber}`);
+    if(error) {
+        console.error("Failed to fetch live calls", error);
+        return [];
+    };
+    return data.data || [];
 }
 
 export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {

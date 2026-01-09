@@ -26,23 +26,17 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
   const [isCalling, setCalling] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [isTransferOpen, setTransferOpen] = useState(false);
-  const { startCall, activeCall } = useDialer();
+  const { startCall, callStatus } = useDialer();
 
   const handleInitiateCall = async () => {
     setCalling(true);
     try {
-      const callData = await initiateCall(lead.id);
+      await initiateCall(lead.id);
       toast({
         title: "Call Initiated",
-        description: `A call is being connected to ${lead.name}.`,
+        description: `Calling ${lead.name}...`,
       });
-      startCall({
-          callId: callData.call_id,
-          leadName: lead.name,
-          startTime: Date.now(),
-          leadId: lead.id,
-          onHangup: onLeadUpdate
-      });
+      startCall(lead);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -76,9 +70,9 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
                  Print
              </Link>
            </Button>
-          <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling || !!activeCall}>
-            {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
-            Call Lead
+          <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling || callStatus !== 'idle'}>
+            {isCalling || callStatus === 'connecting' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+            {callStatus === 'connecting' ? 'Connecting...' : 'Call Lead'}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)}>
             <Users className="mr-2 h-4 w-4" />
