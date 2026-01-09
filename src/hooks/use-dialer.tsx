@@ -36,6 +36,9 @@ export function DialerProvider({ children }: { children: ReactNode }) {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+  const openDialer = useCallback(() => setIsDialerOpen(true), []);
+  const closeDialer = useCallback(() => setIsDialerOpen(false), []);
+
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
