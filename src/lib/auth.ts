@@ -1,4 +1,6 @@
 
+'use client';
+
 import type { User, UserPreferences } from './types';
 import { apiClient } from './api-client';
 import { startSessionTimer, stopSessionTimer } from './session-timer';
@@ -59,11 +61,17 @@ export async function login(email: string, password: string): Promise<{ accessTo
         if (responseData && responseData.accessToken && responseData.user) {
             // Store the token and user info
             if (typeof window !== 'undefined') {
+                const userProfile = {
+                    ...responseData.user,
+                    phone: responseData.user.caller_id // Map caller_id to phone
+                };
+
                 localStorage.setItem('accessToken', responseData.accessToken);
-                localStorage.setItem('userProfile', JSON.stringify(responseData.user));
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
                 startSessionTimer(responseData.accessToken); // Start the session timer
+                return { accessToken: responseData.accessToken, user: userProfile };
             }
-            return { accessToken: responseData.accessToken, user: responseData.user };
+             return { accessToken: responseData.accessToken, user: responseData.user };
         } else {
              throw new Error('Login response did not include an accessToken or user object.');
         }
@@ -135,7 +143,7 @@ export async function getProfile(): Promise<UserProfile | null> {
                 name: apiProfile.data.name,
                 email: apiProfile.data.email,
                 role: apiProfile.data.role.name,
-                phone: apiProfile.data.phone,
+                phone: apiProfile.data.caller_id || apiProfile.data.phone,
                 preferences: apiProfile.data.preferences,
                 designation: apiProfile.data.designation,
                 agent_number: apiProfile.data.agent_number,
@@ -150,7 +158,7 @@ export async function getProfile(): Promise<UserProfile | null> {
 }
 
 export async function updateUserProfile(payload: Partial<User>): Promise<User> {
-    const { data, error } = await apiClient<any>('/users/me', {
+    const { data, error } = await apiClient<any>('/users/auth/profile', {
         method: 'PATCH',
         body: JSON.stringify(payload),
     });
