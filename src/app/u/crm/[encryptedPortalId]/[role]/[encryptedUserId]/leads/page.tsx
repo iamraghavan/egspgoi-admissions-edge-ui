@@ -9,13 +9,15 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Lead } from '@/lib/types';
 import { getLeads } from '@/lib/data';
 import type { DateRange } from 'react-day-picker';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GanttChart } from '@/components/gantt/gantt-chart';
+import { Breadcrumbs, BreadcrumbItem } from '@/components/ui/breadcrumbs';
+import PageHeader from '@/components/page-header';
+import { useParams } from 'next/navigation';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; };
 
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -65,13 +67,13 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 h-full">
-       <Tabs defaultValue="table" className="h-full flex flex-col">
-        <TabsList>
-          <TabsTrigger value="table">Data Table</TabsTrigger>
-          <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
-        </TabsList>
-        <TabsContent value="table" className="flex-grow">
+    <div className="flex flex-col gap-4 h-full">
+        <Breadcrumbs>
+            <BreadcrumbItem href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`}>Dashboard</BreadcrumbItem>
+            <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
+        </Breadcrumbs>
+       <PageHeader title="Leads" description="Manage and track all your prospective students." />
+        <div className="flex-grow">
             <LeadsDataTable
                 columns={leadColumns}
                 data={leads}
@@ -83,11 +85,7 @@ export default function LeadsPage() {
                 dateRange={dateRange}
                 setDateRange={handleDateRangeChange}
             />
-        </TabsContent>
-        <TabsContent value="gantt" className="flex-grow">
-            <GanttChart leads={leads} isLoading={loading} />
-        </TabsContent>
-      </Tabs>
+        </div>
     </div>
   );
 }
