@@ -35,9 +35,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { courseData } from '@/lib/course-data';
 import * as XLSX from 'xlsx';
-import PageHeader from "../page-header"
-import { Breadcrumbs, BreadcrumbItem } from "../ui/breadcrumbs"
-import { useParams } from "next/navigation"
 import { Lead, User } from "@/lib/types"
 import type { DateRange } from "react-day-picker"
 
@@ -45,7 +42,9 @@ import type { DateRange } from "react-day-picker"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  loading: boolean
+  searchKey: string;
+  searchPlaceholder: string;
+  loading?: boolean
   onLoadMore?: () => void
   canLoadMore?: boolean
   isFetchingMore?: boolean
@@ -54,9 +53,11 @@ interface DataTableProps<TData, TValue> {
   setDateRange?: (dateRange?: DateRange) => void;
 }
 
-export default function LeadsDataTable<TData, TValue>({
+export default function DataTable<TData, TValue>({
   columns,
   data,
+  searchKey,
+  searchPlaceholder,
   loading,
   onLoadMore,
   canLoadMore,
@@ -87,7 +88,6 @@ export default function LeadsDataTable<TData, TValue>({
   const [isDownloading, setIsDownloading] = React.useState(false);
   
   const { toast } = useToast();
-  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
 
   const [uploadStep, setUploadStep] = React.useState<'select' | 'verify'>('select');
   const [parsedData, setParsedData] = React.useState<any[]>([]);
@@ -109,10 +109,12 @@ export default function LeadsDataTable<TData, TValue>({
   }, [selectedCollege]);
 
   React.useEffect(() => {
-    getUsers().then(users => {
-        setAvailableAgents(users);
-    });
-  }, []);
+    if (refreshData) { // Only fetch agents if it's the Leads data table
+        getUsers().then(users => {
+            setAvailableAgents(users);
+        });
+    }
+  }, [refreshData]);
 
   const handleCreateLead = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -285,13 +287,15 @@ export default function LeadsDataTable<TData, TValue>({
     <div className="space-y-4">
       <div className="rounded-md border bg-card">
           <DataTableToolbar 
-            table={table} 
-            onCreateLead={() => setCreateDialogOpen(true)}
-            onUploadLeads={() => setUploadDialogOpen(true)}
-            onBulkTransfer={() => setBulkTransferOpen(true)}
+            table={table}
+            searchKey={searchKey}
+            searchPlaceholder={searchPlaceholder}
+            onCreateLead={refreshData ? () => setCreateDialogOpen(true) : undefined}
+            onUploadLeads={refreshData ? () => setUploadDialogOpen(true) : undefined}
+            onBulkTransfer={refreshData ? () => setBulkTransferOpen(true) : undefined}
             dateRange={dateRange}
-            onDateRangeChange={setDateRange!}
-            onSearch={() => refreshData!({ dateRange })}
+            onDateRangeChange={setDateRange}
+            onSearch={refreshData ? () => refreshData({ dateRange }) : undefined}
           />
       </div>
       <div className="rounded-md border">

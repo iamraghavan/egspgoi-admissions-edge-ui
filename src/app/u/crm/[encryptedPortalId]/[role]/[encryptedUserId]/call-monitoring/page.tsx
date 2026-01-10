@@ -148,8 +148,8 @@ export default function CallMonitoringPage() {
                         columns={callRecordsColumns} 
                         data={records}
                         loading={loading && page === 1}
-                        searchKey="call_id" // Not used for filtering, but required by component
-                        searchPlaceholder="Filter by ID..." // Not used
+                        searchKey="call_id" 
+                        searchPlaceholder="Filter by ID..."
                         onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
                         canLoadMore={canLoadMore}
                         isFetchingMore={loading && page > 1}

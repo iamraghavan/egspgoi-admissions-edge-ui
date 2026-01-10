@@ -1,14 +1,21 @@
+
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getLeads } from '@/lib/data';
 import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
-import KanbanBoard from '@/components/leads/kanban-board';
 import { PlusCircle } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[500px] w-full" />,
+});
 
 export default async function LeadsPage() {
-  const leads = await getLeads();
+  const { leads } = await getLeads();
 
   return (
     <div className="flex flex-col gap-8">
