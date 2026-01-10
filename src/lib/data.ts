@@ -301,7 +301,17 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
 
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const { data, error } = await apiClient<any>(`/campaigns/${id}`);
-    if(error) throw new Error(error.message);
+    if(error) {
+        // If the API returns a not found error, gracefully return null
+        if (error.status === 404) {
+            return null;
+        }
+        // For other errors, we might still want to throw
+        throw new Error(error.message);
+    };
+    if (!data || !data.data) {
+        return null;
+    }
     const campaign = data.data;
     return { 
         ...campaign,
