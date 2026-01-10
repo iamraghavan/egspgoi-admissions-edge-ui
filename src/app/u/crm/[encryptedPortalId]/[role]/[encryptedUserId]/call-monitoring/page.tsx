@@ -74,8 +74,8 @@ export default function CallMonitoringPage() {
                         </div>
                      ) : liveCalls.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {liveCalls.map((call) => (
-                                <LiveCallCard key={call.callId} call={call} />
+                            {liveCalls.map((call, index) => (
+                                <LiveCallCard key={`${call.callId}-${call.agent_name}-${call.customer_number}-${index}`} call={call} />
                             ))}
                         </div>
                     ) : (
