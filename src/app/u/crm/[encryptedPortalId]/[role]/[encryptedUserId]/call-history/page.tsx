@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/page-header";
 import DataTable from "@/components/leads/data-table";
@@ -14,7 +14,7 @@ import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, PlayCircle } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { AudioPlayerDialog } from '@/components/calls/audio-player-dialog';
 import { Label } from '@/components/ui/label';
@@ -104,27 +104,6 @@ export default function CallHistoryPage() {
         setPage(1); // Reset page
         fetchRecords(true);
     }
-
-    const columnsWithPlayAction = useMemo(() => [
-        ...callRecordsColumns,
-        {
-            id: 'actions',
-            cell: ({ row }: any) => {
-                const url = row.original.recording_url;
-                if (!url) return null;
-
-                return (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setPlayingRecording(url)}
-                    >
-                        <PlayCircle className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                );
-            },
-        },
-    ], []);
     
     return (
         <div className="flex flex-col gap-8">
@@ -168,7 +147,7 @@ export default function CallHistoryPage() {
                 </div>
             </div>
             <DataTable 
-                columns={columnsWithPlayAction} 
+                columns={callRecordsColumns} 
                 data={records}
                 loading={loading && records.length === 0}
                 searchKey="call_id" 
@@ -176,6 +155,9 @@ export default function CallHistoryPage() {
                 onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
                 canLoadMore={canLoadMore}
                 isFetchingMore={loading && page > 1}
+                meta={{
+                    setPlayingRecording,
+                }}
             />
             {playingRecording && (
               <AudioPlayerDialog

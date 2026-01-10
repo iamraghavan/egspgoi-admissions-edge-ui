@@ -51,6 +51,7 @@ interface DataTableProps<TData, TValue> {
   refreshData?: (filters?: { dateRange?: DateRange }) => void;
   dateRange?: DateRange;
   setDateRange?: (dateRange?: DateRange) => void;
+  meta?: any;
 }
 
 export default function DataTable<TData, TValue>({
@@ -65,6 +66,7 @@ export default function DataTable<TData, TValue>({
   refreshData,
   dateRange,
   setDateRange,
+  meta,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -268,6 +270,7 @@ export default function DataTable<TData, TValue>({
     },
     meta: {
         refreshData: refreshData ? () => refreshData() : undefined,
+        ...meta
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,

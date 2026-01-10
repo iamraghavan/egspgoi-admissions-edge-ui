@@ -58,14 +58,15 @@ export const callRecordsColumns: ColumnDef<any>[] = [
   {
     accessorKey: "recording_url",
     header: "Recording",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const url = row.getValue("recording_url") as string;
       if (!url) return <span>N/A</span>;
+      
+      const { setPlayingRecording } = (table.options.meta || {}) as any;
+
       return (
-        <Button variant="ghost" size="icon" asChild>
-          <a href={url} target="_blank" rel="noopener noreferrer">
+        <Button variant="ghost" size="icon" onClick={() => setPlayingRecording?.(url)}>
             <PlayCircle className="h-5 w-5 text-muted-foreground" />
-          </a>
         </Button>
       )
     },
