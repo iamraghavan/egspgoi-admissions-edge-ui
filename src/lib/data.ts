@@ -497,8 +497,12 @@ type GetCallRecordsParams = {
   from_date?: string;
   to_date?: string;
   direction?: 'inbound' | 'outbound' | 'all';
+  destination?: string; // For outbound calls
+  callerid?: string; // For inbound calls
+  agent_number?: string;
   agent_name?: string;
   page?: number;
+  limit?: number;
 };
 
 export const getCallRecords = async (params: GetCallRecordsParams): Promise<any> => {
@@ -515,3 +519,5 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     if(error) throw new Error(error.message);
     return data;
 };
+
+    

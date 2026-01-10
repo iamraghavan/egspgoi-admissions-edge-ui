@@ -40,14 +40,32 @@ export default function CallMonitoringPage() {
     }, [router]);
     
     const fetchRecords = useCallback(async (isNewSearch = false) => {
+        if (!dateRange?.from || !dateRange?.to) {
+            toast({
+                variant: 'destructive',
+                title: 'Date Range Required',
+                description: 'Please select a date range to fetch call records.',
+            });
+            return;
+        }
+
         setLoadingRecords(true);
         try {
             const currentPage = isNewSearch ? 1 : page;
-            const params: any = { page: currentPage };
-            if (dateRange?.from) params.from_date = format(dateRange.from, 'yyyy-MM-dd HH:mm:ss');
-            if (dateRange?.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd HH:mm:ss');
+            const params: any = { page: currentPage, limit: 20 };
+            params.from_date = format(dateRange.from, 'yyyy-MM-dd HH:mm:ss');
+            params.to_date = format(dateRange.to, 'yyyy-MM-dd HH:mm:ss');
+            
             if (direction !== 'all') params.direction = direction;
-            if (agent !== 'all') params.agent_name = agent;
+            
+            const selectedAgent = users.find(u => u.id === agent);
+            if (selectedAgent?.agent_number) {
+                 params.agent_number = selectedAgent.agent_number;
+            } else if (agent !== 'all') {
+                // If agent is selected but not found or has no number, it might be a name
+                params.agent_name = agent;
+            }
+
 
             const response = await getCallRecords(params);
             
@@ -73,7 +91,7 @@ export default function CallMonitoringPage() {
         } finally {
             setLoadingRecords(false);
         }
-    }, [page, dateRange, direction, agent, toast, handleLogout, records]);
+    }, [page, dateRange, direction, agent, toast, handleLogout, records, users]);
 
     const fetchLiveCalls = useCallback(async () => {
         try {
@@ -147,7 +165,7 @@ export default function CallMonitoringPage() {
                 <CardContent>
                     <div className="flex flex-wrap items-end gap-4 mb-6">
                         <div className="grid w-full max-w-xs items-center gap-1.5">
-                            <label className="text-sm font-medium">Date Range</label>
+                            <label className="text-sm font-medium">Date Range (Required)</label>
                             <DropdownRangeDatePicker selected={dateRange} onSelect={setDateRange} />
                         </div>
                          <div className="grid w-full max-w-xs items-center gap-1.5">
@@ -171,7 +189,7 @@ export default function CallMonitoringPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All</SelectItem>
-                                    {users.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -180,7 +198,7 @@ export default function CallMonitoringPage() {
                                 {loadingRecords && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
                                 Search
                             </Button>
-                            <Button variant="outline" onClick={handleSearch} disabled={loadingRecords && page === 1}>
+                            <Button variant="outline" onClick={() => { setRecords([]); setPage(1); fetchRecords(true); }} disabled={loadingRecords && page === 1}>
                                 <RefreshCw className={`mr-2 h-4 w-4 ${loadingRecords && page === 1 ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
@@ -201,3 +219,5 @@ export default function CallMonitoringPage() {
         </div>
     );
 }
+
+    
