@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/page-header";
 import DataTable from "@/components/leads/data-table";
@@ -14,9 +14,10 @@ import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, PlayCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { AudioPlayerDialog } from '@/components/calls/audio-player-dialog';
+import { Label } from '@/components/ui/label';
 
 export default function CallHistoryPage() {
     const [records, setRecords] = useState([]);
@@ -104,7 +105,7 @@ export default function CallHistoryPage() {
         fetchRecords(true);
     }
 
-    const columnsWithPlayAction = React.useMemo(() => [
+    const columnsWithPlayAction = useMemo(() => [
         ...callRecordsColumns,
         {
             id: 'actions',
@@ -167,7 +168,7 @@ export default function CallHistoryPage() {
                 </div>
             </div>
             <DataTable 
-                columns={callRecordsColumns} 
+                columns={columnsWithPlayAction} 
                 data={records}
                 loading={loading && records.length === 0}
                 searchKey="call_id" 
