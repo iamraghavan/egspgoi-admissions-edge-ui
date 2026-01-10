@@ -36,48 +36,48 @@ const formatDuration = (seconds: number) => {
     return `${minutes}m ${remainingSeconds}s`;
 }
 
-export const callHistoryColumns: ColumnDef<Call>[] = [
+export const callHistoryColumns: ColumnDef<any>[] = [
   {
-    accessorKey: "leadId",
-    header: "Lead",
-    cell: ({ row }) => <DataCell id={row.original.leadId} fetcher={getLeadById} nameKey="name" />,
+    accessorKey: "date",
+    header: "Date & Time",
+     cell: ({ row }) => {
+      const date = new Date(`${row.original.date}T${row.original.time}Z`);
+      return <div>{date.toLocaleString()}</div>;
+    },
   },
-  {
-    accessorKey: "agentId",
+   {
+    accessorKey: "call_id",
+    header: "Call ID",
+  },
+   {
+    accessorKey: "agent_name",
     header: "Agent",
-    cell: ({ row }) => <DataCell id={row.original.agentId} fetcher={getUserById} nameKey="name" avatarKey="avatarUrl" />,
   },
   {
-    accessorKey: "timestamp",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date & Time
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("timestamp"))
-      return <div>{date.toLocaleString()}</div>
-    },
+    accessorKey: "customer_number",
+    header: "Customer Number",
+  },
+    {
+    accessorKey: "direction",
+    header: "Direction",
+     cell: ({ row }) => (
+      <span className="capitalize">{row.getValue("direction")}</span>
+    ),
   },
   {
-    accessorKey: "duration",
+    accessorKey: "call_duration",
     header: "Duration",
-    cell: ({ row }) => formatDuration(row.getValue("duration")),
+    cell: ({ row }) => formatDuration(row.getValue("call_duration")),
   },
   {
-    id: "actions",
+    accessorKey: "recording_url",
+    header: "Recording",
     cell: ({ row }) => {
       const call = row.original
 
       return (
         <Button variant="ghost" size="icon" asChild>
-          <a href={call.recordingUrl} target="_blank" rel="noopener noreferrer">
+          <a href={call.recording_url} target="_blank" rel="noopener noreferrer">
             <PlayCircle className="h-5 w-5 text-muted-foreground" />
           </a>
         </Button>
