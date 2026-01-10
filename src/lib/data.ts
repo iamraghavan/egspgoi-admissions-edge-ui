@@ -506,19 +506,21 @@ type GetCallRecordsParams = {
 };
 
 export const getCallRecords = async (params: GetCallRecordsParams): Promise<any> => {
-    const url = new URL('https://cms-egspgoi.vercel.app/api/v1/smartflo/call/records');
+    const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
         if (value && value !== 'all') {
-            url.searchParams.append(key, value.toString());
+            query.append(key, value.toString());
         }
     });
+
+    const endpoint = `/smartflo/call/records?${query.toString()}`;
     
-    const { data, error } = await apiClient<any>(url.pathname + url.search, {
+    const { data, error } = await apiClient<any>(endpoint, {
         method: 'GET',
     });
+
     if(error) throw new Error(error.message);
     
-    // The actual results are in data.data.results
     return {
         success: data?.success,
         results: data?.data?.results || [],
