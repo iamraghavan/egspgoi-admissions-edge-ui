@@ -13,15 +13,20 @@ import { LeadCourseInfo } from '@/components/leads/lead-course-info';
 import { LeadNotes } from '@/components/leads/lead-notes';
 import { LeadAssignedAgent } from '@/components/leads/lead-assigned-agent';
 import { LeadMetadata } from '@/components/leads/lead-metadata';
+import { ActiveCallCard } from '@/components/calls/active-call-card';
+import { useDialer } from '@/hooks/use-dialer';
 
 export default function LeadDetailPage() {
     const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
     const { toast } = useToast();
+    const { activeCall, callStatus } = useDialer();
     
     const [lead, setLead] = useState<Lead | null>(null);
     const [assignedUser, setAssignedUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
+
+    const isCallForCurrentLead = activeCall && activeCall.leadId === params.leadId;
 
     const fetchLeadDetails = useCallback(async () => {
         if (!params.leadId) return;
@@ -111,6 +116,7 @@ export default function LeadDetailPage() {
                 </div>
 
                 <div className="space-y-6">
+                    {isCallForCurrentLead && <ActiveCallCard />}
                     <LeadAssignedAgent user={assignedUser} />
                     <LeadMetadata lead={lead} />
                 </div>
