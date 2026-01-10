@@ -183,7 +183,7 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     if(error) throw new Error(error.message);
 };
 
-export const initiateCall = async (leadId: string): Promise<any> => {
+export const initiateCall = async (leadId: string): Promise<{ poll_url: string }> => {
     const profile = await getProfile();
     const agentNumber = profile?.agent_number;
 
@@ -191,14 +191,23 @@ export const initiateCall = async (leadId: string): Promise<any> => {
         throw new Error("Agent number not found in profile.");
     }
 
-    const { data, error } = await apiClient(`/leads/${leadId}/call`, {
+    const { data, error } = await apiClient<{ data: { poll_url: string } }>(`/leads/${leadId}/call`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: agentNumber }),
     });
 
     if(error) throw new Error(error.message);
-    return data;
+    if (!data?.data?.poll_url) throw new Error("API did not return a poll_url for tracking the call.");
+
+    return data.data;
 };
+
+export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string }> => {
+    const { data, error } = await apiClient<{ active: boolean, call_id?: string, status?: string }>(pollUrl);
+    if (error) throw new Error(error.message);
+    return data!;
+};
+
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
     const { data, error } = await apiClient(`/leads/${leadId}/transfer`, {

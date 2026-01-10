@@ -4,8 +4,7 @@
 
 import { createContext, useState, useContext, ReactNode, useCallback, useRef, useEffect } from 'react';
 import type { Lead } from '@/lib/types';
-import { getLiveCalls } from '@/lib/data';
-import { getProfile } from '@/lib/auth';
+import { initiateCall, pollForActiveCall } from '@/lib/data';
 import { useToast } from './use-toast';
 
 type ActiveCall = {
@@ -47,37 +46,28 @@ export function DialerProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const startPollingForCall = useCallback(async (lead: Lead) => {
-    const agentProfile = await getProfile();
-    if (!agentProfile?.phone) {
-        toast({ variant: 'destructive', title: 'Polling Error', description: 'Agent phone number not found.' });
-        setCallStatus('idle');
-        return;
-    }
-
+  const startPollingForCall = useCallback(async (lead: Lead, pollUrl: string) => {
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const liveCalls = await getLiveCalls(agentProfile.phone!);
-        const matchedCall = liveCalls.find(call => call.customer_number === lead.phone);
+        const pollResponse = await pollForActiveCall(pollUrl);
 
-        if (matchedCall && matchedCall.call_id) {
+        if (pollResponse?.active && pollResponse.call_id) {
           stopPolling();
           setActiveCall({
-            callId: matchedCall.call_id,
+            callId: pollResponse.call_id,
             leadId: lead.id,
             leadName: lead.name,
-            startTime: new Date(matchedCall.start_stamp).getTime(),
+            startTime: Date.now(), // Start time is when frontend confirms connection
             onHangup: () => {
-                // This will be called from the endCall function
-                // The idea is to pass a potential refresh function from the component that starts the call
                 const event = new CustomEvent('leadDataShouldRefresh', { detail: { leadId: lead.id }});
                 window.dispatchEvent(event);
             }
           });
           setCallStatus('connected');
         }
+        // If not active, the interval continues polling
       } catch (error: any) {
-        console.error("Polling for live calls failed:", error);
+        console.error("Polling for active call failed:", error);
         toast({ variant: 'destructive', title: 'Polling Error', description: error.message });
         stopPolling();
         setCallStatus('idle');
@@ -95,12 +85,24 @@ export function DialerProvider({ children }: { children: ReactNode }) {
   }, [stopPolling, toast]);
 
 
-  const startCall = useCallback((lead: Lead) => {
+  const startCall = useCallback(async (lead: Lead) => {
     setCallStatus('connecting');
-    // The `initiateCall` function is still called, but we don't use its response for the call_id anymore
-    // The actual polling is now handled by the component that calls `startCall`
-    startPollingForCall(lead);
-  }, [startPollingForCall]);
+    try {
+        const initiationResponse = await initiateCall(lead.id);
+        if (initiationResponse && initiationResponse.poll_url) {
+            startPollingForCall(lead, initiationResponse.poll_url);
+        } else {
+            throw new Error("Did not receive a poll URL to track the call.");
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Call Initiation Failed",
+            description: error.message,
+        });
+        setCallStatus('idle');
+    }
+  }, [startPollingForCall, toast]);
 
   const endCall = useCallback(() => {
     if (activeCall && activeCall.onHangup) {
