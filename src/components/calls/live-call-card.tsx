@@ -2,10 +2,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Ear, GitMerge, Mic, PhoneOff, User, Clock, RadioTower } from "lucide-react";
-import type { LiveCall } from "@/lib/types";
 import { Badge } from '../ui/badge';
 import {
   Tooltip,
@@ -31,27 +30,33 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
 
     useEffect(() => {
         const updateDuration = () => {
-            // Assuming call.duration is in "HH:mm:ss" or "mm:ss" format
-            const parts = call.duration.split(':').map(Number);
+            const timeParts = call.call_time.split(':').map(Number);
             let totalSeconds = 0;
-            if (parts.length === 3) {
-                totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-            } else if (parts.length === 2) {
-                totalSeconds = parts[0] * 60 + parts[1];
-            } else if (parts.length === 1) {
-                totalSeconds = parts[0];
+            if (timeParts.length === 3) {
+                totalSeconds = timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2];
+            } else if (timeParts.length === 2) {
+                totalSeconds = timeParts[0] * 60 + timeParts[1];
+            } else if (timeParts.length === 1) {
+                totalSeconds = timeParts[0];
             }
             setDuration(totalSeconds);
         };
+
         updateDuration();
-        const interval = setInterval(() => setDuration(prev => prev + 1), 1000);
+        const interval = setInterval(() => {
+            if (call.state?.toLowerCase() === 'answered') {
+                setDuration(prev => prev + 1);
+            }
+        }, 1000);
+        
         return () => clearInterval(interval);
-    }, [call.duration]);
+    }, [call.call_time, call.state]);
 
     const formatDuration = (totalSeconds: number) => {
-        const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
         const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-        return `${minutes}:${seconds}`;
+        return `${hours}:${minutes}:${seconds}`;
     };
 
     const getStatusVariant = (status: string) => {
@@ -68,7 +73,9 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="text-lg font-medium">{call.customer_number || 'Unknown Number'}</CardTitle>
-                        <Badge variant={getStatusVariant(call.state)} className="capitalize mt-1">{call.state}</Badge>
+                        <div className="mt-1">
+                           <Badge variant={getStatusVariant(call.state)} className="capitalize">{call.state}</Badge>
+                        </div>
                     </div>
                     <div className="text-lg font-mono font-semibold text-primary">{formatDuration(duration)}</div>
                 </div>
@@ -76,7 +83,7 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
             <CardContent className="flex-grow space-y-3">
                  <DetailItem icon={User} label="Agent" value={call.agent_name || 'N/A'} />
                  <DetailItem icon={RadioTower} label="Direction" value={<span className='capitalize'>{call.direction === 2 ? 'Outbound' : 'Inbound'}</span>} />
-                 <DetailItem icon={Clock} label="Call Time" value={call.call_time} />
+                 <DetailItem icon={Clock} label="Created At" value={call.created_at} />
             </CardContent>
              <TooltipProvider>
                 <div className="flex justify-around items-center p-2 border-t">

@@ -12,12 +12,11 @@ import { RefreshCw } from 'lucide-react';
 import { getLiveCalls } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
-import type { LiveCall } from '@/lib/types';
 import LiveCallCard from '@/components/calls/live-call-card';
 import { cn } from '@/lib/utils';
 
 export default function CallMonitoringPage() {
-    const [liveCalls, setLiveCalls] = useState<LiveCall[]>([]);
+    const [liveCalls, setLiveCalls] = useState<any[]>([]);
     const [loadingLiveCalls, setLoadingLiveCalls] = useState(true);
     
     const { toast } = useToast();
@@ -75,7 +74,7 @@ export default function CallMonitoringPage() {
                      ) : liveCalls.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {liveCalls.map((call, index) => (
-                                <LiveCallCard key={`${call.callId}-${call.agent_name}-${call.customer_number}-${index}`} call={call} />
+                                <LiveCallCard key={`${call.call_id}-${index}`} call={call} />
                             ))}
                         </div>
                     ) : (
