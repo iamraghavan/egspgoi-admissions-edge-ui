@@ -1,4 +1,5 @@
 
+
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
@@ -184,7 +185,11 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 
 export const initiateCall = async (leadId: string): Promise<any> => {
     const profile = await getProfile();
-    const agentNumber = profile?.phone || "918064522110";
+    const agentNumber = profile?.agent_number;
+
+    if (!agentNumber) {
+        throw new Error("Agent number not found in profile.");
+    }
 
     const { data, error } = await apiClient(`/leads/${leadId}/call`, {
         method: 'POST',
@@ -192,7 +197,7 @@ export const initiateCall = async (leadId: string): Promise<any> => {
     });
 
     if(error) throw new Error(error.message);
-    return data?.data;
+    return data;
 };
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
@@ -450,7 +455,11 @@ export const hangupCall = async (callId: string): Promise<any> => {
 
 export const dialNumber = async (numberToDial: string): Promise<any> => {
     const profile = await getProfile();
-    const agentNumber = profile?.phone || "918064522110";
+    const agentNumber = profile?.agent_number;
+    
+    if (!agentNumber) {
+        throw new Error("Agent number not found in profile.");
+    }
 
     const { data, error } = await apiClient(`/smartflo/call/dial`, {
         method: 'POST',
