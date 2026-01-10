@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { login } from "@/lib/auth";
+import { login, getProfile } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 
 const formSchema = z.object({
@@ -57,12 +57,13 @@ export function LoginForm() {
     try {
       const loginResponse = await login(values.email, values.password);
 
-      if (loginResponse && loginResponse.accessToken && loginResponse.user) {
-          const userProfile = loginResponse.user;
+      if (loginResponse && loginResponse.accessToken) {
+          // Immediately fetch the full profile to get all details including preferences
+          const userProfile = await getProfile();
 
-          // Store the token and user info
-          localStorage.setItem('accessToken', loginResponse.accessToken);
-          localStorage.setItem('userProfile', JSON.stringify(userProfile));
+          if (!userProfile) {
+            throw new Error("Could not fetch user profile after login.");
+          }
 
           toast({
               title: "Login Successful",
@@ -73,10 +74,13 @@ export function LoginForm() {
           const encryptedUserId = userProfile.id; 
           const encryptedPortalId = "egspgoi"; 
 
-          router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
+          // Wait a moment for toast to be seen
+          setTimeout(() => {
+            router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
+          }, 1000);
 
       } else {
-        throw new Error("Login response did not include an accessToken and user.");
+        throw new Error("Login response did not include an accessToken.");
       }
     } catch (error: any) {
         toast({
@@ -125,12 +129,22 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Login
         </Button>
+        <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+                </span>
+            </div>
+        </div>
         <Button variant="outline" className="w-full" type="button">
-          Login with Google
+          Google
         </Button>
       </form>
     </Form>

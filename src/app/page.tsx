@@ -1,39 +1,32 @@
-import Image from 'next/image';
+
 import { AppLogo } from '@/components/icons';
 import { LoginForm } from '@/components/auth/login-form';
+import { Card, CardHeader, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import placeholderImagesData from '@/lib/placeholder-images.json';
 
 export default function LoginPage() {
   const loginImage = placeholderImagesData.placeholderImages.find(p => p.id === "login-background");
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
-            <div className="flex justify-center items-center gap-2">
-                <AppLogo className="w-8 h-8 text-primary" />
-                <h1 className="text-3xl font-bold">Admissions Edge</h1>
+    <div 
+      className="w-full min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
+      style={{ backgroundImage: `url(${loginImage?.imageUrl})` }}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+      <Card className="mx-auto max-w-sm w-full z-10">
+        <CardHeader className="text-center">
+            <div className="flex justify-center items-center gap-2 mb-4">
+                <AppLogo className="w-10 h-10 text-primary" />
             </div>
-            <p className="text-balance text-muted-foreground">
-              Enter your email below to login to your account
-            </p>
-          </div>
+            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+            <CardDescription>
+                Enter your credentials to access your account
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
           <LoginForm />
-        </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        {loginImage && (
-          <Image
-            src={loginImage.imageUrl}
-            alt={loginImage.description}
-            width="1920"
-            height="1080"
-            className="h-full w-full object-cover"
-            data-ai-hint={loginImage.imageHint}
-          />
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
