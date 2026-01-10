@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 import { getSessionTimeoutContext } from './session-context';
 
 let sessionTimeoutId: NodeJS.Timeout | null = null;
-const TIMEOUT_BUFFER = 30 * 1000; // 30 seconds in milliseconds
+const TIMEOUT_BUFFER = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 interface DecodedToken {
   exp: number;
