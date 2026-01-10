@@ -1,6 +1,7 @@
 
 'use client';
-
+import 'react-date-range/dist/styles.css'; 
+import 'react-date-range/dist/theme/default.css'; 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/page-header";
@@ -10,20 +11,22 @@ import { getCallRecords, getUsers } from "@/lib/data";
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
 import type { User } from '@/lib/types';
-import { DateRange } from 'react-day-picker';
+import type { DateRange as DateRangeType } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { AudioPlayerDialog } from '@/components/calls/audio-player-dialog';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DateRangePicker } from 'react-date-range';
+import { cn } from '@/lib/utils';
 
 export default function CallHistoryPage() {
     const [records, setRecords] = useState([]);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [dateRange, setDateRange] = useState<DateRangeType | undefined>();
     const [direction, setDirection] = useState<'inbound' | 'outbound' | 'all'>('all');
     const [agent, setAgent] = useState('all');
     const [page, setPage] = useState(1);
@@ -104,6 +107,12 @@ export default function CallHistoryPage() {
         setPage(1); // Reset page
         fetchRecords(true);
     }
+
+    const handleDateChange = (ranges: any) => {
+        const { selection } = ranges;
+        const newRange = { from: selection.startDate, to: selection.endDate };
+        setDateRange(newRange);
+    }
     
     return (
         <div className="flex flex-col gap-8">
@@ -112,7 +121,46 @@ export default function CallHistoryPage() {
             <div className="flex flex-wrap items-end gap-4 mb-6 p-4 border rounded-lg bg-card">
                 <div className="grid w-full max-w-xs items-center gap-1.5">
                     <Label className="text-sm font-medium">Date Range</Label>
-                    <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                id="date"
+                                variant={"outline"}
+                                className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !dateRange && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                dateRange.to ? (
+                                    <>
+                                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                                    {format(dateRange.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(dateRange.from, "LLL dd, y")
+                                )
+                                ) : (
+                                <span>Pick a date</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <DateRangePicker
+                                onChange={handleDateChange}
+                                showSelectionPreview={true}
+                                moveRangeOnFirstSelection={false}
+                                months={2}
+                                ranges={[{
+                                    startDate: dateRange?.from,
+                                    endDate: dateRange?.to,
+                                    key: 'selection'
+                                }]}
+                                direction="horizontal"
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </div>
                 <div className="grid w-full max-w-[180px] items-center gap-1.5">
                     <Label className="text-sm font-medium">Call Direction</Label>
