@@ -67,7 +67,7 @@ export function DialerProvider({ children }: { children: ReactNode }) {
         }
         // If not active, the interval continues polling
       } catch (error: any) {
-        console.error("Polling for active call failed:", error);
+        console.error("Polling Error", error);
         toast({ variant: 'destructive', title: 'Polling Error', description: error.message });
         stopPolling();
         setCallStatus('idle');

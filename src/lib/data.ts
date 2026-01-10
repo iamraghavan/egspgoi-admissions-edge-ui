@@ -209,11 +209,15 @@ export const pollForActiveCall = async (pollUrl: string): Promise<{ active: bool
     if (!callerId) {
         throw new Error("Caller ID (agent phone number) not found in profile.");
     }
-
+    
     const urlWithAgent = `${pollUrl}?agent_number=${callerId}`;
     
     const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string } }>(urlWithAgent);
-    if (error) throw new Error(error.message);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    
     return data!.data;
 };
 
