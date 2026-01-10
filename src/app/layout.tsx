@@ -19,7 +19,6 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'Admissions Edge',
   description: 'Streamlining admissions with cutting-edge tools.',
-  manifest: '/manifest.json'
 };
 
 export default function RootLayout({
