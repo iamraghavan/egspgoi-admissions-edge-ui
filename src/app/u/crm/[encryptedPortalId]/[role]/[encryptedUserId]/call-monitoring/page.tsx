@@ -12,17 +12,19 @@ import { Button } from '@/components/ui/button';
 import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
-import { getCallRecords, getUsers } from '@/lib/data';
+import { getCallRecords, getUsers, getLiveCalls } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
-import HangupForm from '@/components/calls/hangup-form';
-import type { User } from '@/lib/types';
+import type { User, LiveCall } from '@/lib/types';
 import { format } from 'date-fns';
+import LiveCallCard from '@/components/calls/live-call-card';
 
 export default function CallMonitoringPage() {
     const [records, setRecords] = useState([]);
+    const [liveCalls, setLiveCalls] = useState<LiveCall[]>([]);
     const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loadingRecords, setLoadingRecords] = useState(false);
+    const [loadingLiveCalls, setLoadingLiveCalls] = useState(true);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [direction, setDirection] = useState<'inbound' | 'outbound' | 'all'>('all');
     const [agent, setAgent] = useState('all');
@@ -38,7 +40,7 @@ export default function CallMonitoringPage() {
     }, [router]);
     
     const fetchRecords = useCallback(async (isNewSearch = false) => {
-        setLoading(true);
+        setLoadingRecords(true);
         try {
             const currentPage = isNewSearch ? 1 : page;
             const params: any = { page: currentPage };
@@ -69,13 +71,33 @@ export default function CallMonitoringPage() {
                 toast({ variant: "destructive", title: "Failed to fetch records", description: error.message });
             }
         } finally {
-            setLoading(false);
+            setLoadingRecords(false);
         }
     }, [page, dateRange, direction, agent, toast, handleLogout, records]);
 
+    const fetchLiveCalls = useCallback(async () => {
+        try {
+            const fetchedLiveCalls = await getLiveCalls();
+            setLiveCalls(fetchedLiveCalls);
+        } catch (error: any) {
+            console.error("Failed to fetch live calls:", error);
+            // Non-critical, so we don't show a toast unless it's an auth error
+            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                 toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
+                 handleLogout();
+            }
+        } finally {
+            setLoadingLiveCalls(false);
+        }
+    }, [handleLogout, toast]);
+
     useEffect(() => {
         getUsers().then(setUsers);
-    }, []);
+        fetchLiveCalls(); // Initial fetch
+        
+        const interval = setInterval(fetchLiveCalls, 10000); // Refresh every 10 seconds
+        return () => clearInterval(interval);
+    }, [fetchLiveCalls]);
 
     const handleSearch = () => {
         setRecords([]); // Clear old records
@@ -85,21 +107,35 @@ export default function CallMonitoringPage() {
     
     return (
         <div className="flex flex-col gap-8">
-            <PageHeader title="Smartflo Call Management" description="Monitor calls and manage call records." />
+            <PageHeader title="Smartflo Call Management" description="Monitor live calls and manage historical records." />
             
             <Card>
                 <CardHeader>
-                    <CardTitle>Call Controls</CardTitle>
-                    <CardDescription>Use the form below to manually hang up an active call.</CardDescription>
+                    <CardTitle>Live Call Monitoring</CardTitle>
+                    <CardDescription>A real-time view of all ongoing calls.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <HangupForm />
+                     {loadingLiveCalls ? (
+                         <div className="flex items-center justify-center h-40 border border-dashed rounded-lg">
+                            <p className="text-muted-foreground">Loading live calls...</p>
+                        </div>
+                     ) : liveCalls.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {liveCalls.map((call) => (
+                                <LiveCallCard key={call.callId} call={call} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-40 border border-dashed rounded-lg">
+                            <p className="text-muted-foreground">No active calls right now.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Call Records</CardTitle>
+                    <CardTitle>Call History</CardTitle>
                     <CardDescription>Review and filter through past call records.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -134,12 +170,12 @@ export default function CallMonitoringPage() {
                             </Select>
                         </div>
                         <div className="flex gap-2">
-                             <Button onClick={handleSearch} disabled={loading && page === 1}>
-                                {loading && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                             <Button onClick={handleSearch} disabled={loadingRecords && page === 1}>
+                                {loadingRecords && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
                                 Search
                             </Button>
-                            <Button variant="outline" onClick={handleSearch} disabled={loading && page === 1}>
-                                <RefreshCw className={`mr-2 h-4 w-4 ${loading && page === 1 ? 'animate-spin' : ''}`} />
+                            <Button variant="outline" onClick={handleSearch} disabled={loadingRecords && page === 1}>
+                                <RefreshCw className={`mr-2 h-4 w-4 ${loadingRecords && page === 1 ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
                         </div>
@@ -147,12 +183,12 @@ export default function CallMonitoringPage() {
                     <DataTable 
                         columns={callRecordsColumns} 
                         data={records}
-                        loading={loading && page === 1}
+                        loading={loadingRecords && page === 1}
                         searchKey="call_id" 
                         searchPlaceholder="Filter by ID..."
                         onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
                         canLoadMore={canLoadMore}
-                        isFetchingMore={loading && page > 1}
+                        isFetchingMore={loadingRecords && page > 1}
                     />
                 </CardContent>
             </Card>
