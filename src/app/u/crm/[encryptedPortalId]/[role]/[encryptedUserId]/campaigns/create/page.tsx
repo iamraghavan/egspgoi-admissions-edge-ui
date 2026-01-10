@@ -1,8 +1,7 @@
 
 'use client';
 
-import 'react-date-range/dist/styles.css'; 
-import 'react-date-range/dist/theme/default.css'; 
+import 'react-day-picker/dist/style.css';
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -10,7 +9,7 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createCampaign } from "@/lib/data";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,8 +17,11 @@ import { format } from "date-fns";
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
-import { DateRangePicker } from 'react-date-range';
+import { DateRange } from 'react-day-picker';
 import { courseData } from '@/lib/course-data';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 
 export default function CreateCampaignPage() {
@@ -28,13 +30,10 @@ export default function CreateCampaignPage() {
     const { toast } = useToast();
     
     const [isSubmitting, setSubmitting] = useState(false);
-    const [dateRange, setDateRange] = useState([
-        {
-          startDate: new Date(),
-          endDate: new Date(),
-          key: 'selection'
-        }
-    ]);
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: new Date(),
+        to: new Date(),
+    });
 
     const colleges = [...new Set(courseData.map(item => item['Institution Name']))];
 
@@ -43,9 +42,8 @@ export default function CreateCampaignPage() {
         setSubmitting(true);
 
         const formData = new FormData(event.currentTarget);
-        const { startDate, endDate } = dateRange[0];
         
-        if (!startDate || !endDate) {
+        if (!date?.from || !date?.to) {
             toast({ variant: "destructive", title: "Please select a date range." });
             setSubmitting(false);
             return;
@@ -56,8 +54,8 @@ export default function CreateCampaignPage() {
             type: formData.get('type') as string,
             platform: formData.get('platform') as string,
             status: 'draft',
-            start_date: format(startDate, 'yyyy-MM-dd'),
-            end_date: format(endDate, 'yyyy-MM-dd'),
+            start_date: format(date.from, 'yyyy-MM-dd'),
+            end_date: format(date.to, 'yyyy-MM-dd'),
             institution: formData.get('institution') as string,
             objective: formData.get('objective') as string,
             kpi: formData.get('kpi') as string,
@@ -106,7 +104,7 @@ export default function CreateCampaignPage() {
                                     <Input id="budget" name="budget" type="number" placeholder="e.g., 5000" required />
                                 </div>
                             </div>
-                             <div className="grid md:grid-cols-2 gap-6">
+                             <div className="grid md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="type">Campaign Type</Label>
                                     <Select name="type" required>
@@ -132,18 +130,44 @@ export default function CreateCampaignPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label>Date Range</Label>
-                                <div className='flex justify-center'>
-                                     <DateRangePicker
-                                        onChange={item => setDateRange([item.selection])}
-                                        ranges={dateRange}
-                                        months={2}
-                                        direction="horizontal"
-                                        showDateDisplay={false}
-                                    />
+                                 <div className="space-y-2">
+                                    <Label>Date Range</Label>
+                                     <Popover>
+                                        <PopoverTrigger asChild>
+                                        <Button
+                                            id="date"
+                                            variant={"outline"}
+                                            className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !date && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date?.from ? (
+                                            date.to ? (
+                                                <>
+                                                {format(date.from, "LLL dd, y")} -{" "}
+                                                {format(date.to, "LLL dd, y")}
+                                                </>
+                                            ) : (
+                                                format(date.from, "LLL dd, y")
+                                            )
+                                            ) : (
+                                            <span>Pick a date range</span>
+                                            )}
+                                        </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            initialFocus
+                                            mode="range"
+                                            defaultMonth={date?.from}
+                                            selected={date}
+                                            onSelect={setDate}
+                                            numberOfMonths={2}
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
                             
