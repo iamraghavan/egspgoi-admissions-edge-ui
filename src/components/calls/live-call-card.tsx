@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -65,12 +66,12 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
         <Card className="flex flex-col">
             <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-medium">{call.customer_number || 'Unknown Number'}</CardTitle>
+                    <div>
+                        <CardTitle className="text-lg font-medium">{call.customer_number || 'Unknown Number'}</CardTitle>
+                        <Badge variant={getStatusVariant(call.state)} className="capitalize mt-1">{call.state}</Badge>
+                    </div>
                     <div className="text-lg font-mono font-semibold text-primary">{formatDuration(duration)}</div>
                 </div>
-                 <CardDescription>
-                    <Badge variant={getStatusVariant(call.state)} className="capitalize">{call.state}</Badge>
-                </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow space-y-3">
                  <DetailItem icon={User} label="Agent" value={call.agent_name || 'N/A'} />
