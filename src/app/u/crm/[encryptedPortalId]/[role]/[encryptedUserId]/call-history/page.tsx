@@ -12,10 +12,11 @@ import { logout } from '@/lib/auth';
 import type { User } from '@/lib/types';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
-import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { AudioPlayerDialog } from '@/components/calls/audio-player-dialog';
 
 export default function CallHistoryPage() {
     const [records, setRecords] = useState([]);
@@ -27,6 +28,8 @@ export default function CallHistoryPage() {
     const [page, setPage] = useState(1);
     const [canLoadMore, setCanLoadMore] = useState(false);
     
+    const [playingRecording, setPlayingRecording] = useState<string | null>(null);
+
     const { toast } = useToast();
     const router = useRouter();
 
@@ -100,6 +103,27 @@ export default function CallHistoryPage() {
         setPage(1); // Reset page
         fetchRecords(true);
     }
+
+    const columnsWithPlayAction = React.useMemo(() => [
+        ...callRecordsColumns,
+        {
+            id: 'actions',
+            cell: ({ row }: any) => {
+                const url = row.original.recording_url;
+                if (!url) return null;
+
+                return (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setPlayingRecording(url)}
+                    >
+                        <PlayCircle className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                );
+            },
+        },
+    ], []);
     
     return (
         <div className="flex flex-col gap-8">
@@ -107,11 +131,11 @@ export default function CallHistoryPage() {
             
             <div className="flex flex-wrap items-end gap-4 mb-6 p-4 border rounded-lg bg-card">
                 <div className="grid w-full max-w-xs items-center gap-1.5">
-                    <label className="text-sm font-medium">Date Range</label>
-                    <DropdownRangeDatePicker selected={dateRange} onSelect={setDateRange} />
+                    <Label className="text-sm font-medium">Date Range</Label>
+                    <DateRangePicker date={dateRange} onDateChange={setDateRange} />
                 </div>
                 <div className="grid w-full max-w-[180px] items-center gap-1.5">
-                    <label className="text-sm font-medium">Call Direction</label>
+                    <Label className="text-sm font-medium">Call Direction</Label>
                     <Select onValueChange={(val: any) => setDirection(val)} value={direction}>
                         <SelectTrigger>
                             <SelectValue placeholder="All Directions" />
@@ -124,7 +148,7 @@ export default function CallHistoryPage() {
                     </Select>
                 </div>
                 <div className="grid w-full max-w-xs items-center gap-1.5">
-                    <label className="text-sm font-medium">Agent</label>
+                    <Label className="text-sm font-medium">Agent</Label>
                     <Select onValueChange={setAgent} value={agent}>
                         <SelectTrigger>
                             <SelectValue placeholder="All Agents" />
@@ -152,6 +176,16 @@ export default function CallHistoryPage() {
                 canLoadMore={canLoadMore}
                 isFetchingMore={loading && page > 1}
             />
+            {playingRecording && (
+              <AudioPlayerDialog
+                recordingUrl={playingRecording}
+                onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                    setPlayingRecording(null);
+                  }
+                }}
+              />
+            )}
         </div>
     );
 }
