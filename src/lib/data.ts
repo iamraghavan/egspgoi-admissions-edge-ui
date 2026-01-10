@@ -210,8 +210,6 @@ export const pollForActiveCall = async (pollUrl: string): Promise<{ active: bool
         throw new Error("Caller ID (agent phone number) not found in profile.");
     }
     
-    // The pollUrl from the backend already contains the API prefix.
-    // We remove it to avoid duplication by the apiClient.
     const endpoint = pollUrl.startsWith('/api/v1') ? pollUrl.substring(7) : pollUrl;
     const urlWithAgent = `${endpoint}?agent_number=${callerId}`;
     
@@ -388,11 +386,11 @@ const roleIdToNameMap: Record<string, Role> = {
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<any>('/users?type=agent');
+    const { data, error } = await apiClient<any[]>('/users?type=agent');
     if (error) {
         throw new Error(error.message || 'Failed to fetch users');
     }
-    const users = data?.data || [];
+    const users = data || [];
     return users.map((user: any) => ({
       ...user,
       role: roleIdToNameMap[user.role_id] || 'Admission Executive',
