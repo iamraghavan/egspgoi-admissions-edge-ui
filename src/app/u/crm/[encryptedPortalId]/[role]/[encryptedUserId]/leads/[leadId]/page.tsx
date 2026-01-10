@@ -52,15 +52,22 @@ export default function LeadDetailPage() {
         }
     }, [params.leadId, toast]);
 
-    useEffect(() => {
-        fetchLeadDetails();
-        getUsers().then(setUsers).catch(err => {
+    const fetchUsers = useCallback(async () => {
+        try {
+            const fetchedUsers = await getUsers();
+            setUsers(fetchedUsers);
+        } catch (err: any) {
              toast({
                 variant: "destructive",
                 title: "Failed to fetch users",
                 description: err.message || "Could not load agent list.",
             });
-        })
+        }
+    },[toast]);
+
+    useEffect(() => {
+        fetchLeadDetails();
+        fetchUsers();
 
         const handleRefresh = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -73,7 +80,7 @@ export default function LeadDetailPage() {
         return () => {
             window.removeEventListener('leadDataShouldRefresh', handleRefresh);
         }
-    }, [fetchLeadDetails, params.leadId, toast]);
+    }, [fetchLeadDetails, fetchUsers, params.leadId]);
 
     if (loading) {
         return (
