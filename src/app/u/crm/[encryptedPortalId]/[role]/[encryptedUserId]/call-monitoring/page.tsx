@@ -64,7 +64,7 @@ export default function CallMonitoringPage() {
                  throw new Error(response.message || 'Failed to fetch records');
             }
         } catch (error: any) {
-             if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+             if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token') || error.message.includes('Session expired')) {
                 toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
                 handleLogout();
             } else {
@@ -81,8 +81,7 @@ export default function CallMonitoringPage() {
             setLiveCalls(fetchedLiveCalls);
         } catch (error: any) {
             console.error("Failed to fetch live calls:", error);
-            // Non-critical, so we don't show a toast unless it's an auth error
-            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token') || error.message.includes('Session expired')) {
                  toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
                  handleLogout();
             }
@@ -92,12 +91,19 @@ export default function CallMonitoringPage() {
     }, [handleLogout, toast]);
 
     useEffect(() => {
-        getUsers().then(setUsers);
-        fetchLiveCalls(); // Initial fetch
+        getUsers().then(setUsers).catch(err => {
+            if (err.message.includes('Authentication token') || err.message.includes('Invalid or expired token') || err.message.includes('Session expired')) {
+                 toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
+                 handleLogout();
+            } else {
+                toast({ variant: "destructive", title: "Failed to load agents", description: err.message });
+            }
+        });
+        fetchLiveCalls();
         
         const interval = setInterval(fetchLiveCalls, 10000); // Refresh every 10 seconds
         return () => clearInterval(interval);
-    }, [fetchLiveCalls]);
+    }, [fetchLiveCalls, handleLogout, toast]);
 
     const handleSearch = () => {
         setRecords([]); // Clear old records
