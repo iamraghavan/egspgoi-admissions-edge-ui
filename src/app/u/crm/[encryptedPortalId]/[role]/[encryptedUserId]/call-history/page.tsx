@@ -50,7 +50,6 @@ export default function CallHistoryPage() {
             if (selectedAgent?.agent_number) {
                  params.agent_number = selectedAgent.agent_number;
             } else if (agent !== 'all') {
-                // This might be a name if agent_number is not present
                 const agentData = users.find(u => u.id === agent);
                 if(agentData?.name){
                     params.agent_name = agentData.name;

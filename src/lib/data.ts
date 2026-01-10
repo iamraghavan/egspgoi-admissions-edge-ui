@@ -513,9 +513,17 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         }
     });
     
-    const { data, error } = await apiClient(url.pathname + url.search, {
+    const { data, error } = await apiClient<any>(url.pathname + url.search, {
         method: 'GET',
     });
     if(error) throw new Error(error.message);
-    return data;
+    
+    // The actual results are in data.data.results
+    return {
+        success: data?.success,
+        results: data?.data?.results || [],
+        count: data?.data?.count || 0,
+        limit: data?.data?.limit || 20,
+        message: data?.message
+    };
 };
