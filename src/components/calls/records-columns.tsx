@@ -5,12 +5,22 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown, PlayCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import type { BadgeProps } from "@/components/ui/badge";
 
 const formatDuration = (seconds: number) => {
     if(isNaN(seconds) || seconds < 0) return '0m 0s';
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.round(seconds % 60);
     return `${minutes}m ${remainingSeconds}s`;
+}
+
+const getStatusVariant = (status: string): BadgeProps['variant'] => {
+    switch(status?.toLowerCase()) {
+        case 'answered': return 'success';
+        case 'missed': return 'destructive';
+        case 'ringing': return 'warning';
+        default: return 'secondary';
+    }
 }
 
 export const callRecordsColumns: ColumnDef<any>[] = [
@@ -21,9 +31,12 @@ export const callRecordsColumns: ColumnDef<any>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <Badge variant={row.getValue("status") === 'answered' ? 'success' : 'secondary'} className="capitalize">{row.getValue("status")}</Badge>
-    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge variant={getStatusVariant(status)} className="capitalize">{status}</Badge>
+      )
+    },
   },
     {
     accessorKey: "direction",

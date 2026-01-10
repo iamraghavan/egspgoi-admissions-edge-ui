@@ -30,6 +30,7 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
 
     useEffect(() => {
         const updateDuration = () => {
+            if (!call.call_time) return;
             const timeParts = call.call_time.split(':').map(Number);
             let totalSeconds = 0;
             if (timeParts.length === 3) {
@@ -63,6 +64,7 @@ export default function LiveCallCard({ call }: LiveCallCardProps) {
         switch(status?.toLowerCase()) {
             case 'answered': return 'success';
             case 'ringing': return 'warning';
+            case 'missed': return 'destructive';
             default: return 'secondary';
         }
     }
