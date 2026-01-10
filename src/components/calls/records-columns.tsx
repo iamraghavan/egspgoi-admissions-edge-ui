@@ -22,11 +22,11 @@ export const callRecordsColumns: ColumnDef<any>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.getValue("status") === 'completed' ? 'default' : 'secondary'} className="capitalize">{row.getValue("status")}</Badge>
+      <Badge variant={row.getValue("status") === 'answered' ? 'success' : 'secondary'} className="capitalize">{row.getValue("status")}</Badge>
     ),
   },
   {
-    accessorKey: "duration",
+    accessorKey: "call_duration",
     header: ({ column }) => {
       return (
         <Button
@@ -38,15 +38,15 @@ export const callRecordsColumns: ColumnDef<any>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => formatDuration(row.getValue("duration")),
+    cell: ({ row }) => formatDuration(row.getValue("call_duration")),
   },
   {
-    accessorKey: "agent",
+    accessorKey: "agent_name",
     header: "Agent",
   },
   {
-    accessorKey: "service",
-    header: "Service",
+    accessorKey: "customer_number",
+    header: "Customer Number",
   },
   {
     accessorKey: "recording_url",

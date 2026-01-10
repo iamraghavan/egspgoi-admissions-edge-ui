@@ -11,7 +11,6 @@ import { callRecordsColumns } from '@/components/calls/records-columns';
 import { Button } from '@/components/ui/button';
 import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { RefreshCw } from 'lucide-react';
 import { getCallRecords, getUsers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -41,19 +40,24 @@ export default function CallMonitoringPage() {
     const fetchRecords = useCallback(async (isNewSearch = false) => {
         setLoading(true);
         try {
-            const params: any = { page: isNewSearch ? 1 : page };
-            if (dateRange?.from) params.from_date = format(dateRange.from, 'yyyy-MM-dd');
-            if (dateRange?.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd');
-            if (direction && direction !== 'all') params.call_direction = direction;
-            if (agent && agent !== 'all') params.agent_name = agent;
+            const currentPage = isNewSearch ? 1 : page;
+            const params: any = { page: currentPage };
+            if (dateRange?.from) params.from_date = format(dateRange.from, 'yyyy-MM-dd HH:mm:ss');
+            if (dateRange?.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd HH:mm:ss');
+            if (direction !== 'all') params.direction = direction;
+            if (agent !== 'all') params.agent_name = agent;
 
             const response = await getCallRecords(params);
             
             if(response.success) {
-                setRecords(isNewSearch ? response.data : [...records, ...response.data]);
-                setCanLoadMore(response.data.length > 0 && response.meta?.has_next_page);
-                 if (isNewSearch) setPage(2);
-                 else setPage(prev => prev + 1);
+                const newRecords = response.results || [];
+                setRecords(isNewSearch ? newRecords : [...records, ...newRecords]);
+                setCanLoadMore(newRecords.length > 0 && response.count > (currentPage * (response.limit || 20)));
+                 if (isNewSearch) {
+                    setPage(2);
+                } else {
+                    setPage(prev => prev + 1);
+                }
             } else {
                  throw new Error(response.message || 'Failed to fetch records');
             }
@@ -130,12 +134,12 @@ export default function CallMonitoringPage() {
                             </Select>
                         </div>
                         <div className="flex gap-2">
-                             <Button onClick={handleSearch} disabled={loading}>
-                                {loading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                             <Button onClick={handleSearch} disabled={loading && page === 1}>
+                                {loading && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
                                 Search
                             </Button>
-                            <Button variant="outline" onClick={() => fetchRecords(true)} disabled={loading}>
-                                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            <Button variant="outline" onClick={handleSearch} disabled={loading && page === 1}>
+                                <RefreshCw className={`mr-2 h-4 w-4 ${loading && page === 1 ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
                         </div>
@@ -143,9 +147,10 @@ export default function CallMonitoringPage() {
                     <DataTable 
                         columns={callRecordsColumns} 
                         data={records}
+                        loading={loading && page === 1}
                         searchKey="call_id" // Not used for filtering, but required by component
                         searchPlaceholder="Filter by ID..." // Not used
-                        onLoadMore={() => fetchRecords()}
+                        onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
                         canLoadMore={canLoadMore}
                         isFetchingMore={loading && page > 1}
                     />

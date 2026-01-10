@@ -210,6 +210,8 @@ export const pollForActiveCall = async (pollUrl: string): Promise<{ active: bool
         throw new Error("Caller ID (agent phone number) not found in profile.");
     }
     
+    // The pollUrl from the backend already includes the necessary path.
+    // We just need to append the agent_number query parameter.
     const endpoint = pollUrl.startsWith('/api/v1') ? pollUrl.substring(7) : pollUrl;
     const urlWithAgent = `${endpoint}?agent_number=${callerId}`;
     
@@ -332,8 +334,8 @@ export const getCalls = async (): Promise<Call[]> => {
     return Promise.resolve(calls);
 }
 
-export const getLiveCalls = async (agentNumber: string): Promise<any[]> => {
-    const { data, error } = await apiClient<any>(`/smartflo/live-calls?agent_number=${agentNumber}`);
+export const getLiveCalls = async (): Promise<any[]> => {
+    const { data, error } = await apiClient<any>(`/smartflo/live-calls`);
     if(error) {
         throw new Error(error.message || 'Failed to fetch live calls');
     };
@@ -494,7 +496,7 @@ export const dialNumber = async (numberToDial: string): Promise<any> => {
 type GetCallRecordsParams = {
   from_date?: string;
   to_date?: string;
-  call_direction?: 'inbound' | 'outbound' | 'all';
+  direction?: 'inbound' | 'outbound' | 'all';
   agent_name?: string;
   page?: number;
 };
@@ -502,7 +504,7 @@ type GetCallRecordsParams = {
 export const getCallRecords = async (params: GetCallRecordsParams): Promise<any> => {
     const url = new URL('https://cms-egspgoi.vercel.app/api/v1/smartflo/call/records');
     Object.entries(params).forEach(([key, value]) => {
-        if (value && (key !== 'call_direction' || (key === 'call_direction' && value !== 'all'))) {
+        if (value && value !== 'all') {
             url.searchParams.append(key, value.toString());
         }
     });
@@ -513,6 +515,3 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     if(error) throw new Error(error.message);
     return data;
 };
-
-
-    

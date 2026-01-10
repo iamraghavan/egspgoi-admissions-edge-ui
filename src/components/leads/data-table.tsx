@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Loader2, Download, File, Upload, ArrowLeft } from "lucide-react"
+import { Loader2, Download, ArrowLeft } from "lucide-react"
 import { DataTableToolbar } from "./data-table-toolbar"
 import { useToast } from "@/hooks/use-toast"
 import { createLead, uploadLeads, getUsers, bulkTransferLeads } from "@/lib/data"
@@ -49,9 +49,11 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void
   canLoadMore?: boolean
   isFetchingMore?: boolean
-  refreshData: (filters?: { dateRange?: DateRange }) => void;
-  dateRange: DateRange | undefined;
-  setDateRange: (dateRange?: DateRange) => void;
+  refreshData?: (filters?: { dateRange?: DateRange }) => void;
+  dateRange?: DateRange;
+  setDateRange?: (dateRange?: DateRange) => void;
+  searchKey: string;
+  searchPlaceholder: string;
 }
 
 export default function DataTable<TData, TValue>({
@@ -63,7 +65,9 @@ export default function DataTable<TData, TValue>({
   isFetchingMore,
   refreshData,
   dateRange,
-  setDateRange
+  setDateRange,
+  searchKey,
+  searchPlaceholder,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -114,7 +118,6 @@ export default function DataTable<TData, TValue>({
     });
   }, []);
 
-
   const handleCreateLead = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -133,7 +136,7 @@ export default function DataTable<TData, TValue>({
         title: "Lead Created",
         description: `${newLead.name} has been successfully added.`,
       });
-      refreshData();
+      if(refreshData) refreshData();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -208,7 +211,7 @@ export default function DataTable<TData, TValue>({
         description: response.message || `${uploadFile.name} has been uploaded and is being processed.`,
       });
       handleCloseUploadDialog();
-      refreshData();
+      if(refreshData) refreshData();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -234,7 +237,7 @@ export default function DataTable<TData, TValue>({
             title: "Leads Transferred",
             description: `${selectedLeadIds.length} leads have been transferred.`,
         });
-        refreshData();
+        if(refreshData) refreshData();
         table.resetRowSelection();
         setBulkTransferOpen(false);
     } catch (error: any) {
@@ -255,6 +258,7 @@ export default function DataTable<TData, TValue>({
     setUploadStep('select');
   };
 
+  const isLeadsTable = 'name' in (data[0] || {}) && 'status' in (data[0] || {});
 
   const table = useReactTable({
     data,
@@ -266,7 +270,7 @@ export default function DataTable<TData, TValue>({
       columnFilters,
     },
     meta: {
-        refreshData: () => refreshData(),
+        refreshData: refreshData ? () => refreshData() : undefined,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -282,26 +286,34 @@ export default function DataTable<TData, TValue>({
     manualPagination: true,
   })
 
-  const breadcrumbUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`;
-
   return (
     <div className="space-y-4">
-        <Breadcrumbs>
-            <BreadcrumbItem href={breadcrumbUrl}>Dashboard</BreadcrumbItem>
-            <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
-        </Breadcrumbs>
-      <PageHeader title="Leads" description="Manage and track all your prospective students."/>
-      <div className="rounded-md border bg-card">
-        <DataTableToolbar 
-            table={table} 
-            onCreateLead={() => setCreateDialogOpen(true)}
-            onUploadLeads={() => setUploadDialogOpen(true)}
-            onBulkTransfer={() => setBulkTransferOpen(true)}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            onSearch={() => refreshData({ dateRange })}
-            />
-        <div className="border-t">
+      { isLeadsTable && refreshData && setDateRange ? (
+          <div className="rounded-md border bg-card">
+              <DataTableToolbar 
+                table={table} 
+                onCreateLead={() => setCreateDialogOpen(true)}
+                onUploadLeads={() => setUploadDialogOpen(true)}
+                onBulkTransfer={() => setBulkTransferOpen(true)}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                onSearch={() => refreshData({ dateRange })}
+              />
+          </div>
+        ) : (
+            <div className="flex items-center p-4 rounded-md border bg-card">
+                 <Input
+                    placeholder={searchPlaceholder}
+                    value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn(searchKey)?.setFilterValue(event.target.value)
+                    }
+                    className="h-8 w-full"
+                />
+            </div>
+        )
+      }
+      <div className="rounded-md border">
             <Table>
             <TableHeader className="bg-muted/50">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -359,12 +371,7 @@ export default function DataTable<TData, TValue>({
             </TableBody>
             </Table>
         </div>
-      </div>
-      <div className="flex items-center justify-between">
-          <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{" "}
-              {data.length} row(s) selected.
-          </div>
+      <div className="flex items-center justify-center">
           {onLoadMore && canLoadMore && (
                 <Button
                 variant="outline"
@@ -529,7 +536,7 @@ export default function DataTable<TData, TValue>({
                         {isSubmitting ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
                         ) : (
-                            <><Upload className="mr-2 h-4 w-4" /> Confirm & Upload</>
+                            <><Download className="mr-2 h-4 w-4" /> Confirm & Upload</>
                         )}
                     </Button>
                 </>
@@ -571,5 +578,3 @@ export default function DataTable<TData, TValue>({
     </div>
   )
 }
-
-    
