@@ -183,7 +183,7 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 };
 
 export const initiateCall = async (leadId: string): Promise<any> => {
-    const profile = getProfile();
+    const profile = await getProfile();
     const agentNumber = profile?.phone || "918064522110";
 
     const { data, error } = await apiClient(`/leads/${leadId}/call`, {
@@ -307,8 +307,7 @@ export const getCalls = async (): Promise<Call[]> => {
 export const getLiveCalls = async (agentNumber: string): Promise<any[]> => {
     const { data, error } = await apiClient<any>(`/smartflo/live-calls?agent_number=${agentNumber}`);
     if(error) {
-        console.error("Failed to fetch live calls", error);
-        return [];
+        throw new Error(error.message || 'Failed to fetch live calls');
     };
     return data.data || [];
 }
@@ -450,7 +449,7 @@ export const hangupCall = async (callId: string): Promise<any> => {
 };
 
 export const dialNumber = async (numberToDial: string): Promise<any> => {
-    const profile = getProfile();
+    const profile = await getProfile();
     const agentNumber = profile?.phone || "918064522110";
 
     const { data, error } = await apiClient(`/smartflo/call/dial`, {
