@@ -1,23 +1,28 @@
 
 'use client';
+import 'react-date-range/dist/styles.css'; 
+import 'react-date-range/dist/theme/default.css'; 
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { DateRange } from 'react-day-picker';
+import type { DateRange as DateRangeType } from 'react-day-picker';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DataTable from '@/components/leads/data-table';
 import { callRecordsColumns } from '@/components/calls/records-columns';
 import { Button } from '@/components/ui/button';
-import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
 import { getCallRecords, getUsers, getLiveCalls } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/lib/auth';
 import type { User, LiveCall } from '@/lib/types';
 import { format } from 'date-fns';
 import LiveCallCard from '@/components/calls/live-call-card';
+import { cn } from '@/lib/utils';
+import { DateRangePicker } from 'react-date-range';
+import { Label } from '@/components/ui/label';
 
 export default function CallMonitoringPage() {
     const [records, setRecords] = useState([]);
@@ -25,7 +30,7 @@ export default function CallMonitoringPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [loadingLiveCalls, setLoadingLiveCalls] = useState(true);
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [dateRange, setDateRange] = useState<DateRangeType | undefined>();
     const [direction, setDirection] = useState<'inbound' | 'outbound' | 'all'>('all');
     const [agent, setAgent] = useState('all');
     const [page, setPage] = useState(1);
@@ -40,7 +45,7 @@ export default function CallMonitoringPage() {
     }, [router]);
     
     const fetchRecords = useCallback(async (isNewSearch = false) => {
-        if (!dateRange?.from || !dateRange?.to) {
+        if (!dateRange?.from) {
             toast({
                 variant: 'destructive',
                 title: 'Date Range Required',
@@ -54,7 +59,7 @@ export default function CallMonitoringPage() {
             const currentPage = isNewSearch ? 1 : page;
             const params: any = { page: currentPage, limit: 20 };
             params.from_date = format(dateRange.from, 'yyyy-MM-dd HH:mm:ss');
-            params.to_date = format(dateRange.to, 'yyyy-MM-dd HH:mm:ss');
+            if(dateRange.to) params.to_date = format(dateRange.to, 'yyyy-MM-dd HH:mm:ss');
             
             if (direction !== 'all') params.direction = direction;
             
@@ -62,8 +67,10 @@ export default function CallMonitoringPage() {
             if (selectedAgent?.agent_number) {
                  params.agent_number = selectedAgent.agent_number;
             } else if (agent !== 'all') {
-                // If agent is selected but not found or has no number, it might be a name
-                params.agent_name = agent;
+                const agentData = users.find(u => u.id === agent);
+                if(agentData?.name){
+                    params.agent_name = agentData.name;
+                }
             }
 
 
@@ -95,6 +102,7 @@ export default function CallMonitoringPage() {
 
     const fetchLiveCalls = useCallback(async () => {
         try {
+            setLoadingLiveCalls(true);
             const fetchedLiveCalls = await getLiveCalls();
             setLiveCalls(fetchedLiveCalls);
         } catch (error: any) {
@@ -128,19 +136,32 @@ export default function CallMonitoringPage() {
         setPage(1); // Reset page
         fetchRecords(true);
     }
+
+    const handleDateChange = (ranges: any) => {
+        const { selection } = ranges;
+        const newRange = { from: selection.startDate, to: selection.endDate };
+        setDateRange(newRange);
+    }
     
     return (
         <div className="flex flex-col gap-8">
             <PageHeader title="Smartflo Call Management" description="Monitor live calls and manage historical records." />
             
             <Card>
-                <CardHeader>
-                    <CardTitle>Live Call Monitoring</CardTitle>
-                    <CardDescription>A real-time view of all ongoing calls.</CardDescription>
+                <CardHeader className='flex-row items-center justify-between'>
+                    <div>
+                        <CardTitle>Live Call Monitoring</CardTitle>
+                        <CardDescription>A real-time view of all ongoing calls.</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={fetchLiveCalls} disabled={loadingLiveCalls}>
+                        <RefreshCw className={cn("mr-2 h-4 w-4", loadingLiveCalls && "animate-spin")} />
+                        Refresh
+                    </Button>
                 </CardHeader>
                 <CardContent>
                      {loadingLiveCalls ? (
                          <div className="flex items-center justify-center h-40 border border-dashed rounded-lg">
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                             <p className="text-muted-foreground">Loading live calls...</p>
                         </div>
                      ) : liveCalls.length > 0 ? (
@@ -164,12 +185,51 @@ export default function CallMonitoringPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap items-end gap-4 mb-6">
-                        <div className="grid w-full max-w-xs items-center gap-1.5">
-                            <label className="text-sm font-medium">Date Range (Required)</label>
-                            <DropdownRangeDatePicker selected={dateRange} onSelect={setDateRange} />
+                         <div className="grid w-full max-w-xs items-center gap-1.5">
+                            <Label className="text-sm font-medium">Date Range (Required)</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        id="date"
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !dateRange && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateRange?.from ? (
+                                        dateRange.to ? (
+                                            <>
+                                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                                            {format(dateRange.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(dateRange.from, "LLL dd, y")
+                                        )
+                                        ) : (
+                                        <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <DateRangePicker
+                                        onChange={handleDateChange}
+                                        showSelectionPreview={true}
+                                        moveRangeOnFirstSelection={false}
+                                        months={2}
+                                        ranges={[{
+                                            startDate: dateRange?.from,
+                                            endDate: dateRange?.to,
+                                            key: 'selection'
+                                        }]}
+                                        direction="horizontal"
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
                          <div className="grid w-full max-w-xs items-center gap-1.5">
-                            <label className="text-sm font-medium">Call Direction</label>
+                            <Label className="text-sm font-medium">Call Direction</Label>
                              <Select onValueChange={(val: any) => setDirection(val)} value={direction}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="All Directions" />
@@ -182,7 +242,7 @@ export default function CallMonitoringPage() {
                             </Select>
                         </div>
                         <div className="grid w-full max-w-xs items-center gap-1.5">
-                            <label className="text-sm font-medium">Agent</label>
+                            <Label className="text-sm font-medium">Agent</Label>
                             <Select onValueChange={setAgent} value={agent}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="All Agents" />
@@ -197,10 +257,6 @@ export default function CallMonitoringPage() {
                              <Button onClick={handleSearch} disabled={loadingRecords && page === 1}>
                                 {loadingRecords && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
                                 Search
-                            </Button>
-                            <Button variant="outline" onClick={() => { setRecords([]); setPage(1); fetchRecords(true); }} disabled={loadingRecords && page === 1}>
-                                <RefreshCw className={`mr-2 h-4 w-4 ${loadingRecords && page === 1 ? 'animate-spin' : ''}`} />
-                                Refresh
                             </Button>
                         </div>
                     </div>
@@ -219,3 +275,5 @@ export default function CallMonitoringPage() {
         </div>
     );
 }
+
+    
