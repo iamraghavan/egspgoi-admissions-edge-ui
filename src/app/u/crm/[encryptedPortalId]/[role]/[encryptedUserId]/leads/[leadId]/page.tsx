@@ -27,30 +27,40 @@ export default function LeadDetailPage() {
         if (!params.leadId) return;
 
         setLoading(true);
-        const { data: fetchedLead, error } = await getLeadById(params.leadId);
-        
-        if (error) {
-             toast({
-                variant: "destructive",
-                title: "Failed to fetch lead",
-                description: error.message || "An unexpected error occurred.",
-            });
-        } else if (fetchedLead) {
-            setLead(fetchedLead);
-            if (fetchedLead.assigned_user) {
-                setAssignedUser(fetchedLead.assigned_user);
+        try {
+            const { data: fetchedLead, error } = await getLeadById(params.leadId);
+            
+            if (error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Failed to fetch lead",
+                    description: error.message || "An unexpected error occurred.",
+                });
+            } else if (fetchedLead) {
+                setLead(fetchedLead);
+                if (fetchedLead.assigned_user) {
+                    setAssignedUser(fetchedLead.assigned_user);
+                }
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Lead not found",
+                });
             }
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Lead not found",
-            });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, [params.leadId, toast]);
 
     useEffect(() => {
         fetchLeadDetails();
+        getUsers().then(setUsers).catch(err => {
+             toast({
+                variant: "destructive",
+                title: "Failed to fetch users",
+                description: err.message || "Could not load agent list.",
+            });
+        })
 
         const handleRefresh = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -63,11 +73,7 @@ export default function LeadDetailPage() {
         return () => {
             window.removeEventListener('leadDataShouldRefresh', handleRefresh);
         }
-    }, [fetchLeadDetails, params.leadId]);
-
-    useEffect(() => {
-        getUsers().then(setUsers);
-    }, []);
+    }, [fetchLeadDetails, params.leadId, toast]);
 
     if (loading) {
         return (
