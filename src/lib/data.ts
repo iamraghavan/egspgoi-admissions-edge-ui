@@ -372,7 +372,7 @@ const roleIdToNameMap: Record<string, Role> = {
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<any>('/users/agents');
+    const { data, error } = await apiClient<any>('/users?type=agent');
     if (error) {
         console.error("Failed to fetch users:", error.message);
         return [];
