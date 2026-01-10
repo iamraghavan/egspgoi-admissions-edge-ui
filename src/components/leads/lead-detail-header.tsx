@@ -7,12 +7,10 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, Edit, Phone, Printer, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import type { Lead, User } from '@/lib/types';
-import { initiateCall } from '@/lib/data';
 import { EditLeadDialog } from './edit-lead-dialog';
 import { TransferLeadDialog } from './transfer-lead-dialog';
-import { useDialer } from '@/hooks/use-dialer';
+import { CallStatusDialog } from '../calls/call-status-dialog';
 
 interface LeadDetailHeaderProps {
   lead: Lead;
@@ -22,32 +20,10 @@ interface LeadDetailHeaderProps {
 
 export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDetailHeaderProps) {
   const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
-  const { toast } = useToast();
-  const [isCalling, setCalling] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [isTransferOpen, setTransferOpen] = useState(false);
-  const { startCall, callStatus } = useDialer();
+  const [isCallDialogOpen, setCallDialogOpen] = useState(false);
 
-  const handleInitiateCall = async () => {
-    setCalling(true);
-    try {
-      await initiateCall(lead.id);
-      toast({
-        title: "Call Initiated",
-        description: `Calling ${lead.name}...`,
-      });
-      startCall(lead);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to Initiate Call",
-        description: error.message || "An unknown error occurred.",
-      });
-    } finally {
-      setCalling(false);
-    }
-  };
-  
   const printUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
   const leadsUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads`;
 
@@ -70,9 +46,9 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
                  Print
              </Link>
            </Button>
-          <Button variant="outline" size="sm" onClick={handleInitiateCall} disabled={isCalling || callStatus !== 'idle'}>
-            {isCalling || callStatus === 'connecting' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
-            {callStatus === 'connecting' ? 'Connecting...' : 'Call Lead'}
+          <Button variant="outline" size="sm" onClick={() => setCallDialogOpen(true)}>
+            <Phone className="mr-2 h-4 w-4" />
+            Call Lead
           </Button>
           <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)}>
             <Users className="mr-2 h-4 w-4" />
@@ -97,6 +73,11 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
         lead={lead}
         agents={availableAgents}
         onLeadUpdate={onLeadUpdate}
+      />
+       <CallStatusDialog
+        isOpen={isCallDialogOpen}
+        onOpenChange={setCallDialogOpen}
+        lead={lead}
       />
     </>
   );

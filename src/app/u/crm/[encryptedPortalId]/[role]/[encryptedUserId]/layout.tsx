@@ -9,13 +9,10 @@ import AppHeader from '@/components/layout/app-header';
 import { SidebarProvider, SidebarContext } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import InfoMarquee from '@/components/layout/info-marquee';
-import { DialerProvider } from '@/hooks/use-dialer';
-import { DialerSheet } from '@/components/calls/dialer-sheet';
 import { SessionTimeoutProvider, useSessionTimeout } from '@/hooks/use-session-timeout';
 import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
 import { setSessionTimeoutContext } from '@/lib/session-context';
 import { initializeSessionTimer } from '@/lib/session-timer';
-import { ActiveCallBar } from '@/components/calls/active-call-bar';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -48,8 +45,6 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
-      <DialerSheet />
-      <ActiveCallBar />
       <SessionTimeoutDialog />
     </div>
   )
@@ -58,11 +53,9 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
 export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <DialerProvider>
-        <SessionTimeoutProvider>
-          <CrmLayoutContent>{children}</CrmLayoutContent>
-        </SessionTimeoutProvider>
-      </DialerProvider>
+      <SessionTimeoutProvider>
+        <CrmLayoutContent>{children}</CrmLayoutContent>
+      </SessionTimeoutProvider>
     </SidebarProvider>
   );
 }

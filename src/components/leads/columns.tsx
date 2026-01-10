@@ -10,14 +10,14 @@ import { ArrowUpDown, MoreHorizontal, Phone, Trash2, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
-import { getUsers, initiateCall, deleteLead, getUserById, updateLeadStatus } from "@/lib/data"
+import { getUsers, deleteLead, getUserById, updateLeadStatus } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { format } from 'date-fns';
 import type { LeadStatus } from "@/lib/types";
-import { useDialer } from "@/hooks/use-dialer"
+import { CallStatusDialog } from "../calls/call-status-dialog"
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
@@ -112,8 +112,8 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const lead = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
       const { toast } = useToast();
-      const { startCall, activeCall, callStatus } = useDialer();
-      const [isCalling, setIsCalling] = useState(false);
+      const [isCallDialogOpen, setCallDialogOpen] = useState(false);
+      const [selectedLeadForCall, setSelectedLeadForCall] = useState<Lead | null>(null);
 
       const handleUpdateStatus = async (status: LeadStatus) => {
         try {
@@ -133,24 +133,9 @@ export const leadColumns: ColumnDef<Lead>[] = [
         }
       }
 
-      const handleCall = async () => {
-        setIsCalling(true);
-        try {
-            await initiateCall(lead.id);
-            toast({
-                title: "Call Initiated",
-                description: `Calling ${lead.name}...`,
-            });
-            startCall(lead);
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Call Failed",
-                description: error.message,
-            });
-        } finally {
-            setIsCalling(false);
-        }
+      const handleCallClick = () => {
+        setSelectedLeadForCall(lead);
+        setCallDialogOpen(true);
       };
 
       const handleDelete = async (type: 'soft' | 'hard') => {
@@ -174,60 +159,67 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const leadStatuses: LeadStatus[] = ["New", "Contacted", "Interested", "Enrolled", "Failed"];
 
       return (
-        <div className="flex items-center justify-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-                <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">View Details</span>
-                </Link>
-            </Button>
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+        <>
+            <div className="flex items-center justify-center gap-2">
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View Details</span>
+                    </Link>
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
-                Copy email address
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        Update Status
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                        {leadStatuses.map(status => (
-                            <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(status)}>
-                                {status}
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
+                    Copy email address
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            Update Status
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            {leadStatuses.map(status => (
+                                <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(status)}>
+                                    {status}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuItem onClick={handleCallClick}>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Initiate Call
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => handleDelete('soft')}>
+                                Soft Delete
                             </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuItem onClick={handleCall} disabled={isCalling || callStatus !== 'idle'}>
-                {isCalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
-                Initiate Call
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                        <DropdownMenuItem onClick={() => handleDelete('soft')}>
-                            Soft Delete
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
-                            Hard Delete (Permanent)
-                        </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-            </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+                            <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
+                                Hard Delete (Permanent)
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+             <CallStatusDialog
+                isOpen={isCallDialogOpen}
+                onOpenChange={setCallDialogOpen}
+                lead={selectedLeadForCall}
+            />
+        </>
       )
     },
   },
