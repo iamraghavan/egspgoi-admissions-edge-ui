@@ -52,11 +52,9 @@ interface DataTableProps<TData, TValue> {
   refreshData?: (filters?: { dateRange?: DateRange }) => void;
   dateRange?: DateRange;
   setDateRange?: (dateRange?: DateRange) => void;
-  searchKey: string;
-  searchPlaceholder: string;
 }
 
-export default function DataTable<TData, TValue>({
+export default function LeadsDataTable<TData, TValue>({
   columns,
   data,
   loading,
@@ -66,8 +64,6 @@ export default function DataTable<TData, TValue>({
   refreshData,
   dateRange,
   setDateRange,
-  searchKey,
-  searchPlaceholder,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -258,7 +254,6 @@ export default function DataTable<TData, TValue>({
     setUploadStep('select');
   };
 
-  const isLeadsTable = 'name' in (data[0] || {}) && 'status' in (data[0] || {});
 
   const table = useReactTable({
     data,
@@ -288,31 +283,17 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      { isLeadsTable && refreshData && setDateRange ? (
-          <div className="rounded-md border bg-card">
-              <DataTableToolbar 
-                table={table} 
-                onCreateLead={() => setCreateDialogOpen(true)}
-                onUploadLeads={() => setUploadDialogOpen(true)}
-                onBulkTransfer={() => setBulkTransferOpen(true)}
-                dateRange={dateRange}
-                onDateRangeChange={setDateRange}
-                onSearch={() => refreshData({ dateRange })}
-              />
-          </div>
-        ) : (
-            <div className="flex items-center p-4 rounded-md border bg-card">
-                 <Input
-                    placeholder={searchPlaceholder}
-                    value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn(searchKey)?.setFilterValue(event.target.value)
-                    }
-                    className="h-8 w-full"
-                />
-            </div>
-        )
-      }
+      <div className="rounded-md border bg-card">
+          <DataTableToolbar 
+            table={table} 
+            onCreateLead={() => setCreateDialogOpen(true)}
+            onUploadLeads={() => setUploadDialogOpen(true)}
+            onBulkTransfer={() => setBulkTransferOpen(true)}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange!}
+            onSearch={() => refreshData!({ dateRange })}
+          />
+      </div>
       <div className="rounded-md border">
             <Table>
             <TableHeader className="bg-muted/50">
