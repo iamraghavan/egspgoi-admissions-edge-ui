@@ -185,15 +185,15 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 
 export const initiateCall = async (leadId: string): Promise<{ poll_url: string }> => {
     const profile = await getProfile();
-    const agentNumber = profile?.agent_number;
+    const callerId = profile?.caller_id;
 
-    if (!agentNumber) {
-        throw new Error("Agent number not found. Please update your profile.");
+    if (!callerId) {
+        throw new Error("Caller ID not found. Please update your profile.");
     }
 
     const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
-        body: JSON.stringify({ agent_number: agentNumber }),
+        body: JSON.stringify({ agent_number: callerId }),
     });
 
     if(error) throw new Error(error.message);
@@ -202,7 +202,7 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
     return data.data;
 };
 
-export const pollForActiveCall = async (pollUrl: string, lead: Lead): Promise<{ active: boolean, call_id?: string, status?: string }> => {
+export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string }> => {
     const profile = await getProfile();
     const callerId = profile?.caller_id;
 
