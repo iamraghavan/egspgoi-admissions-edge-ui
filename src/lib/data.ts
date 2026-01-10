@@ -202,7 +202,7 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
     return data.data;
 };
 
-export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string }> => {
+export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string, agent_name?: string, customer_number?: string }> => {
     const profile = await getProfile();
     const callerId = profile?.caller_id;
 
@@ -215,7 +215,7 @@ export const pollForActiveCall = async (pollUrl: string): Promise<{ active: bool
     const endpoint = pollUrl.startsWith('/api/v1') ? pollUrl.substring(7) : pollUrl;
     const urlWithAgent = `${endpoint}?agent_number=${callerId}`;
     
-    const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string } }>(urlWithAgent);
+    const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string, agent_name?: string, customer_number?: string } }>(urlWithAgent);
 
     if (error) {
         throw new Error(error.message);
@@ -519,5 +519,3 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     if(error) throw new Error(error.message);
     return data;
 };
-
-    

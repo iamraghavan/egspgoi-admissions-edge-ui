@@ -25,6 +25,13 @@ export const callRecordsColumns: ColumnDef<any>[] = [
       <Badge variant={row.getValue("status") === 'answered' ? 'success' : 'secondary'} className="capitalize">{row.getValue("status")}</Badge>
     ),
   },
+    {
+    accessorKey: "direction",
+    header: "Direction",
+     cell: ({ row }) => (
+      <span className="capitalize">{row.getValue("direction")}</span>
+    ),
+  },
   {
     accessorKey: "call_duration",
     header: ({ column }) => {
