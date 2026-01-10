@@ -191,7 +191,7 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
         throw new Error("Agent number not found. Please update your profile.");
     }
 
-    const { data, error } = await apiClient<{ data: { poll_url: string } }>(`/leads/${leadId}/call`, {
+    const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: agentNumber }),
     });
@@ -202,7 +202,7 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
     return data.data;
 };
 
-export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string }> => {
+export const pollForActiveCall = async (pollUrl: string, lead: Lead): Promise<{ active: boolean, call_id?: string, status?: string }> => {
     const profile = await getProfile();
     const callerId = profile?.caller_id;
 
@@ -210,7 +210,10 @@ export const pollForActiveCall = async (pollUrl: string): Promise<{ active: bool
         throw new Error("Caller ID (agent phone number) not found in profile.");
     }
     
-    const urlWithAgent = `${pollUrl}?agent_number=${callerId}`;
+    // The pollUrl from the backend already contains the API prefix.
+    // We remove it to avoid duplication by the apiClient.
+    const endpoint = pollUrl.startsWith('/api/v1') ? pollUrl.substring(7) : pollUrl;
+    const urlWithAgent = `${endpoint}?agent_number=${callerId}`;
     
     const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string } }>(urlWithAgent);
 
