@@ -38,45 +38,30 @@ export function getAuthHeaders() {
  * @returns A promise that resolves with the login response data.
  */
 export async function login(email: string, password: string): Promise<{ accessToken: string, user: UserProfile }> {
-    const response = await fetch(`https://cms-egspgoi.vercel.app/api/v1/auth/login`, {
+    const { data, error } = await apiClient<any>('/auth/login', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ email, password }),
-    });
+    }, true); // `true` marks this as a public endpoint
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        try {
-            const errorJson = JSON.parse(errorText);
-            throw new Error(errorJson.message || 'Login failed');
-        } catch (e) {
-            throw new Error(errorText || 'An unknown error occurred');
-        }
+    if (error) {
+        throw new Error(error.message || 'Login failed');
     }
 
-    try {
-        const responseData = await response.json();
-        if (responseData && responseData.accessToken && responseData.user) {
-            // Store the token and user info
-            if (typeof window !== 'undefined') {
-                const userProfile = {
-                    ...responseData.user,
-                    phone: responseData.user.caller_id // Map caller_id to phone
-                };
+    if (data && data.accessToken && data.user) {
+        if (typeof window !== 'undefined') {
+            const userProfile: UserProfile = {
+                ...data.user,
+                phone: data.user.caller_id // Map caller_id to phone
+            };
 
-                localStorage.setItem('accessToken', responseData.accessToken);
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                startSessionTimer(responseData.accessToken); // Start the session timer
-                return { accessToken: responseData.accessToken, user: userProfile };
-            }
-             return { accessToken: responseData.accessToken, user: responseData.user };
-        } else {
-             throw new Error('Login response did not include an accessToken or user object.');
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            startSessionTimer(data.accessToken); // Start the session timer
+            return { accessToken: data.accessToken, user: userProfile };
         }
-    } catch (error) {
-        throw new Error('Failed to parse successful login response.');
+        return { accessToken: data.accessToken, user: data.user };
+    } else {
+        throw new Error('Login response did not include an accessToken or user object.');
     }
 }
 
@@ -86,20 +71,18 @@ export async function login(email: string, password: string): Promise<{ accessTo
  * @returns A promise that resolves when the token is refreshed.
  */
 export async function refreshToken(): Promise<void> {
-    const response = await fetch(`https://cms-egspgoi.vercel.app/api/v1/auth/refresh`, {
+    const { data, error } = await apiClient<{accessToken: string}>('/auth/refresh', {
         method: 'POST',
-        headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        throw new Error('Failed to refresh token');
+    if (error) {
+        throw new Error(error.message || 'Failed to refresh token');
     }
 
-     const responseData = await response.json();
-    if (responseData && responseData.accessToken) {
+    if (data && data.accessToken) {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', responseData.accessToken);
-            startSessionTimer(responseData.accessToken); // Reset the session timer with the new token
+            localStorage.setItem('accessToken', data.accessToken);
+            startSessionTimer(data.accessToken); // Reset the session timer with the new token
         }
     } else {
         throw new Error('Refresh response did not include a new accessToken.');
@@ -158,7 +141,7 @@ export async function getProfile(): Promise<UserProfile | null> {
 }
 
 export async function updateUserProfile(payload: Partial<User>): Promise<User> {
-    const { data, error } = await apiClient<any>('/users/auth/profile', {
+    const { data, error } = await apiClient<any>('/users/me', {
         method: 'PATCH',
         body: JSON.stringify(payload),
     });
