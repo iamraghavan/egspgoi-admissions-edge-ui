@@ -188,7 +188,7 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
     const agentNumber = profile?.agent_number;
 
     if (!agentNumber) {
-        throw new Error("Agent number not found in profile.");
+        throw new Error("Agent number not found. Please update your profile.");
     }
 
     const { data, error } = await apiClient<{ data: { poll_url: string } }>(`/leads/${leadId}/call`, {
@@ -203,9 +203,18 @@ export const initiateCall = async (leadId: string): Promise<{ poll_url: string }
 };
 
 export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string }> => {
-    const { data, error } = await apiClient<{ active: boolean, call_id?: string, status?: string }>(pollUrl);
+    const profile = await getProfile();
+    const callerId = profile?.caller_id;
+
+    if (!callerId) {
+        throw new Error("Caller ID (agent phone number) not found in profile.");
+    }
+
+    const urlWithAgent = `${pollUrl}?agent_number=${callerId}`;
+    
+    const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string } }>(urlWithAgent);
     if (error) throw new Error(error.message);
-    return data!;
+    return data!.data;
 };
 
 
@@ -374,8 +383,7 @@ const roleIdToNameMap: Record<string, Role> = {
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<any>('/users?type=agent');
     if (error) {
-        console.error("Failed to fetch users:", error.message);
-        return [];
+        throw new Error(error.message || 'Failed to fetch users');
     }
     const users = data?.data || [];
     return users.map((user: any) => ({
@@ -500,3 +508,6 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
     if(error) throw new Error(error.message);
     return data;
 };
+
+
+    

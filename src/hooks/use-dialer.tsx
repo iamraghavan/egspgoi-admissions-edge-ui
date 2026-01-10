@@ -78,11 +78,13 @@ export function DialerProvider({ children }: { children: ReactNode }) {
     setTimeout(() => {
         if (pollingIntervalRef.current) {
             stopPolling();
-            setCallStatus('idle');
-            toast({ variant: 'destructive', title: 'Call Failed', description: 'Could not connect the call. Please try again.' });
+            if (callStatus !== 'connected') {
+                setCallStatus('idle');
+                toast({ variant: 'destructive', title: 'Call Failed', description: 'Could not connect the call. Please try again.' });
+            }
         }
     }, 30000);
-  }, [stopPolling, toast]);
+  }, [stopPolling, toast, callStatus]);
 
 
   const startCall = useCallback(async (lead: Lead) => {
@@ -106,10 +108,10 @@ export function DialerProvider({ children }: { children: ReactNode }) {
 
   const endCall = useCallback(() => {
     if (activeCall && activeCall.onHangup) {
-      // Wait 5 seconds before triggering the refetch to allow for webhook processing
+      // Wait a few seconds before triggering the refetch to allow for webhook processing
       setTimeout(() => {
         activeCall.onHangup!();
-      }, 5000);
+      }, 3000);
     }
     setActiveCall(null);
     setCallStatus('idle');
@@ -136,3 +138,5 @@ export function useDialer() {
   }
   return context;
 }
+
+    
