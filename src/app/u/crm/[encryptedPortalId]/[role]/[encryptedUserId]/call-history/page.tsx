@@ -50,7 +50,11 @@ export default function CallHistoryPage() {
             if (selectedAgent?.agent_number) {
                  params.agent_number = selectedAgent.agent_number;
             } else if (agent !== 'all') {
-                params.agent_name = agent;
+                // This might be a name if agent_number is not present
+                const agentData = users.find(u => u.id === agent);
+                if(agentData?.name){
+                    params.agent_name = agentData.name;
+                }
             }
 
             const response = await getCallRecords(params);
@@ -89,7 +93,8 @@ export default function CallHistoryPage() {
             }
         });
         fetchRecords(true);
-    }, []); // Only fetch users on initial load
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only once on initial mount
 
     const handleSearch = () => {
         setRecords([]); // Clear old records
@@ -141,7 +146,7 @@ export default function CallHistoryPage() {
             <DataTable 
                 columns={callRecordsColumns} 
                 data={records}
-                loading={loading && page === 1}
+                loading={loading && records.length === 0}
                 searchKey="call_id" 
                 searchPlaceholder="Filter by ID..."
                 onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
