@@ -79,8 +79,42 @@ export default function LeadsPage() {
   }, [toast, isAdmissionRole, params.encryptedUserId]);
   
   useEffect(() => {
-    fetchLeads({ isNewSearch: true, range: dateRange });
-  }, [fetchLeads, dateRange]);
+    let isMounted = true;
+    
+    async function loadLeads() {
+        if (!isMounted) return;
+        setLoading(true);
+
+        const filters: { startDate?: Date, endDate?: Date, assignedTo?: string } = {};
+        if (dateRange?.from) filters.startDate = dateRange.from;
+        if (dateRange?.to) filters.endDate = dateRange.to;
+        if (isAdmissionRole) filters.assignedTo = params.encryptedUserId;
+
+        const { leads: fetchedLeads, meta, error } = await getLeads(filters);
+
+        if (!isMounted) return;
+
+        if (error) {
+            if (error.status !== 401 && error.status !== 403) {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch leads",
+                    description: error.message || "Could not retrieve lead data from the server.",
+                });
+            }
+        } else {
+            setLeads(fetchedLeads);
+            setNextCursor(meta?.cursor || null);
+        }
+        setLoading(false);
+    }
+
+    loadLeads();
+
+    return () => {
+        isMounted = false;
+    };
+  }, [dateRange, isAdmissionRole, params.encryptedUserId, toast]);
 
   const handleDateRangeChange = (newDateRange?: DateRange) => {
     setDateRange(newDateRange);
