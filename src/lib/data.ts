@@ -399,24 +399,59 @@ const roleIdToNameMap: Record<string, Role> = {
     "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
     "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
     "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin",
+    "a78c021b-156c-48d6-8a2b-36f64e2931a7": "Marketing Manager",
+    "f3a3a7f8-e73a-4464-9279-8b83a7587602": "Finance"
 };
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<any[]>('/users?type=agent');
+    const { data, error } = await apiClient<{data: any[]}>(`/users`);
     if (error) {
         if (error.status === 401 || error.status === 403) {
             return []; // Gracefully return empty array on auth errors
         }
         throw new Error(error.message || 'Failed to fetch users');
     }
-    const users = data || [];
+    const users = data?.data || [];
     return users.map((user: any) => ({
       ...user,
       role: roleIdToNameMap[user.role_id] || 'Admission Executive',
       avatarUrl: user.avatarUrl || '',
     }));
 }
+
+export const createUser = async (userData: User): Promise<User> => {
+    const { data, error } = await apiClient<any>(`/users`, {
+        method: 'POST',
+        body: JSON.stringify(userData),
+    });
+    if (error) throw new Error(error.message);
+    const user = data.data;
+    return {
+        ...user,
+        role: roleIdToNameMap[user.role_id] || 'Admission Executive'
+    };
+};
+
+export const updateUser = async (userId: string, userData: Partial<User>): Promise<User> => {
+    const { data, error } = await apiClient<any>(`/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(userData),
+    });
+    if (error) throw new Error(error.message);
+    const user = data.data;
+     return {
+        ...user,
+        role: roleIdToNameMap[user.role_id] || 'Admission Executive'
+    };
+};
+
+export const deleteUser = async (userId: string, type: 'soft' | 'hard'): Promise<void> => {
+    const { error } = await apiClient(`/users/${userId}?type=${type}`, {
+        method: 'DELETE',
+    });
+    if (error) throw new Error(error.message);
+};
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 

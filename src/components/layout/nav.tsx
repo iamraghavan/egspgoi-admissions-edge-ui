@@ -11,7 +11,8 @@ import {
   Phone,
   History,
   Settings,
-  Landmark
+  Landmark,
+  UserCog
 } from 'lucide-react';
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
@@ -56,6 +57,12 @@ const navItems: NavItem[] = [
     href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/accounting`,
     icon: Landmark,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
+  },
+    {
+    title: 'User Management',
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/user-management`,
+    icon: UserCog,
+    roles: ['Super Admin'],
   },
   {
     title: 'Call Monitoring',
