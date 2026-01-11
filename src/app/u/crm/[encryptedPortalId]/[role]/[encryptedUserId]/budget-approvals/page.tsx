@@ -24,7 +24,7 @@ export default async function BudgetApprovalsPage() {
                 </Button>
             </PageHeader>
             <Tabs defaultValue="pending">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList>
                     <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
                     <TabsTrigger value="my-requests">My Requests</TabsTrigger>
                     <TabsTrigger value="all">All Requests</TabsTrigger>
