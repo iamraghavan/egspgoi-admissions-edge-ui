@@ -67,7 +67,10 @@ export const getLeads = async (
     const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
     if(error){
-        return { leads: [], meta: null, error };
+        if (error.status === 401 || error.status === 403) {
+            return { leads: [], meta: null, error };
+        }
+        throw new Error(error.message || 'Failed to fetch leads');
     }
     
     if (data && data.success && Array.isArray(data.data)) {
@@ -542,5 +545,3 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         message: data?.message
     };
 };
-
-

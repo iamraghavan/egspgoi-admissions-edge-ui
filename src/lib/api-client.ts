@@ -39,9 +39,9 @@ export async function apiClient<T>(
 
         if (response.status === 401 || response.status === 403) {
             const sessionContext = getSessionTimeoutContext();
-            if (sessionContext) {
+            if (sessionContext && !sessionContext.isTimeoutDialogOpen) {
                 sessionContext.openTimeoutDialog();
-            } else {
+            } else if (!sessionContext) {
                 console.error("Session context not available to open timeout dialog.");
                  if (typeof window !== 'undefined') logout();
             }
