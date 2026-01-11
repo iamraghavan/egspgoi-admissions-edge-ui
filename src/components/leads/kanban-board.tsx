@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Lead, LeadStatus } from '@/lib/types';
 import { updateLeadStatus } from '@/lib/data';
 import { Skeleton } from '../ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface KanbanBoardClientProps {
   leads: Lead[];
