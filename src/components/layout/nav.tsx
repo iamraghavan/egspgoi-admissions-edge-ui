@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
     title: 'Dashboard',
     href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/dashboard`,
     icon: LayoutDashboard,
-    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance'],
   },
   {
     title: 'Leads',

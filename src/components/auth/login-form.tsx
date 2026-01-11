@@ -70,9 +70,11 @@ export function LoginForm() {
       const encryptedUserId = userProfile.id; 
       const encryptedPortalId = "egspgoi"; 
 
+      const defaultPage = userProfile.role === 'Admission Executive' ? 'leads' : 'dashboard';
+
       // Wait a moment for toast to be seen
       setTimeout(() => {
-        router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
+        router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/${defaultPage}`);
       }, 1000);
 
     } catch (error: any) {
