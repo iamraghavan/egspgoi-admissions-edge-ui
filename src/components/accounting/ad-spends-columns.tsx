@@ -3,29 +3,10 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { AdSpend } from "@/lib/types"
-import { getCampaignById } from "@/lib/data"
-import { useEffect, useState } from "react"
 import { Badge } from "../ui/badge"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "../ui/button"
 import { formatCurrency } from "@/lib/formatters"
-
-const CampaignCell = ({ row }: { row: any }) => {
-    const adSpend = row.original as AdSpend;
-    const [campaignName, setCampaignName] = useState<string>('');
-    
-    useEffect(() => {
-        getCampaignById(adSpend.campaignId).then(campaign => {
-            if (campaign) {
-                setCampaignName(campaign.name);
-            }
-        });
-    }, [adSpend.campaignId]);
-
-    if (!campaignName) return <div className="h-6 w-32 animate-pulse bg-muted rounded-md" />;
-
-    return <span>{campaignName}</span>
-}
 
 export const adSpendsColumns: ColumnDef<AdSpend>[] = [
   {
@@ -49,7 +30,10 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
   {
     accessorKey: "campaignId",
     header: "Campaign",
-    cell: CampaignCell,
+    cell: ({ row }) => {
+        const adSpend = row.original as AdSpend;
+        return <span>{adSpend.campaignName || 'N/A'}</span>
+    },
   },
   {
     accessorKey: "platform",

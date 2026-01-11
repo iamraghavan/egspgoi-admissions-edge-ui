@@ -108,6 +108,7 @@ export type LiveCall = {
 export type PaymentRecord = {
     id: string;
     leadId: string;
+    leadName?: string;
     amount: number;
     date: string; // ISO 8601
     method: 'Credit Card' | 'Bank Transfer' | 'Other';
@@ -117,6 +118,7 @@ export type PaymentRecord = {
 export type AdSpend = {
     id: string;
     campaignId: string;
+    campaignName?: string;
     platform: 'Google' | 'Facebook' | 'LinkedIn';
     amount: number;
     date: string; // ISO 8601

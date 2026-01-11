@@ -3,29 +3,10 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { PaymentRecord } from "@/lib/types"
-import { getLeadById } from "@/lib/data"
-import { useEffect, useState } from "react"
 import { Badge } from "../ui/badge"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "../ui/button"
 import { formatCurrency } from "@/lib/formatters"
-
-const LeadCell = ({ row }: { row: any }) => {
-    const payment = row.original as PaymentRecord;
-    const [leadName, setLeadName] = useState<string>('');
-    
-    useEffect(() => {
-        getLeadById(payment.leadId).then(lead => {
-            if (lead) {
-                setLeadName(lead.name);
-            }
-        });
-    }, [payment.leadId]);
-
-    if (!leadName) return <div className="h-6 w-24 animate-pulse bg-muted rounded-md" />;
-
-    return <span>{leadName}</span>
-}
 
 export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
     {
@@ -49,7 +30,10 @@ export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
     {
         accessorKey: "leadId",
         header: "Lead",
-        cell: LeadCell
+        cell: ({ row }) => {
+            const payment = row.original as PaymentRecord;
+            return <span>{payment.leadName || 'N/A'}</span>
+        }
     },
     {
         accessorKey: "amount",

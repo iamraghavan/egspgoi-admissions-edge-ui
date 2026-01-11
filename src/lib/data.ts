@@ -365,16 +365,16 @@ export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
 
 export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
     const paymentRecords: PaymentRecord[] = [
-        { id: 'pay-1', leadId: 'lead-5', amount: 1500, date: subDays(new Date(), 5).toISOString(), method: 'Credit Card', status: 'Completed' },
-        { id: 'pay-2', leadId: 'lead-3', amount: 250, date: subDays(new Date(), 3).toISOString(), method: 'Bank Transfer', status: 'Completed' },
+        { id: 'pay-1', leadId: 'lead-5', leadName: 'Suresh Kumar', amount: 1500, date: subDays(new Date(), 5).toISOString(), method: 'Credit Card', status: 'Completed' },
+        { id: 'pay-2', leadId: 'lead-3', leadName: 'Priya Sharma', amount: 250, date: subDays(new Date(), 3).toISOString(), method: 'Bank Transfer', status: 'Completed' },
     ];
     return Promise.resolve(paymentRecords);
 }
 
 export const getAdSpends = async (): Promise<AdSpend[]> => {
      const adSpends: AdSpend[] = [
-        { id: 'ad-1', campaignId: 'camp-1', platform: 'Google', amount: 500, date: subDays(new Date(), 1).toISOString() },
-        { id: 'ad-2', campaignId: 'camp-1', platform: 'Facebook', amount: 350, date: subDays(new Date(), 1).toISOString() },
+        { id: 'ad-1', campaignId: 'camp-1', campaignName: 'Fall Admissions 2024', platform: 'Google', amount: 500, date: subDays(new Date(), 1).toISOString() },
+        { id: 'ad-2', campaignId: 'camp-1', campaignName: 'Fall Admissions 2024', platform: 'Facebook', amount: 350, date: subDays(new Date(), 1).toISOString() },
     ];
     return Promise.resolve(adSpends);
 }
@@ -404,9 +404,10 @@ const roleIdToNameMap: Record<string, Role> = {
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<any[]>('/users?type=agent');
     if (error) {
-        // The apiClient will trigger the session timeout dialog.
-        // We can return an empty array to prevent the calling component from crashing.
-        return [];
+        if (error.status === 401 || error.status === 403) {
+            return []; // Gracefully return empty array on auth errors
+        }
+        throw new Error(error.message || 'Failed to fetch users');
     }
     const users = data || [];
     return users.map((user: any) => ({
