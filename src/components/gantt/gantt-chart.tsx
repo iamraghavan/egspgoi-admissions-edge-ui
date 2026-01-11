@@ -44,7 +44,7 @@ export function GanttChart({ leads, isLoading }: { leads: Lead[], isLoading: boo
   }
 
   return (
-    <div className="flex flex-col h-full border rounded-lg overflow-hidden">
+    <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
       <header className="flex-shrink-0 flex items-center justify-between p-2 border-b">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={goToToday}>

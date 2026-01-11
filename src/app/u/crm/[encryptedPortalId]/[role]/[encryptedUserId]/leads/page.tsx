@@ -12,6 +12,15 @@ import type { DateRange } from 'react-day-picker';
 import { Breadcrumbs, BreadcrumbItem } from '@/components/ui/breadcrumbs';
 import PageHeader from '@/components/page-header';
 import { useParams } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[500px] w-full" />,
+});
+
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -74,17 +83,28 @@ export default function LeadsPage() {
         </Breadcrumbs>
        <PageHeader title="Leads" description="Manage and track all your prospective students." />
         <div className="flex-grow">
-            <LeadsDataTable
-                columns={leadColumns}
-                data={leads}
-                loading={loading}
-                onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
-                canLoadMore={!!nextCursor}
-                isFetchingMore={isFetchingMore}
-                refreshData={handleSearch}
-                dateRange={dateRange}
-                setDateRange={handleDateRangeChange}
-            />
+             <Tabs defaultValue="table" className="h-full flex flex-col">
+                <TabsList>
+                    <TabsTrigger value="table">Data Table</TabsTrigger>
+                    <TabsTrigger value="board">Kanban Board</TabsTrigger>
+                </TabsList>
+                <TabsContent value="table" className="flex-grow">
+                    <LeadsDataTable
+                        columns={leadColumns}
+                        data={leads}
+                        loading={loading}
+                        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
+                        canLoadMore={!!nextCursor}
+                        isFetchingMore={isFetchingMore}
+                        refreshData={handleSearch}
+                        dateRange={dateRange}
+                        setDateRange={handleDateRangeChange}
+                    />
+                </TabsContent>
+                <TabsContent value="board" className="mt-6 flex-grow">
+                  <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={handleSearch} />
+                </TabsContent>
+            </Tabs>
         </div>
     </div>
   );
