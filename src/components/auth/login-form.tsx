@@ -18,8 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { login, getProfile } from "@/lib/auth";
-import type { Role } from "@/lib/types";
+import { login } from "@/lib/auth";
+import type { Role, User } from "@/lib/types";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -55,33 +55,26 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      const loginResponse = await login(values.email, values.password);
+      const { user: userProfile } = await login(values.email, values.password);
 
-      if (loginResponse && loginResponse.accessToken) {
-          // Immediately fetch the full profile to get all details including preferences
-          const userProfile = await getProfile();
-
-          if (!userProfile) {
-            throw new Error("Could not fetch user profile after login.");
-          }
-
-          toast({
-              title: "Login Successful",
-              description: `Welcome back, ${userProfile.name}! Redirecting...`,
-          });
-          
-          const roleSlug = roleToSlug[userProfile.role as Role] || 'sa';
-          const encryptedUserId = userProfile.id; 
-          const encryptedPortalId = "egspgoi"; 
-
-          // Wait a moment for toast to be seen
-          setTimeout(() => {
-            router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
-          }, 1000);
-
-      } else {
-        throw new Error("Login response did not include an accessToken.");
+      if (!userProfile) {
+        throw new Error("Could not fetch user profile after login.");
       }
+
+      toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userProfile.name}! Redirecting...`,
+      });
+      
+      const roleSlug = roleToSlug[userProfile.role as Role] || 'ae'; // Default to Admission Executive
+      const encryptedUserId = userProfile.id; 
+      const encryptedPortalId = "egspgoi"; 
+
+      // Wait a moment for toast to be seen
+      setTimeout(() => {
+        router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/dashboard`);
+      }, 1000);
+
     } catch (error: any) {
         toast({
             variant: "destructive",

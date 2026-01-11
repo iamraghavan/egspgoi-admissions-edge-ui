@@ -1,4 +1,5 @@
 
+
 export type Role = "Super Admin" | "Marketing Manager" | "Admission Manager" | "Finance" | "Admission Executive";
 
 export type UserPreferences = {
@@ -13,13 +14,13 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   role: Role;
   phone?: string;
   preferences?: UserPreferences;
   designation?: string;
-  agent_number?: string;
-  caller_id?: string;
+  agent_number?: string | null;
+  caller_id?: string | null;
 };
 
 export type LeadStatus = "New" | "Contacted" | "Interested" | "Enrolled" | "Failed";

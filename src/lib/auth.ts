@@ -1,22 +1,15 @@
 
 'use client';
 
-import type { User, UserPreferences } from './types';
+import type { User, UserPreferences, Role } from './types';
 import { apiClient } from './api-client';
 import { startSessionTimer, stopSessionTimer } from './session-timer';
 
-// Mock implementation of a profile object you might get from an API
-interface UserProfile {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    phone?: string;
-    preferences?: UserPreferences;
-    designation?: string;
-    agent_number?: string;
-    caller_id?: string;
-}
+const roleIdToNameMap: Record<string, Role> = {
+    "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
+    "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
+    "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin", // Assuming this is Super Admin
+};
 
 export function getAuthHeaders() {
     if (typeof window === 'undefined') return {};
@@ -37,7 +30,7 @@ export function getAuthHeaders() {
  * @param password - The user's password.
  * @returns A promise that resolves with the login response data.
  */
-export async function login(email: string, password: string): Promise<{ accessToken: string, user: UserProfile }> {
+export async function login(email: string, password: string): Promise<{ accessToken: string, user: User }> {
     const { data, error } = await apiClient<any>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
@@ -47,26 +40,21 @@ export async function login(email: string, password: string): Promise<{ accessTo
         throw new Error(error.message || 'Login failed');
     }
 
-    if (data && data.accessToken && data.user) {
+    if (data && data.accessToken) {
         if (typeof window !== 'undefined') {
-            const userProfile: UserProfile = {
-                ...data.user,
-                phone: data.user.caller_id // Map caller_id to phone
-            };
-
             localStorage.setItem('accessToken', data.accessToken);
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
             startSessionTimer(data.accessToken); // Start the session timer
             
-            // Immediately fetch the full profile to get all details including preferences
+            // Immediately fetch the full profile to get all details including preferences and correct role
             const fullProfile = await getProfile();
-            if (fullProfile) {
-                localStorage.setItem('userProfile', JSON.stringify(fullProfile));
-                return { accessToken: data.accessToken, user: fullProfile };
+            if (!fullProfile) {
+                throw new Error("Could not fetch user profile after login.");
             }
-
-            return { accessToken: data.accessToken, user: userProfile };
+            
+            localStorage.setItem('userProfile', JSON.stringify(fullProfile));
+            return { accessToken: data.accessToken, user: fullProfile };
         }
+        // This server-side path should ideally not be hit in a client-side login flow
         return { accessToken: data.accessToken, user: data.user };
     } else {
         throw new Error('Login response did not include an accessToken or user object.');
@@ -102,17 +90,17 @@ export async function refreshToken(): Promise<void> {
  * If the profile in localStorage is missing a phone number, it fetches the full profile from the API.
  * @returns The user's profile or null if not found.
  */
-export async function getProfile(): Promise<UserProfile | null> {
+export async function getProfile(): Promise<User | null> {
     if (typeof window === 'undefined') {
         return null;
     }
 
     const storedUser = localStorage.getItem('userProfile');
-    let profile: UserProfile | null = null;
+    let profile: User | null = null;
 
     if (storedUser) {
         try {
-            profile = JSON.parse(storedUser) as UserProfile;
+            profile = JSON.parse(storedUser) as User;
         } catch (error) {
             console.error("Failed to parse user profile from localStorage", error);
             return null;
@@ -121,34 +109,21 @@ export async function getProfile(): Promise<UserProfile | null> {
     
     // Always try to fetch the latest profile from the API if a token exists
     if (localStorage.getItem('accessToken')) {
-        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/auth/auth/profile');
+        const { data: apiResponse, error } = await apiClient<any>('/auth/auth/profile');
         if (error) {
             console.error("Failed to fetch full user profile:", error.message);
-            // Return the stale profile from local storage, the caller might handle it
+            // Return the stale profile from local storage if API fails
             return profile;
         }
         
-        if (apiProfile?.success === false && apiProfile.data) {
-             const fullProfile: UserProfile = {
-                id: apiProfile.data.id,
-                name: apiProfile.data.name,
-                email: apiProfile.data.email,
-                role: apiProfile.data.role?.name || apiProfile.data.role_id,
-                phone: apiProfile.data.caller_id || apiProfile.data.phone,
-                preferences: apiProfile.data.preferences,
-                designation: apiProfile.data.designation,
-                agent_number: apiProfile.data.agent_number,
-                caller_id: apiProfile.data.caller_id,
-            };
-            localStorage.setItem('userProfile', JSON.stringify(fullProfile));
-            return fullProfile;
-        } else if (apiProfile) {
-            const apiData = Array.isArray(apiProfile) ? apiProfile[0] : apiProfile;
-            const fullProfile: UserProfile = {
+        if (apiResponse) {
+            const apiData = apiResponse.data || apiResponse; // Handle cases where data is nested
+            const roleName = roleIdToNameMap[apiData.role_id] || apiData.role || 'Admission Executive';
+             const fullProfile: User = {
                 id: apiData.id,
                 name: apiData.name,
                 email: apiData.email,
-                role: apiData.role?.name || apiData.role_id,
+                role: roleName,
                 phone: apiData.caller_id || apiData.phone,
                 preferences: apiData.preferences,
                 designation: apiData.designation,
