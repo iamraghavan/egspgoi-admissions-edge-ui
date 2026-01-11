@@ -102,6 +102,8 @@ export default function LeadsPage() {
                         refreshData={handleSearch}
                         dateRange={dateRange}
                         setDateRange={handleDateRangeChange}
+                        searchKey="name"
+                        searchPlaceholder="Filter leads by name..."
                     />
                 </TabsContent>
                 <TabsContent value="board" className="mt-6 flex-grow">
