@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { getProfile } from '@/lib/auth';
 import AdminDashboard from '@/components/dashboard/admin-dashboard';
@@ -21,11 +21,18 @@ const roleSlugMap: Record<string, Role> = {
 
 export default function DashboardPage() {
   const params = useParams();
-  const { role: roleSlug } = params as { role: string };
+  const router = useRouter();
+  const { role: roleSlug, encryptedPortalId, encryptedUserId } = params as { role: string, encryptedPortalId: string, encryptedUserId: string };
   const [userName, setUserName] = useState<string>('User');
   const [isLoading, setIsLoading] = useState(true);
 
    useEffect(() => {
+    // Redirect if role is Admission Executive
+    if (roleSlug === 'ae') {
+        router.replace(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/leads`);
+        return; // Stop further execution
+    }
+
     const fetchProfile = async () => {
         setIsLoading(true);
         const profile = await getProfile();
@@ -35,12 +42,13 @@ export default function DashboardPage() {
         setIsLoading(false);
     }
     fetchProfile();
-  }, []);
+  }, [roleSlug, router, encryptedPortalId, encryptedUserId]);
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
   const isAdmissionRole = userRole === 'Admission Manager' || userRole === 'Admission Executive';
 
-  if (isLoading) {
+  // Render loading state while redirecting or fetching data
+  if (isLoading || roleSlug === 'ae') {
     return (
         <div className="flex flex-col gap-6">
             <Skeleton className="h-10 w-64" />
