@@ -57,6 +57,14 @@ export async function login(email: string, password: string): Promise<{ accessTo
             localStorage.setItem('accessToken', data.accessToken);
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
             startSessionTimer(data.accessToken); // Start the session timer
+            
+            // Immediately fetch the full profile to get all details including preferences
+            const fullProfile = await getProfile();
+            if (fullProfile) {
+                localStorage.setItem('userProfile', JSON.stringify(fullProfile));
+                return { accessToken: data.accessToken, user: fullProfile };
+            }
+
             return { accessToken: data.accessToken, user: userProfile };
         }
         return { accessToken: data.accessToken, user: data.user };
@@ -111,26 +119,41 @@ export async function getProfile(): Promise<UserProfile | null> {
         }
     }
     
-    // If profile exists but phone is missing, fetch from API
-    if (profile && !profile.phone) {
-        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/auth/profile');
+    // Always try to fetch the latest profile from the API if a token exists
+    if (localStorage.getItem('accessToken')) {
+        const { data: apiProfile, error } = await apiClient<{ success: boolean; data: any }>('/auth/auth/profile');
         if (error) {
             console.error("Failed to fetch full user profile:", error.message);
             // Return the stale profile from local storage, the caller might handle it
             return profile;
         }
         
-        if (apiProfile?.success && apiProfile.data) {
-            const fullProfile: UserProfile = {
+        if (apiProfile?.success === false && apiProfile.data) {
+             const fullProfile: UserProfile = {
                 id: apiProfile.data.id,
                 name: apiProfile.data.name,
                 email: apiProfile.data.email,
-                role: apiProfile.data.role.name,
+                role: apiProfile.data.role?.name || apiProfile.data.role_id,
                 phone: apiProfile.data.caller_id || apiProfile.data.phone,
                 preferences: apiProfile.data.preferences,
                 designation: apiProfile.data.designation,
                 agent_number: apiProfile.data.agent_number,
                 caller_id: apiProfile.data.caller_id,
+            };
+            localStorage.setItem('userProfile', JSON.stringify(fullProfile));
+            return fullProfile;
+        } else if (apiProfile) {
+            const apiData = Array.isArray(apiProfile) ? apiProfile[0] : apiProfile;
+            const fullProfile: UserProfile = {
+                id: apiData.id,
+                name: apiData.name,
+                email: apiData.email,
+                role: apiData.role?.name || apiData.role_id,
+                phone: apiData.caller_id || apiData.phone,
+                preferences: apiData.preferences,
+                designation: apiData.designation,
+                agent_number: apiData.agent_number,
+                caller_id: apiData.caller_id,
             };
             localStorage.setItem('userProfile', JSON.stringify(fullProfile));
             return fullProfile;
