@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -18,8 +19,10 @@ const DataCell = ({ id, fetcher, nameKey }: { id: string; fetcher: (id: string) 
     const [data, setData] = useState<any>(null);
     
     useEffect(() => {
-        fetcher(id).then(setData);
-    }, [id, fetcher]);
+        if (id) {
+            fetcher(id).then(setData);
+        }
+    }, [id, fetcher, nameKey]);
 
     if (!data) return <div className="h-6 w-24 animate-pulse bg-muted rounded-md" />;
 
