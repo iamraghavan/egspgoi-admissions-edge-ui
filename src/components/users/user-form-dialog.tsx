@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { User, Role } from '@/lib/types';
@@ -46,30 +45,32 @@ export function UserFormDialog({ isOpen, onOpenChange, onSubmit, user }: UserFor
     });
 
     useEffect(() => {
-        if (user) {
-            form.reset({
-                name: user.name,
-                email: user.email,
-                phone: user.phone || '',
-                designation: user.designation || '',
-                role: user.role,
-                agent_number: user.agent_number || '',
-                caller_id: user.caller_id || '',
-                status: (user as any).status || 'active',
-                password: '',
-            });
-        } else {
-            form.reset({
-                name: '',
-                email: '',
-                phone: '',
-                designation: '',
-                role: 'Admission Executive',
-                agent_number: '',
-                caller_id: '',
-                status: 'active',
-                password: '',
-            });
+        if (isOpen) {
+            if (user) {
+                form.reset({
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone || '',
+                    designation: user.designation || '',
+                    role: user.role,
+                    agent_number: user.agent_number || '',
+                    caller_id: user.caller_id || '',
+                    status: (user as any).status || 'active',
+                    password: '',
+                });
+            } else {
+                form.reset({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    designation: '',
+                    role: 'Admission Executive',
+                    agent_number: '',
+                    caller_id: '',
+                    status: 'active',
+                    password: '',
+                });
+            }
         }
     }, [user, form, isOpen]);
 
@@ -83,6 +84,9 @@ export function UserFormDialog({ isOpen, onOpenChange, onSubmit, user }: UserFor
         const success = await onSubmit(payload);
         if (!success) {
             setIsSubmitting(false);
+        } else {
+            setIsSubmitting(false);
+            onOpenChange(false);
         }
     };
     
@@ -150,7 +154,7 @@ export function UserFormDialog({ isOpen, onOpenChange, onSubmit, user }: UserFor
                             </div>
                         </div>
                         
-                        <DialogFooter className="pt-4">
+                        <DialogFooter className="pt-4 sticky bottom-0 bg-background py-4">
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                             <Button type="submit" disabled={isSubmitting}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -163,4 +167,3 @@ export function UserFormDialog({ isOpen, onOpenChange, onSubmit, user }: UserFor
         </Dialog>
     );
 }
-

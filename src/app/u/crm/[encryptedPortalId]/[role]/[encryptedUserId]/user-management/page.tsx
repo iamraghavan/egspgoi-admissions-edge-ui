@@ -76,7 +76,6 @@ export default function UserManagementPage() {
                 await createUser(userData as User);
                 toast({ title: 'User Created', description: 'New user has been created.' });
             }
-            setFormOpen(false);
             fetchUsers();
             return true;
         } catch (error: any) {
