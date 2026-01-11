@@ -1,5 +1,4 @@
 
-
 import { getAuthHeaders, logout } from './auth';
 import { getSessionTimeoutContext } from './session-context';
 
@@ -20,32 +19,23 @@ export async function apiClient<T>(
 ): Promise<ApiResult<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    let headers: HeadersInit = { 'Content-Type': 'application/json' };
-    if (!isPublic) {
-        try {
-            const authHeaders = getAuthHeaders();
-            headers = { ...headers, ...authHeaders };
-        } catch (error: any) {
-            const sessionContext = getSessionTimeoutContext();
-            if (sessionContext) {
-                sessionContext.openTimeoutDialog();
-            } else {
-                console.error("Session context not available to open timeout dialog.");
-                if (typeof window !== 'undefined') logout();
-            }
-            return { data: null, error: { message: error.message || 'Authentication token not found', status: 401 }};
-        }
-    }
+    const baseHeaders: HeadersInit = { 'Content-Type': 'application/json' };
     
     if (options.body instanceof FormData) {
-        delete (headers as any)['Content-Type'];
+        delete (baseHeaders as any)['Content-Type'];
     }
 
+    const finalOptions = { ...options };
+
     try {
-        const response = await fetch(url, {
-            ...options,
-            headers,
-        });
+         if (!isPublic) {
+            const authHeaders = getAuthHeaders();
+            finalOptions.headers = { ...baseHeaders, ...options.headers, ...authHeaders };
+        } else {
+            finalOptions.headers = { ...baseHeaders, ...options.headers };
+        }
+
+        const response = await fetch(url, finalOptions);
 
         if (response.status === 401 || response.status === 403) {
             const sessionContext = getSessionTimeoutContext();
@@ -60,7 +50,7 @@ export async function apiClient<T>(
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: `Request failed with status ${response.status}` }));
-            return { data: null, error: { message: errorData.message, status: response.status } };
+            return { data: null, error: { message: errorData.message || `Request failed with status ${response.status}`, status: response.status } };
         }
 
         // Handle successful but empty responses (e.g., DELETE, PUT with no content)
