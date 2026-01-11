@@ -1,4 +1,5 @@
 
+
 'use client';
 import 'react-date-range/dist/styles.css'; 
 import 'react-date-range/dist/theme/default.css'; 
@@ -50,11 +51,13 @@ export default function LeadsPage() {
     const { leads: fetchedLeads, meta, error } = await getLeads(filters);
     
     if(error){
-        toast({
-            variant: "destructive",
-            title: "Failed to fetch leads",
-            description: error.message || "Could not retrieve lead data from the server.",
-        });
+        if (error.status !== 401 && error.status !== 403) {
+            toast({
+                variant: "destructive",
+                title: "Failed to fetch leads",
+                description: error.message || "Could not retrieve lead data from the server.",
+            });
+        }
     } else {
       setLeads(prev => (cursor && !isNewSearch) ? [...prev, ...fetchedLeads] : fetchedLeads);
       setNextCursor(meta?.cursor || null);
