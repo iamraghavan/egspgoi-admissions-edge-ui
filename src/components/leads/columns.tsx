@@ -18,6 +18,7 @@ import { Loader2 } from "lucide-react"
 import { format } from 'date-fns';
 import type { LeadStatus } from "@/lib/types";
 import { CallStatusDialog } from "../calls/call-status-dialog"
+import { ConfirmationDialog } from "../ui/confirmation-dialog"
 
 const AssignedToCell = ({ row }: { row: any }) => {
     const lead = row.original as Lead;
@@ -114,6 +115,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const { toast } = useToast();
       const [isCallDialogOpen, setCallDialogOpen] = useState(false);
       const [selectedLeadForCall, setSelectedLeadForCall] = useState<Lead | null>(null);
+      const [isConfirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
 
       const handleUpdateStatus = async (status: LeadStatus) => {
         try {
@@ -139,13 +141,17 @@ export const leadColumns: ColumnDef<Lead>[] = [
       };
 
       const handleDelete = async (type: 'soft' | 'hard') => {
+        if (type === 'hard') {
+            setConfirmHardDeleteOpen(true);
+            return;
+        }
+
         try {
             await deleteLead(lead.id, type);
             toast({
                 title: "Lead Deleted",
-                description: `${lead.name} has been ${type === 'soft' ? 'soft' : 'permanently'} deleted.`,
+                description: `${lead.name} has been soft deleted.`,
             });
-            // This is a way to trigger a re-fetch in the parent component
             (table.options.meta as any)?.refreshData();
         } catch (error: any) {
             toast({
@@ -155,6 +161,23 @@ export const leadColumns: ColumnDef<Lead>[] = [
             });
         }
       };
+
+      const confirmHardDelete = async () => {
+         try {
+            await deleteLead(lead.id, 'hard');
+            toast({
+                title: "Lead Permanently Deleted",
+                description: `${lead.name} has been permanently deleted.`,
+            });
+            (table.options.meta as any)?.refreshData();
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Delete Failed",
+                description: error.message,
+            });
+        }
+      }
 
       const leadStatuses: LeadStatus[] = ["New", "Contacted", "Interested", "Enrolled", "Failed"];
 
@@ -218,6 +241,14 @@ export const leadColumns: ColumnDef<Lead>[] = [
                 isOpen={isCallDialogOpen}
                 onOpenChange={setCallDialogOpen}
                 lead={selectedLeadForCall}
+            />
+            <ConfirmationDialog
+                isOpen={isConfirmHardDeleteOpen}
+                onOpenChange={setConfirmHardDeleteOpen}
+                onConfirm={confirmHardDelete}
+                title="Confirm Permanent Deletion"
+                description={`Are you sure you want to permanently delete the lead for ${lead.name}? This action cannot be undone.`}
+                confirmText="Permanently Delete"
             />
         </>
       )
