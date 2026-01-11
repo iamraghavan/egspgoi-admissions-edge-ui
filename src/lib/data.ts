@@ -394,13 +394,16 @@ export const getUserById = async (id: string): Promise<User | null> => {
 const roleIdToNameMap: Record<string, Role> = {
     "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
     "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
+    "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin",
 };
 
 
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<any[]>('/users?type=agent');
     if (error) {
-        throw new Error(error.message || 'Failed to fetch users');
+        // The apiClient will trigger the session timeout dialog.
+        // We can return an empty array to prevent the calling component from crashing.
+        return [];
     }
     const users = data || [];
     return users.map((user: any) => ({
