@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,22 +25,29 @@ export function LeadNotes({ lead, onNoteAdded }: LeadNotesProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
         const fetchNotes = async () => {
-            setIsLoading(true);
+            if(isMounted) setIsLoading(true);
             try {
                 const fetchedNotes = await getLeadNotes(lead.id);
-                setNotes(fetchedNotes);
+                if(isMounted) setNotes(fetchedNotes);
             } catch (error: any) {
-                 toast({
-                    variant: "destructive",
-                    title: "Failed to fetch notes",
-                    description: error.message,
-                });
+                 if(isMounted) {
+                    toast({
+                        variant: "destructive",
+                        title: "Failed to fetch notes",
+                        description: error.message,
+                    });
+                 }
             } finally {
-                setIsLoading(false);
+                if(isMounted) setIsLoading(false);
             }
         }
         fetchNotes();
+
+        return () => {
+            isMounted = false;
+        };
     }, [lead.id, toast]);
 
     const handleAddNote = async () => {

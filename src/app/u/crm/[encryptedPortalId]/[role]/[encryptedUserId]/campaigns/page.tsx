@@ -27,26 +27,32 @@ export default function CampaignsPage() {
         router.push('/');
     }, [router]);
 
-    const fetchCampaigns = useCallback(async () => {
-        try {
-            setLoading(true);
-            const fetchedCampaigns = await getCampaigns();
-            setCampaigns(fetchedCampaigns);
-        } catch (error: any) {
-            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                toast({ variant: "destructive", title: "Session Expired", description: "Your session has expired. Please log in again." });
-                handleLogout();
-            } else {
-                toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [toast, handleLogout]);
-
     useEffect(() => {
+        let isMounted = true;
+        const fetchCampaigns = async () => {
+            try {
+                if(isMounted) setLoading(true);
+                const fetchedCampaigns = await getCampaigns();
+                if(isMounted) setCampaigns(fetchedCampaigns);
+            } catch (error: any) {
+                if (isMounted) {
+                    if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
+                        toast({ variant: "destructive", title: "Session Expired", description: "Your session has expired. Please log in again." });
+                        handleLogout();
+                    } else {
+                        toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
+                    }
+                }
+            } finally {
+                if(isMounted) setLoading(false);
+            }
+        }
         fetchCampaigns();
-    }, [fetchCampaigns]);
+
+        return () => {
+            isMounted = false;
+        };
+    }, [toast, handleLogout]);
 
     if (loading) {
         return (

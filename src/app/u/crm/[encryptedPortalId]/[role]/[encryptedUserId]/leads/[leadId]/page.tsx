@@ -23,61 +23,67 @@ export default function LeadDetailPage() {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
 
-    const fetchLeadDetails = useCallback(async () => {
+    const fetchLeadDetails = useCallback(async (isMounted: boolean) => {
         if (!params.leadId) return;
 
-        setLoading(true);
+        if (isMounted) setLoading(true);
         try {
             const { data: fetchedLead, error } = await getLeadById(params.leadId);
             
-            if (error) {
-                 toast({
-                    variant: "destructive",
-                    title: "Failed to fetch lead",
-                    description: error.message || "An unexpected error occurred.",
-                });
-            } else if (fetchedLead) {
-                setLead(fetchedLead);
-                if (fetchedLead.assigned_user) {
-                    setAssignedUser(fetchedLead.assigned_user);
+            if (isMounted) {
+                if (error) {
+                     toast({
+                        variant: "destructive",
+                        title: "Failed to fetch lead",
+                        description: error.message || "An unexpected error occurred.",
+                    });
+                } else if (fetchedLead) {
+                    setLead(fetchedLead);
+                    if (fetchedLead.assigned_user) {
+                        setAssignedUser(fetchedLead.assigned_user);
+                    }
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Lead not found",
+                    });
                 }
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Lead not found",
-                });
             }
         } finally {
-            setLoading(false);
+            if (isMounted) setLoading(false);
         }
     }, [params.leadId, toast]);
 
-    const fetchUsers = useCallback(async () => {
+    const fetchUsers = useCallback(async (isMounted: boolean) => {
         try {
             const fetchedUsers = await getUsers();
-            setUsers(fetchedUsers);
+            if (isMounted) setUsers(fetchedUsers);
         } catch (err: any) {
-             toast({
-                variant: "destructive",
-                title: "Failed to fetch users",
-                description: err.message || "Could not load agent list.",
-            });
+             if (isMounted) {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch users",
+                    description: err.message || "Could not load agent list.",
+                });
+             }
         }
     },[toast]);
 
     useEffect(() => {
-        fetchLeadDetails();
-        fetchUsers();
+        let isMounted = true;
+        fetchLeadDetails(isMounted);
+        fetchUsers(isMounted);
 
         const handleRefresh = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail.leadId === params.leadId) {
-                fetchLeadDetails();
+                fetchLeadDetails(isMounted);
             }
         }
 
         window.addEventListener('leadDataShouldRefresh', handleRefresh);
         return () => {
+            isMounted = false;
             window.removeEventListener('leadDataShouldRefresh', handleRefresh);
         }
     }, [fetchLeadDetails, fetchUsers, params.leadId]);
@@ -115,12 +121,12 @@ export default function LeadDetailPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <LeadDetailHeader lead={lead} onLeadUpdate={fetchLeadDetails} availableAgents={users}/>
+            <LeadDetailHeader lead={lead} onLeadUpdate={() => fetchLeadDetails(true)} availableAgents={users}/>
             <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 grid gap-6">
                     <LeadContactInfo lead={lead} />
                     <LeadCourseInfo lead={lead} />
-                    <LeadNotes lead={lead} onNoteAdded={fetchLeadDetails} />
+                    <LeadNotes lead={lead} onNoteAdded={() => fetchLeadDetails(true)} />
                 </div>
 
                 <div className="space-y-6">

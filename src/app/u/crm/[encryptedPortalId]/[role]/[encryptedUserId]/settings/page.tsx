@@ -14,12 +14,19 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
         const fetchProfile = async () => {
             const profile = await getProfile();
-            setUser(profile as User);
-            setLoading(false);
+            if (isMounted) {
+                setUser(profile as User);
+                setLoading(false);
+            }
         };
         fetchProfile();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleUpdate = (updatedUser: User) => {

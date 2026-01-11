@@ -45,19 +45,24 @@ export default function StatsGrid() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchStats = async () => {
         try {
-            setLoading(true);
+            if (isMounted) setLoading(true);
             const fetchedStats = await getDashboardStats();
-            setStats(fetchedStats);
+            if (isMounted) setStats(fetchedStats);
         } catch (error: any) {
             console.error("Failed to fetch dashboard stats", error);
             // This component won't handle session errors directly anymore
         } finally {
-            setLoading(false);
+            if (isMounted) setLoading(false);
         }
     };
     fetchStats();
+
+    return () => {
+        isMounted = false;
+    };
   }, []);
 
   return (
