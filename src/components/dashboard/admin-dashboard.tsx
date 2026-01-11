@@ -39,17 +39,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchRecentLeads = async () => {
       setLoading(true);
-      const { leads: allLeads, error } = await getLeads();
-      if (error) {
-        toast({
-            variant: "destructive",
-            title: "Failed to fetch leads",
-            description: error.message || "An unexpected error occurred.",
-        });
-      } else {
-        setRecentLeads(allLeads.slice(0, 5));
+      try {
+        const { leads: allLeads, error } = await getLeads();
+        if (error) {
+          toast({
+              variant: "destructive",
+              title: "Failed to fetch leads",
+              description: error.message || "An unexpected error occurred.",
+          });
+        } else {
+          setRecentLeads(allLeads.slice(0, 5));
+        }
+      } catch (err: any) {
+         toast({
+              variant: "destructive",
+              title: "Failed to fetch leads",
+              description: err.message || "An unexpected error occurred.",
+          });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchRecentLeads();
   }, [toast]);
