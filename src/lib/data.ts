@@ -399,20 +399,20 @@ const roleIdToNameMap: Record<string, Role> = {
     "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
     "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
     "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin",
-    "a78c021b-156c-48d6-8a2b-36f64e2931a7": "Marketing Manager",
-    "f3a3a7f8-e73a-4464-9279-8b83a7587602": "Finance"
+    "477760ae-525b-45c6-a629-9cadde0503bb": "Marketing Manager",
+    "7b532b0d-641d-4569-9dd7-cd008013f14f": "Finance"
 };
 
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<{data: any[]}>(`/users`);
+    const { data, error } = await apiClient<any[]>(`/users`);
     if (error) {
         if (error.status === 401 || error.status === 403) {
             return []; // Gracefully return empty array on auth errors
         }
         throw new Error(error.message || 'Failed to fetch users');
     }
-    const users = data?.data || [];
+    const users = Array.isArray(data) ? data : [];
     return users.map((user: any) => ({
       ...user,
       role: roleIdToNameMap[user.role_id] || 'Admission Executive',
