@@ -138,8 +138,9 @@ export default function KanbanBoardClient({ leads, isLoading, onLeadUpdate }: Ka
               <KanbanColumnContent value={status} className="h-full">
                 {leads.map((lead) => (
                   <KanbanItem key={lead.id} value={lead.id}>
-                    <Card>
-                      <CardContent className="p-3">
+                    <Card className="relative overflow-hidden">
+                        <span className={cn("absolute left-0 top-0 h-full w-1.5", getStatusIndicatorColor(lead.status as LeadStatus))} />
+                      <CardContent className="p-3 pl-4">
                         <p className="font-semibold mb-2">{lead.name}</p>
                         <p className="text-sm text-muted-foreground">{lead.course}</p>
                         <div className="flex items-center justify-between mt-3">
