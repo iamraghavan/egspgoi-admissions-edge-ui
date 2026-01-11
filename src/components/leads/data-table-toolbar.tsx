@@ -65,7 +65,7 @@ export function DataTableToolbar<TData>({
   return (
     <div className="flex items-center justify-between p-4">
       <div className="flex flex-1 items-center space-x-2">
-        {searchKey && table.getColumn(searchKey) && (
+        {searchKey && (
             <Input
             placeholder={searchPlaceholder || `Filter by ${searchKey}...`}
             value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}

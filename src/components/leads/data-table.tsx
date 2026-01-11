@@ -42,8 +42,8 @@ import type { DateRange } from "react-day-picker"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  searchKey: string;
-  searchPlaceholder: string;
+  searchKey?: string;
+  searchPlaceholder?: string;
   loading?: boolean
   onLoadMore?: () => void
   canLoadMore?: boolean
@@ -283,7 +283,6 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true,
   })
 
   return (

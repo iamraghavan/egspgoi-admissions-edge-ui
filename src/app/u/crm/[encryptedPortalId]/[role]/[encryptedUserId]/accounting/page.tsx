@@ -29,16 +29,16 @@ export default async function AccountingPage() {
           <DataTable 
             columns={paymentsColumns} 
             data={payments}
-            searchKey="date"
-            searchPlaceholder="Filter by date..."
+            searchKey="leadName"
+            searchPlaceholder="Filter by lead name..."
           />
         </TabsContent>
         <TabsContent value="adspends" className="mt-6">
           <DataTable 
             columns={adSpendsColumns} 
             data={adSpends}
-            searchKey="platform"
-            searchPlaceholder="Filter by platform..."
+            searchKey="campaignName"
+            searchPlaceholder="Filter by campaign..."
           />
         </TabsContent>
       </Tabs>
