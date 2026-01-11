@@ -5,10 +5,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { User, Role } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { ConfirmationDialog } from "../ui/confirmation-dialog";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 const RoleBadge = ({ role }: { role: Role }) => {
     const variant: "default" | "secondary" | "destructive" | "outline" =
@@ -73,6 +75,7 @@ export const userColumns: ColumnDef<User>[] = [
         cell: ({ row, table }) => {
             const user = row.original;
             const meta = table.options.meta as { onEdit: (user: User) => void; onDelete: (userId: string, type: 'soft' | 'hard') => void; };
+            const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
             
             const [isConfirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
 
@@ -100,6 +103,12 @@ export const userColumns: ColumnDef<User>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                            <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/user-management/${user.id}`}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                            </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => meta.onEdit(user)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
