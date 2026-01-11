@@ -7,7 +7,7 @@ import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
-import type { Lead } from '@/lib/types';
+import type { Lead, Role } from '@/lib/types';
 import { getLeads } from '@/lib/data';
 import type { DateRange } from 'react-day-picker';
 import { Breadcrumbs, BreadcrumbItem } from '@/components/ui/breadcrumbs';
@@ -22,6 +22,14 @@ const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
   loading: () => <Skeleton className="h-[500px] w-full" />,
 });
 
+const roleSlugMap: Record<string, Role> = {
+    'sa': 'Super Admin',
+    'mm': 'Marketing Manager',
+    'am': 'Admission Manager',
+    'fin': 'Finance',
+    'ae': 'Admission Executive',
+};
+
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -32,6 +40,9 @@ export default function LeadsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  
+  const userRole = roleSlugMap[params.role] || 'Admission Executive';
+  const isAdmissionRole = userRole === 'Admission Manager' || userRole === 'Admission Executive';
 
   const fetchLeads = useCallback(async (
     { cursor, isNewSearch, range }: { cursor?: string | null; isNewSearch?: boolean; range?: DateRange } = {}
@@ -42,10 +53,11 @@ export default function LeadsPage() {
         setLoading(true);
     }
 
-    const filters: { cursor?: string; startDate?: Date, endDate?: Date } = {};
+    const filters: { cursor?: string; startDate?: Date, endDate?: Date, assignedTo?: string } = {};
     if (cursor) filters.cursor = cursor;
     if (range?.from) filters.startDate = range.from;
     if (range?.to) filters.endDate = range.to;
+    if (isAdmissionRole) filters.assignedTo = params.encryptedUserId;
     
 
     const { leads: fetchedLeads, meta, error } = await getLeads(filters);
@@ -64,7 +76,7 @@ export default function LeadsPage() {
     }
     setLoading(false);
     setIsFetchingMore(false);
-  }, [toast]);
+  }, [toast, isAdmissionRole, params.encryptedUserId]);
   
   useEffect(() => {
     fetchLeads({ isNewSearch: true, range: dateRange });

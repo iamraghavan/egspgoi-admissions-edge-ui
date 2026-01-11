@@ -55,12 +55,13 @@ type ApiPaginatedResponse = {
 }
 
 export const getLeads = async (
-    filters: { cursor?: string | null, startDate?: Date, endDate?: Date } = {}
+    filters: { cursor?: string | null, startDate?: Date, endDate?: Date, assignedTo?: string } = {}
 ): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
     const params = new URLSearchParams({ limit: '20' });
     if (filters.cursor) params.append('cursor', filters.cursor);
     if (filters.startDate) params.append('startDate', format(filters.startDate, 'yyyy-MM-dd'));
     if (filters.endDate) params.append('endDate', format(filters.endDate, 'yyyy-MM-dd'));
+    if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
 
     const url = `/leads?${params.toString()}`;
     
