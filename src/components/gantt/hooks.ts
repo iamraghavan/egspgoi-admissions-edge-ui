@@ -12,6 +12,10 @@ import {
   addWeeks,
   addMonths,
   format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
 } from 'date-fns';
 import { useAtom } from 'jotai';
 import { ganttStartDateAtom, ganttScaleAtom, GanttScale } from './atoms';
@@ -22,34 +26,37 @@ const getScaleConfig = (scale: GanttScale) => {
   switch (scale) {
     case 'week':
       return {
-        getIntervals: eachWeekOfInterval,
-        getLabel: (d: Date) => `Week of ${format(d, 'MMM d')}`,
-        getSecondaryLabel: (d: Date) => format(d, 'd'),
-        getSecondaryIntervals: eachDayOfInterval,
+        getPrimaryIntervals: (interval: {start: Date, end: Date}) => eachWeekOfInterval(interval, { weekStartsOn: 1 }),
+        getPrimaryLabel: (d: Date) => `Week of ${format(d, 'MMM d')}`,
+        getSecondaryIntervals: (interval: {start: Date, end: Date}) => eachDayOfInterval(interval),
+        getSecondaryLabel: (d: Date) => format(d, 'EEE d'),
         add: addWeeks,
-        columnWidth: 70,
-        totalColumns: 20,
+        columnWidth: 280, // 40px per day
+        totalColumns: 10,
+        daysInColumn: 7,
       };
     case 'month':
       return {
-        getIntervals: eachMonthOfInterval,
-        getLabel: (d: Date) => format(d, 'MMMM yyyy'),
+        getPrimaryIntervals: eachMonthOfInterval,
+        getPrimaryLabel: (d: Date) => format(d, 'MMMM yyyy'),
+        getSecondaryIntervals: (interval: {start: Date, end: Date}) => eachWeekOfInterval(interval, { weekStartsOn: 1}),
         getSecondaryLabel: (d: Date) => `W${format(d, 'w')}`,
-        getSecondaryIntervals: (interval: {start:Date, end: Date}) => eachWeekOfInterval(interval, { weekStartsOn: 1}),
         add: addMonths,
-        columnWidth: 200,
-        totalColumns: 12,
+        columnWidth: 400, // 100px per week
+        totalColumns: 6,
+        daysInColumn: 30.44, // average
       };
     case 'day':
     default:
       return {
-        getIntervals: eachDayOfInterval,
-        getLabel: (d: Date) => format(d, 'EEE, MMM d'),
-        getSecondaryLabel: (d: Date) => format(d, 'HH:mm'),
+        getPrimaryIntervals: eachDayOfInterval,
+        getPrimaryLabel: (d: Date) => format(d, 'EEE, MMM d'),
         getSecondaryIntervals: () => [], // No secondary for day view
+        getSecondaryLabel: (d: Date) => '',
         add: addDays,
         columnWidth: 100,
         totalColumns: 30,
+        daysInColumn: 1,
       };
   }
 };
@@ -76,42 +83,42 @@ export const useGantt = (leads: Lead[]) => {
     const endDate = config.add(startDate, config.totalColumns);
     const interval = { start: startDate, end: endDate };
 
-    const primaryHeaders = config.getIntervals(interval).map((day) => ({
-      label: config.getLabel(day),
+    const primaryHeaders = config.getPrimaryIntervals(interval).map((day) => ({
+      label: config.getPrimaryLabel(day),
       width: config.columnWidth,
     }));
     
     let secondaryHeaders: {label: string, width: number}[] = [];
+    
     if (scale === 'week') {
-        const days = eachDayOfInterval(interval);
-        secondaryHeaders = days.map(d => ({ label: format(d, 'd'), width: config.columnWidth / 7 }))
+        const days = config.getSecondaryIntervals(interval);
+        secondaryHeaders = days.map(d => ({ label: config.getSecondaryLabel(d), width: config.columnWidth / config.daysInColumn }))
     } else if (scale === 'month') {
-        const weeks = eachWeekOfInterval(interval, { weekStartsOn: 1 });
-        secondaryHeaders = weeks.map(w => ({ label: `W${format(w, 'w')}`, width: config.columnWidth / 4.3 }))
+        const primaryIntervals = config.getPrimaryIntervals(interval);
+        primaryIntervals.forEach(monthStart => {
+            const monthEnd = endOfMonth(monthStart);
+            const weeksInMonth = eachWeekOfInterval({ start: monthStart, end: monthEnd }, { weekStartsOn: 1 });
+            weeksInMonth.forEach(weekStart => {
+                secondaryHeaders.push({ label: config.getSecondaryLabel(weekStart), width: config.columnWidth / weeksInMonth.length });
+            });
+        });
     }
-
 
     const totalWidth = primaryHeaders.reduce((acc, curr) => acc + curr.width, 0);
 
     const getPositionFromDate = (date: Date) => {
       const daysDiff = differenceInDays(startOfDay(date), startOfDay(startDate));
-      let position;
-      switch (scale) {
-          case 'month':
-             position = (daysDiff / 30.44) * config.columnWidth; // Average days in a month
-             break;
-          case 'week':
-              position = (daysDiff / 7) * config.columnWidth;
-              break;
-          case 'day':
-          default:
-              position = daysDiff * config.columnWidth;
-              break;
-      }
+      const position = (daysDiff / config.daysInColumn) * config.columnWidth;
       return Math.max(0, position);
     };
 
-    const rangeLabel = `${format(startDate, 'MMMM yyyy')}`;
+    let rangeLabel = format(startDate, 'MMMM yyyy');
+    if (scale === 'day') {
+        rangeLabel = `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`;
+    } else if (scale === 'week') {
+        rangeLabel = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
+    }
+
 
     return {
       headers: { primary: primaryHeaders, secondary: secondaryHeaders },
