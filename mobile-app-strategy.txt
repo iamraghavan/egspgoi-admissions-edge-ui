@@ -2,82 +2,50 @@
 
 This document outlines suggestions and a strategic approach for developing a mobile application based on the existing "Admissions Edge" web CRM.
 
-## 1. Core Philosophy: Focused & Action-Oriented
+## 1. Core Philosophy: Unified Cross-Platform Experience
 
-The mobile app should not be a direct port of the entire web application. Instead, it should focus on the on-the-go needs of your users, primarily Admission Executives and Managers. The key is to provide quick access to critical information and enable fast actions.
+The new strategy is to migrate the entire "Admissions Edge" application to a single codebase using Flutter. This will create a unified, consistent user experience across all platforms, including iOS, Android, and the web. This approach maximizes development efficiency, simplifies maintenance, and ensures feature parity across all devices.
 
-**Motto:** "Information at a glance, action in a tap."
+**Motto:** "One- codebase, every platform."
 
 ## 2. Recommended Technology Stack
 
-For the best balance of performance, development speed, and code reusability, a cross-platform framework is highly recommended.
+To achieve a true single-codebase solution, Flutter is the recommended framework.
 
-*   **Primary Recommendation: React Native**
-    *   **Why:** Your team already has expertise in React (from the Next.js web app). This allows for significant code-sharing of business logic, data-fetching functions, and utility helpers. You can reuse the logic from `src/lib/data.ts` and `src/lib/auth.ts` with minimal changes.
-    *   **UI Components:** Use a component library like **React Native Paper** or **Tamagui** to build a high-quality, consistent UI quickly. Tamagui, in particular, has a philosophy similar to ShadCN and works across web and mobile.
-    *   **Navigation:** Use **React Navigation** for all routing and screen transitions.
+*   **Primary Recommendation: Flutter**
+    *   **Why:** Flutter's single codebase compiles to native ARM code for mobile and to a highly optimized web application (using either HTML or CanvasKit rendering). This eliminates the need to maintain separate web and mobile development teams and ensures that new features are immediately available to all users, regardless of their device. Its rich widget library and control over every pixel allow for a beautiful, brand-consistent UI across all platforms.
+    *   **UI/UX:** Leverage Flutter's responsive design capabilities to create a seamless experience that adapts to different screen sizes. Use widgets like `LayoutBuilder`, `MediaQuery`, and packages like `flutter_adaptive_scaffold` to build a UI that feels natural on mobile, tablets, and desktops.
+    *   **Navigation:** Implement a robust routing solution using a package like `go_router` to handle deep linking and nested navigation consistently across web and mobile.
 
-*   **Alternative: Flutter**
-    *   **Why:** Excellent performance and a beautiful, highly customizable UI. If native-like performance and UI polish are the absolute top priorities and your team is willing to learn Dart, Flutter is a strong contender.
+## 3. Feature Parity: A Comprehensive Port
 
-## 3. Key Features for the Mobile App (MVP)
+The goal is to achieve 100% feature parity with the existing Next.js web application. This involves porting all existing modules and functionalities to the new Flutter application.
 
-Focus on the features that are most valuable when users are away from their desks.
+### a. Core Modules to Rebuild in Flutter:
+*   **User Authentication:** A secure, unified authentication system for all user roles (Super Admin, Marketing Manager, Admission Manager, Finance, Admission Executive) with support for token management and secure storage.
+*   **Leads Management:** Recreate both the Kanban board (using drag-and-drop functionality) and the data table views. Ensure filtering, searching, and click-to-action features (like initiating calls or emails) are present.
+*   **Campaign Management:** Full campaign creation and management capabilities, including budget allocation and status tracking.
+*   **Budget Approvals:** The complete workflow for creating, submitting, and approving/rejecting budget requests.
+*   **Accounting:** Full-featured payment record and ad spend management tables.
+*   **Call Management:** Both Live Call Monitoring (with listen, whisper, barge capabilities) and a complete Call History with recording playback.
+*   **User Management & Settings:** Comprehensive user administration and individual user preference panels.
 
-### a. Streamlined Authentication
-*   **Biometric Login:** Implement fingerprint or Face ID login after the initial password authentication for fast, secure access.
-*   **Persistent Sessions:** Use secure token storage (like Keychain for iOS and Keystore for Android) to keep users logged in for longer, with silent token refreshes in the background.
-
-### b. Lead Management (For Admission Executives & Managers)
-*   **Simplified Lead List:** A mobile-friendly list view of assigned leads. Key information should be visible upfront: Name, Status, and Last Contacted Date.
-*   **"Click-to-Call" and "Click-to-Email":** Tapping a lead's phone number or email should immediately open the native dialer or email client. This is a crucial mobile feature.
-*   **Quick Status Updates:** Easily swipe or tap to update a lead's status (e.g., from "New" to "Contacted").
-*   **Add Notes:** A simple form to add notes to a lead after a call or meeting. Consider voice-to-text input for hands-free note-taking.
-*   **Filtering & Searching:** Basic search by lead name and filtering by status are essential.
-
-### c. Dashboard for Managers
-*   A simplified, mobile-first dashboard for Admission Managers and Super Admins.
-*   Focus on key performance indicators (KPIs):
-    *   New Leads Today/This Week.
-    *   Calls Made Today.
-    *   Team's Lead Status Overview (simple bar chart).
-*   Avoid complex charts; use clear, large numbers and simple visualizations.
-
-### d. Call Management
-*   **Call History:** A list of recent calls with the ability to tap to play recordings.
-*   **Live Call Monitoring (for Managers):** This is a power-user feature. On mobile, it should be a simple list of active calls. Tapping a call could offer a "Listen" option, but features like "Whisper" and "Barge" may be too complex for an initial mobile release and could be added later.
-
-### e. Push Notifications
-This is a mobile-first advantage.
-*   **For Admission Executives:**
-    *   "New lead assigned to you: [Lead Name]."
-    *   Reminders for scheduled follow-ups.
-*   **For Managers:**
-    *   "Campaign [Campaign Name] has generated [X] new leads."
-    *   "Budget request from [User Name] requires your approval."
+### b. Mobile-Specific Enhancements:
+While aiming for feature parity, the Flutter app should also leverage native mobile capabilities.
+*   **Push Notifications:** A critical feature for mobile. Use Firebase Cloud Messaging (FCM) to send real-time alerts for new lead assignments, budget approval requests, and important campaign milestones.
+*   **Biometric Authentication:** Implement Face ID or fingerprint login for quick and secure access on mobile devices.
+*   **Offline Support:** This is a major advantage of a native mobile app. Use a local database solution like **Drift (Moor)** or **Isar** to cache critical data (leads, user info). Actions taken offline (like adding notes) should be queued and synced with the server once a connection is re-established. This ensures the app remains functional even with intermittent connectivity.
 
 ## 4. UX/UI & Design Recommendations
 
-*   **Navigation:** Use a bottom tab navigator for primary sections (e.g., Leads, Dashboard, Call History, Settings).
-*   **Gestures:** Utilize mobile-native gestures. For example, swipe-to-reveal actions on a lead list item (e.g., swipe right to call, swipe left to update status).
-*   **Offline Support:** This is critical for mobile. The app should be usable even with a spotty internet connection.
-    *   **Strategy:** Cache essential data locally (leads, user info). Queue actions like note creation or status updates and sync them with the server once the connection is restored. A library like **WatermelonDB** or **Realm** can handle this complex state management.
-*   **Readability:** Use the established brand fonts ('Inter' and 'Space Grotesk'), but ensure font sizes and contrast ratios are optimized for smaller screens and varied lighting conditions.
-*   **Component Design:** Use card-based layouts for lists to clearly separate items. Ensure all buttons and touch targets are large enough for easy tapping.
+*   **Responsive Design:** Design the UI from a "mobile-first" perspective, then scale it up for tablets and desktops. Components should fluidly reflow and adapt their layout based on screen size.
+*   **Platform Adaptability:** While maintaining brand consistency, use adaptive components that can optionally conform to the design language of the underlying platform (e.g., Cupertino for iOS, Material You for Android) where it makes sense for a better native feel.
+*   **Performance:** Profile the app on all target platforms to ensure smooth animations and fast load times. Utilize Flutter's performance optimization tools and best practices.
 
-## 5. What to Exclude from the Initial Mobile App
+## 5. API & Backend Considerations
 
-To keep the MVP focused and achievable, some features from the web app should be deferred:
+*   Your existing API backend can be fully reused, which is a major advantage.
+*   The API should remain the single source of truth for all data.
+*   The backend will need to be enhanced to support a push notification service (like FCM) to send notifications to the Flutter app.
 
-*   **Complex Creation/Editing:** Full campaign creation, user management, and budget request forms are better suited for the desktop experience. The mobile app can provide links or deep-links to the web app for these tasks.
-*   **Printing & PDF Generation:** This is not a primary mobile use case.
-*   **Advanced Filtering/Reporting:** The detailed data tables with complex date-range filtering and column customization should remain on the web app. Mobile filtering should be simple and essential.
-*   **Kanban Board:** While possible, a full-featured drag-and-drop Kanban board can be difficult to use on a small screen. A prioritized list view is often more effective for mobile. It could be added in a later version with a landscape view.
-
-## 6. API & Backend Considerations
-
-*   Your existing API can be largely reused, which is a major advantage.
-*   Ensure the API authentication is robust and supports mobile-friendly token refresh mechanisms.
-*   Implement a dedicated push notification service (e.g., Firebase Cloud Messaging - FCM) on your backend to send notifications to the mobile app.
-
-By following this strategy, you can build a highly effective mobile app that complements your powerful web CRM and provides significant value to your users on the move.
+By adopting this Flutter-centric strategy, you will build a future-proof, scalable, and maintainable application that serves your users everywhere, from a single, efficient codebase.
