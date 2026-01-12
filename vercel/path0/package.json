@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev -p 9002",
     "build:next": "NODE_ENV=production next build",
-    "build": "npm run build:next",
-    "deploy": "npx wrangler pages deploy .vercel/output/static",
+    "build": "npm run build:next && npx @cloudflare/next-on-pages",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
