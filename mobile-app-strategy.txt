@@ -1,0 +1,83 @@
+# Mobile App Development Strategy for Admissions Edge
+
+This document outlines suggestions and a strategic approach for developing a mobile application based on the existing "Admissions Edge" web CRM.
+
+## 1. Core Philosophy: Focused & Action-Oriented
+
+The mobile app should not be a direct port of the entire web application. Instead, it should focus on the on-the-go needs of your users, primarily Admission Executives and Managers. The key is to provide quick access to critical information and enable fast actions.
+
+**Motto:** "Information at a glance, action in a tap."
+
+## 2. Recommended Technology Stack
+
+For the best balance of performance, development speed, and code reusability, a cross-platform framework is highly recommended.
+
+*   **Primary Recommendation: React Native**
+    *   **Why:** Your team already has expertise in React (from the Next.js web app). This allows for significant code-sharing of business logic, data-fetching functions, and utility helpers. You can reuse the logic from `src/lib/data.ts` and `src/lib/auth.ts` with minimal changes.
+    *   **UI Components:** Use a component library like **React Native Paper** or **Tamagui** to build a high-quality, consistent UI quickly. Tamagui, in particular, has a philosophy similar to ShadCN and works across web and mobile.
+    *   **Navigation:** Use **React Navigation** for all routing and screen transitions.
+
+*   **Alternative: Flutter**
+    *   **Why:** Excellent performance and a beautiful, highly customizable UI. If native-like performance and UI polish are the absolute top priorities and your team is willing to learn Dart, Flutter is a strong contender.
+
+## 3. Key Features for the Mobile App (MVP)
+
+Focus on the features that are most valuable when users are away from their desks.
+
+### a. Streamlined Authentication
+*   **Biometric Login:** Implement fingerprint or Face ID login after the initial password authentication for fast, secure access.
+*   **Persistent Sessions:** Use secure token storage (like Keychain for iOS and Keystore for Android) to keep users logged in for longer, with silent token refreshes in the background.
+
+### b. Lead Management (For Admission Executives & Managers)
+*   **Simplified Lead List:** A mobile-friendly list view of assigned leads. Key information should be visible upfront: Name, Status, and Last Contacted Date.
+*   **"Click-to-Call" and "Click-to-Email":** Tapping a lead's phone number or email should immediately open the native dialer or email client. This is a crucial mobile feature.
+*   **Quick Status Updates:** Easily swipe or tap to update a lead's status (e.g., from "New" to "Contacted").
+*   **Add Notes:** A simple form to add notes to a lead after a call or meeting. Consider voice-to-text input for hands-free note-taking.
+*   **Filtering & Searching:** Basic search by lead name and filtering by status are essential.
+
+### c. Dashboard for Managers
+*   A simplified, mobile-first dashboard for Admission Managers and Super Admins.
+*   Focus on key performance indicators (KPIs):
+    *   New Leads Today/This Week.
+    *   Calls Made Today.
+    *   Team's Lead Status Overview (simple bar chart).
+*   Avoid complex charts; use clear, large numbers and simple visualizations.
+
+### d. Call Management
+*   **Call History:** A list of recent calls with the ability to tap to play recordings.
+*   **Live Call Monitoring (for Managers):** This is a power-user feature. On mobile, it should be a simple list of active calls. Tapping a call could offer a "Listen" option, but features like "Whisper" and "Barge" may be too complex for an initial mobile release and could be added later.
+
+### e. Push Notifications
+This is a mobile-first advantage.
+*   **For Admission Executives:**
+    *   "New lead assigned to you: [Lead Name]."
+    *   Reminders for scheduled follow-ups.
+*   **For Managers:**
+    *   "Campaign [Campaign Name] has generated [X] new leads."
+    *   "Budget request from [User Name] requires your approval."
+
+## 4. UX/UI & Design Recommendations
+
+*   **Navigation:** Use a bottom tab navigator for primary sections (e.g., Leads, Dashboard, Call History, Settings).
+*   **Gestures:** Utilize mobile-native gestures. For example, swipe-to-reveal actions on a lead list item (e.g., swipe right to call, swipe left to update status).
+*   **Offline Support:** This is critical for mobile. The app should be usable even with a spotty internet connection.
+    *   **Strategy:** Cache essential data locally (leads, user info). Queue actions like note creation or status updates and sync them with the server once the connection is restored. A library like **WatermelonDB** or **Realm** can handle this complex state management.
+*   **Readability:** Use the established brand fonts ('Inter' and 'Space Grotesk'), but ensure font sizes and contrast ratios are optimized for smaller screens and varied lighting conditions.
+*   **Component Design:** Use card-based layouts for lists to clearly separate items. Ensure all buttons and touch targets are large enough for easy tapping.
+
+## 5. What to Exclude from the Initial Mobile App
+
+To keep the MVP focused and achievable, some features from the web app should be deferred:
+
+*   **Complex Creation/Editing:** Full campaign creation, user management, and budget request forms are better suited for the desktop experience. The mobile app can provide links or deep-links to the web app for these tasks.
+*   **Printing & PDF Generation:** This is not a primary mobile use case.
+*   **Advanced Filtering/Reporting:** The detailed data tables with complex date-range filtering and column customization should remain on the web app. Mobile filtering should be simple and essential.
+*   **Kanban Board:** While possible, a full-featured drag-and-drop Kanban board can be difficult to use on a small screen. A prioritized list view is often more effective for mobile. It could be added in a later version with a landscape view.
+
+## 6. API & Backend Considerations
+
+*   Your existing API can be largely reused, which is a major advantage.
+*   Ensure the API authentication is robust and supports mobile-friendly token refresh mechanisms.
+*   Implement a dedicated push notification service (e.g., Firebase Cloud Messaging - FCM) on your backend to send notifications to the mobile app.
+
+By following this strategy, you can build a highly effective mobile app that complements your powerful web CRM and provides significant value to your users on the move.
