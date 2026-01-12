@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { getLeadById, getUserById } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -213,7 +214,7 @@ export default function LeadPrintPage() {
             <div ref={printRef} className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border-none max-w-4xl mx-auto">
                 <header className="flex justify-between items-start pb-8 border-b">
                     <div>
-                        <img src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" className="h-16" />
+                        <Image src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" width={64} height={64} className="h-16 w-auto" />
                     </div>
                     <div className="text-right">
                         <h1 className="text-3xl font-bold text-gray-800">Lead Summary</h1>
