@@ -63,8 +63,8 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className="flex items-center justify-between p-4">
-      <div className="flex flex-1 items-center space-x-2">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4">
+      <div className="w-full md:w-auto flex flex-col md:flex-row md:items-center gap-2">
         {searchKey && (
             <Input
             placeholder={searchPlaceholder || `Filter by ${searchKey}...`}
@@ -72,81 +72,83 @@ export function DataTableToolbar<TData>({
             onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
             }
-            className="h-8 w-[150px] lg:w-[250px]"
+            className="h-8 w-full md:w-[150px] lg:w-[250px]"
             />
         )}
-        {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
-          />
-        )}
-        {onDateRangeChange && (
-            <Popover>
-            <PopoverTrigger asChild>
-                <Button
-                    id="date"
-                    variant={"outline"}
-                    size="sm"
-                    className={cn(
-                    "h-8 justify-start text-left font-normal",
-                    !dateRange && "text-muted-foreground"
-                    )}
-                >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange?.from ? (
-                        dateRange.to ? (
-                            <>
-                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                            {format(dateRange.to, "LLL dd, y")}
-                            </>
+        <div className="flex items-center gap-2">
+            {table.getColumn("status") && (
+              <DataTableFacetedFilter
+                column={table.getColumn("status")}
+                title="Status"
+                options={statuses}
+              />
+            )}
+            {onDateRangeChange && (
+                <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        size="sm"
+                        className={cn(
+                        "h-8 w-full justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                            dateRange.to ? (
+                                <>
+                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                {format(dateRange.to, "LLL dd, y")}
+                                </>
+                            ) : (
+                                format(dateRange.from, "LLL dd, y")
+                            )
                         ) : (
-                            format(dateRange.from, "LLL dd, y")
-                        )
-                    ) : (
-                        <span>Pick a date</span>
-                    )}
+                            <span>Pick a date</span>
+                        )}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <DateRangePicker
+                        onChange={handleDateChange}
+                        showSelectionPreview={true}
+                        moveRangeOnFirstSelection={false}
+                        months={2}
+                        ranges={[{
+                            startDate: dateRange?.from,
+                            endDate: dateRange?.to,
+                            key: 'selection'
+                        }]}
+                        direction="horizontal"
+                    />
+                </PopoverContent>
+                </Popover>
+            )}
+            {onSearch && (
+                <Button onClick={handleSearchClick} size="sm" className="h-8">
+                    <Search className="mr-2 h-4 w-4" />
+                    Search
                 </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-                <DateRangePicker
-                    onChange={handleDateChange}
-                    showSelectionPreview={true}
-                    moveRangeOnFirstSelection={false}
-                    months={2}
-                    ranges={[{
-                        startDate: dateRange?.from,
-                        endDate: dateRange?.to,
-                        key: 'selection'
-                    }]}
-                    direction="horizontal"
-                />
-            </PopoverContent>
-            </Popover>
-        )}
-        {onSearch && (
-            <Button onClick={handleSearchClick} size="sm" className="h-8">
-                <Search className="mr-2 h-4 w-4" />
-                Search
-            </Button>
-        )}
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={resetFilters}
-            className="h-8 px-2 lg:px-3"
-          >
-            Reset
-            <X className="ml-2 h-4 w-4" />
-          </Button>
-        )}
+            )}
+            {isFiltered && (
+              <Button
+                variant="ghost"
+                onClick={resetFilters}
+                className="h-8 px-2 lg:px-3"
+              >
+                Reset
+                <X className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+        </div>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="w-full md:w-auto flex flex-col sm:flex-row sm:items-center justify-end gap-2">
          {isRowSelected && onBulkTransfer && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
+                <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto">
                     Bulk Actions
                 </Button>
             </DropdownMenuTrigger>
@@ -163,13 +165,13 @@ export function DataTableToolbar<TData>({
           </DropdownMenu>
          )}
          {onUploadLeads && (
-            <Button variant="outline" size="sm" className="h-8" onClick={onUploadLeads}>
+            <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto" onClick={onUploadLeads}>
                 <Upload className="mr-2 h-4 w-4" />
                 Bulk Upload
             </Button>
          )}
         {onCreateLead && (
-            <Button size="sm" className="h-8" onClick={onCreateLead}>
+            <Button size="sm" className="h-8 w-full sm:w-auto" onClick={onCreateLead}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create Lead
             </Button>
