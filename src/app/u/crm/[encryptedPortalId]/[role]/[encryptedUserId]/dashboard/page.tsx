@@ -3,12 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import PageHeader from '@/components/page-header';
 import { getProfile } from '@/lib/auth';
-import AdminDashboard from '@/components/dashboard/admin-dashboard';
-import AdmissionDashboard from '@/components/dashboard/admission-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Role } from '@/lib/types';
+
+const AdminDashboard = dynamic(() => import('@/components/dashboard/admin-dashboard'), {
+  loading: () => <AdminDashboardSkeleton />,
+});
+
+const AdmissionDashboard = dynamic(() => import('@/components/dashboard/admission-dashboard'), {
+  loading: () => <AdminDashboardSkeleton />,
+});
+
 
 const roleSlugMap: Record<string, Role> = {
     'sa': 'Super Admin',
@@ -17,6 +25,16 @@ const roleSlugMap: Record<string, Role> = {
     'fin': 'Finance',
     'ae': 'Admission Executive',
 };
+
+const AdminDashboardSkeleton = () => (
+    <div className="flex flex-col gap-6">
+        <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-[400px] w-full" />
+        </div>
+    </div>
+);
 
 
 export default function DashboardPage() {
@@ -52,11 +70,7 @@ export default function DashboardPage() {
     return (
         <div className="flex flex-col gap-6">
             <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-24 w-full" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Skeleton className="h-[400px] w-full" />
-                <Skeleton className="h-[400px] w-full" />
-            </div>
+            <AdminDashboardSkeleton />
         </div>
     )
   }
