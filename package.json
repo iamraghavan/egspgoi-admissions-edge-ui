@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 9002",
-    "build:next": "NODE_ENV=production next build",
-    "build": "npm run build:next && npx @cloudflare/next-on-pages",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
