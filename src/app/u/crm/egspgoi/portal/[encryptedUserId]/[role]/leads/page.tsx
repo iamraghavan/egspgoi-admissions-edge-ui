@@ -1,4 +1,6 @@
 
+'use client';
+
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,14 +10,46 @@ import { leadColumns } from '@/components/leads/columns';
 import { PlusCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useState } from 'react';
+import type { Lead } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
   ssr: false,
   loading: () => <Skeleton className="h-[500px] w-full" />,
 });
 
-export default async function LeadsPage() {
-  const { leads } = await getLeads();
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchLeads = async () => {
+    setLoading(true);
+    try {
+      const { leads: fetchedLeads, error } = await getLeads();
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to fetch leads',
+          description: error.message
+        });
+      } else {
+        setLeads(fetchedLeads);
+      }
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to fetch leads',
+        description: err.message
+      });
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
 
   return (
     <div className="flex flex-col gap-8">
@@ -31,12 +65,14 @@ export default async function LeadsPage() {
           <TabsTrigger value="table">Data Table</TabsTrigger>
         </TabsList>
         <TabsContent value="board" className="mt-6">
-          <KanbanBoard />
+          <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={fetchLeads} />
         </TabsContent>
         <TabsContent value="table">
           <LeadsDataTable 
             columns={leadColumns} 
             data={leads}
+            loading={loading}
+            refreshData={fetchLeads}
             searchKey="name"
             searchPlaceholder="Filter leads by name..."
           />
