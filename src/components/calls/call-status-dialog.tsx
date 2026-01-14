@@ -19,9 +19,9 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { getProfile } from '@/lib/auth';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, off, type DataSnapshot } from 'firebase/database';
 
-type CallState = 'idle' | 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup' | 'not_found';
+type CallState = 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup' | 'not_found';
 
 interface ActiveCallDetails {
     call_id: string;
@@ -30,6 +30,7 @@ interface ActiveCallDetails {
     agent_name: string;
     customer_number: string;
     unique_id: string;
+    call_status?: string;
 }
 
 interface CallStatusDialogProps {
@@ -39,6 +40,7 @@ interface CallStatusDialogProps {
 }
 
 function formatDuration(seconds: number) {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
     return `${minutes}:${secs}`;
@@ -53,7 +55,7 @@ const CallDetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType,
 );
 
 export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialogProps) {
-  const [callState, setCallState] = useState<CallState>('idle');
+  const [callState, setCallState] = useState<CallState>('initiating');
   const [activeCall, setActiveCall] = useState<ActiveCallDetails | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
@@ -64,14 +66,16 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const database = useDatabase();
 
    useEffect(() => {
-    async function fetchAgentName() {
-        const profile = await getProfile();
-        if (profile?.name) {
-            setAgentName(profile.name);
+    if (isOpen) {
+        async function fetchAgentName() {
+            const profile = await getProfile();
+            if (profile?.name) {
+                setAgentName(profile.name);
+            }
         }
+        fetchAgentName();
     }
-    fetchAgentName();
-   }, []);
+   }, [isOpen]);
 
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
@@ -79,11 +83,12 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       clearInterval(durationIntervalRef.current);
       durationIntervalRef.current = null;
     }
-    setCallState('idle');
+    setCallState('initiating');
     setActiveCall(null);
     setErrorMessage(null);
     setDuration(0);
   }, []);
+
 
   // Effect to initiate the call once when the dialog opens
   useEffect(() => {
@@ -136,7 +141,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     console.log(`Listening for updates on: smartflo_calls/${refId}`);
     const callRef = ref(database, `smartflo_calls/${refId}`);
     
-    const unsubscribe = onValue(callRef, (snapshot) => {
+    const onCallUpdate = (snapshot: DataSnapshot) => {
         if (!isComponentMounted) return;
         
         if (snapshot.exists()) {
@@ -152,26 +157,31 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             }));
 
             const newStatus = callEvent.call_status?.toLowerCase();
+
             if (newStatus === 'answered by agent' || newStatus === 'answered') {
                 if (callState !== 'connected') {
                     setCallState('connected');
                     startDurationTimer();
                 }
-            } else if (newStatus === 'hangup' || newStatus === 'missed') {
-                toast({ title: "Call Ended", description: "The call was terminated." });
+            } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+                toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
                 onOpenChange(false);
+            } else if (newStatus && callState !== 'ringing') {
+                setCallState('ringing');
             }
         }
-    });
+    };
+    
+    const unsubscribe = onValue(callRef, onCallUpdate);
 
     return () => {
         isComponentMounted = false;
         console.log("Unsubscribing from Firebase path:", refId);
-        off(callRef);
+        unsubscribe();
         cleanup();
     };
 
-  }, [isOpen, lead, database, agentName, toast, onOpenChange, cleanup, callState]);
+  }, [isOpen, lead, database, agentName, toast, onOpenChange, cleanup]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
@@ -211,7 +221,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
           <div className="flex flex-col items-center justify-center h-56 gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="text-lg font-medium">Connecting to {lead?.name}...</p>
-            <p className="text-sm text-muted-foreground capitalize">{callState}...</p>
+            <p className="text-sm text-muted-foreground capitalize">{activeCall?.call_status || callState}...</p>
           </div>
         );
       case 'connected':
@@ -228,15 +238,15 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             </div>
             
             <div className='flex items-center gap-2 my-4'>
-                <Badge variant={getStatusVariant(activeCall?.status)} className="capitalize text-sm">
-                    {activeCall?.status}
+                <Badge variant={getStatusVariant(activeCall?.call_status)} className="capitalize text-sm">
+                    {activeCall?.call_status}
                 </Badge>
                 <p className="font-mono text-2xl font-semibold">{formatDuration(duration)}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full max-w-sm">
-                <CallDetailItem icon={User} label="Agent" value={activeCall?.agent_name || '...'} />
-                <CallDetailItem icon={Phone} label="Number" value={activeCall?.customer_number || '...'} />
+                <CallDetailItem icon={User} label="Agent" value={activeCall?.agent_name || agentName || '...'} />
+                <CallDetailItem icon={Phone} label="Number" value={activeCall?.customer_number || lead?.phone || '...'} />
             </div>
           </div>
         );
