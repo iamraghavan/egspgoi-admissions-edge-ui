@@ -77,94 +77,84 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setDuration(0);
   }, []);
 
-  // Effect to initiate the call once when the dialog opens
+  // Main effect to handle call initiation and real-time listening
   useEffect(() => {
-    if (!isOpen || !lead) {
+    if (!isOpen || !lead || !database) {
         return;
     }
-    
+
     let isComponentMounted = true;
+    let unsubscribeFirebase: (() => void) | null = null;
     
-    const startCallProcess = async () => {
+    const startCallAndListen = async () => {
         if (!isComponentMounted) return;
-        
+
         console.log('Starting call process...');
         setCallState('initiating');
-
+        
         try {
+            // 1. Initiate the call via API
             const initiationResponse = await initiateCall(lead.id);
-            if (initiationResponse?.ref_id) {
-                console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
-                if (isComponentMounted) setCallState('ringing');
-            } else {
+            if (!initiationResponse?.ref_id) {
                 throw new Error('Did not receive a ref_id to track the call.');
             }
+            console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
+            
+            if (!isComponentMounted) return;
+            setCallState('ringing');
+            
+            // 2. Set up the Firebase listener
+            const callRefPath = `smartflo_calls/${lead.id}`;
+            console.log(`Listening for updates on: ${callRefPath}`);
+            const callRef = ref(database, callRefPath);
+
+            const handleSnapshot = (snapshot: DataSnapshot) => {
+                console.log("🔥 Received Call Update from Firebase:", snapshot.val());
+                if (!snapshot.exists()) return;
+
+                const callEvent = snapshot.val();
+                setActiveCall(prev => ({ ...(prev || {}), ...callEvent }));
+
+                const newStatus = callEvent.call_status?.toLowerCase();
+
+                if (newStatus === 'answered by agent' || newStatus === 'answered') {
+                    if (callState !== 'connected') {
+                        setCallState('connected');
+                        startDurationTimer();
+                    }
+                } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+                    if (isOpen) {
+                        toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
+                        onOpenChange(false);
+                    }
+                }
+            };
+
+            unsubscribeFirebase = onValue(callRef, handleSnapshot);
+
         } catch (error: any) {
-            console.error("Error in startCallProcess:", error.message);
+            console.error("Error in startCallAndListen:", error.message);
             if (isComponentMounted) {
                 setErrorMessage(error.message || 'Failed to initiate call.');
                 setCallState('failed');
             }
         }
     };
-
-    startCallProcess();
-
-    return () => {
-        isComponentMounted = false;
-    }
-
-  }, [isOpen, lead]);
-
-
-  // Effect to listen for real-time updates from Firebase
-  useEffect(() => {
-    if (!isOpen || !lead || !database) {
-      return;
-    }
-
-    const callRef = ref(database, `smartflo_calls/${lead.id}`);
-    console.log(`Listening for updates on: smartflo_calls/${lead.id}`);
-
-    const handleSnapshot = (snapshot: DataSnapshot) => {
-        console.log("🔥 Received Call Update from Firebase:", snapshot.val());
-        if (snapshot.exists()) {
-            const callEvent = snapshot.val();
-
-            setActiveCall(prev => ({
-                ...(prev || {}),
-                ...callEvent,
-                customer_number: callEvent.customer_number || lead?.phone || '',
-                agent_name: callEvent.agent_name || agentName,
-            }));
-
-            const newStatus = callEvent.call_status?.toLowerCase();
-
-            if (newStatus === 'answered by agent' || newStatus === 'answered') {
-                if (callState !== 'connected') {
-                    setCallState('connected');
-                    startDurationTimer();
-                }
-            } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
-                if (isOpen) {
-                    toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
-                    onOpenChange(false);
-                }
-            } else if (newStatus) {
-                setCallState('ringing');
-            }
-        }
-    }
-
-    const unsubscribe = onValue(callRef, handleSnapshot);
+    
+    startCallAndListen();
 
     // Cleanup function
     return () => {
-      console.log("Unsubscribing from Firebase path:", lead.id);
-      off(callRef, 'value', handleSnapshot);
-      cleanup();
+        isComponentMounted = false;
+        if (unsubscribeFirebase) {
+            console.log("Unsubscribing from Firebase path:", `smartflo_calls/${lead.id}`);
+            unsubscribeFirebase();
+        }
+        cleanup();
     };
-  }, [isOpen, lead, database, agentName, onOpenChange, cleanup, callState, toast]);
+  // This effect should only run when the dialog is opened for a specific lead
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, lead, database]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
@@ -277,3 +267,5 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     </Dialog>
   );
 }
+
+    
