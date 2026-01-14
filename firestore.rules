@@ -237,8 +237,8 @@ service cloud.firestore {
 {
   "rules": {
     "smartflo_calls": {
-      // Allow any authenticated user to read from any sub-path of smartflo_calls
-      ".read": "auth != null",
+      // Allow anyone to read from any sub-path of smartflo_calls
+      ".read": true,
       // Keep writes restricted (only backend should write)
       ".write": false
     }
