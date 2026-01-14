@@ -9,11 +9,11 @@ import { getProfile } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Role } from '@/lib/types';
 
-const AdminDashboard = dynamic(() => import('@/components/dashboard/admin-dashboard'), {
+const AdminDashboard = dynamic(() => import('@/components/dashboard/admin-dashboard.tsx'), {
   loading: () => <AdminDashboardSkeleton />,
 });
 
-const AdmissionDashboard = dynamic(() => import('@/components/dashboard/admission-dashboard'), {
+const AdmissionDashboard = dynamic(() => import('@/components/dashboard/admission-dashboard.tsx'), {
   loading: () => <AdminDashboardSkeleton />,
 });
 
