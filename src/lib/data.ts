@@ -190,18 +190,14 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 export const initiateCall = async (leadId: string): Promise<{ unique_id: string }> => {
     const profile = await getProfile();
     const callerId = profile?.caller_id;
-    const agentNumber = profile?.agent_number;
 
     if (!callerId) {
-        throw new Error("Caller ID not found. Please update your profile.");
-    }
-     if (!agentNumber) {
-        throw new Error("Agent Number not found. Please update your profile.");
+        throw new Error("Caller ID not found in your profile. Please update your settings.");
     }
 
     const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
-        body: JSON.stringify({ agent_number: agentNumber }),
+        body: JSON.stringify({ agent_number: callerId }),
     });
 
     if(error) throw new Error(error.message);
