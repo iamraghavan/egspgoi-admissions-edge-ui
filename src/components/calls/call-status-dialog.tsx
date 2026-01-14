@@ -85,22 +85,19 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setDuration(0);
   }, []);
 
+  // Effect to initiate the call once when the dialog opens
   useEffect(() => {
-    if (!isOpen || !lead || !database) {
-      if (!isOpen) cleanup();
+    if (!isOpen || !lead) {
       return;
     }
-
+    
     let isComponentMounted = true;
-    const refId = lead.id;
-    const callRef = ref(database, `smartflo_calls/${refId}`);
-
-    // Function to start the entire call process
+    
     const startCallProcess = async () => {
       if (!isComponentMounted) return;
       
-      setCallState('initiating');
       console.log('Starting call process...');
+      setCallState('initiating');
 
       try {
         const initiationResponse = await initiateCall(lead.id);
@@ -119,56 +116,61 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       }
     };
 
-    // Set up the Firebase listener
-    console.log(`Listening for updates on: smartflo_calls/${refId}`);
-    const unsubscribe = onValue(callRef, (snapshot) => {
-      if (!isComponentMounted) return;
-
-      if (snapshot.exists()) {
-        const callEvent = snapshot.val();
-        console.log("🔥 Received Call Update from Firebase:", callEvent);
-
-        setActiveCall(prev => ({
-          ...(prev || {}),
-          ...callEvent,
-          customer_number: callEvent.customer_number || lead?.phone || '',
-          agent_name: callEvent.agent_name || agentName,
-          unique_id: refId,
-        }));
-
-        const newStatus = callEvent.status?.toLowerCase();
-        if (newStatus === 'answered by agent' || newStatus === 'answered') {
-          if (callState !== 'connected') {
-            setCallState('connected');
-            startDurationTimer();
-          }
-        } else if (newStatus === 'hangup' || newStatus === 'missed') {
-          toast({ title: "Call Ended", description: "The call was terminated." });
-          onOpenChange(false);
-        } else if (newStatus) {
-            // To handle other statuses like 'ringing' from webhook
-            if (callState !== 'connected') {
-                setCallState(newStatus);
-            }
-        }
-      }
-    }, (error) => {
-      if (!isComponentMounted) return;
-      console.error("Firebase subscription error:", error);
-      setErrorMessage('Connection to real-time call updates failed.');
-      setCallState('failed');
-    });
-
-    // Kick off the call process
     startCallProcess();
 
-    // Cleanup function for this effect
     return () => {
-      isComponentMounted = false;
-      console.log("Unsubscribing from Firebase path:", refId);
-      off(callRef);
-      cleanup();
+        isComponentMounted = false;
+    }
+
+  }, [isOpen, lead]);
+
+
+  // Effect to listen to Firebase for real-time updates
+  useEffect(() => {
+    if (!isOpen || !lead || !database) {
+        return;
+    }
+
+    let isComponentMounted = true;
+    const refId = lead.id;
+    console.log(`Listening for updates on: smartflo_calls/${refId}`);
+    const callRef = ref(database, `smartflo_calls/${refId}`);
+    
+    const unsubscribe = onValue(callRef, (snapshot) => {
+        if (!isComponentMounted) return;
+        
+        if (snapshot.exists()) {
+            const callEvent = snapshot.val();
+            console.log("🔥 Received Call Update from Firebase:", callEvent);
+
+            setActiveCall(prev => ({
+                ...(prev || {}),
+                ...callEvent,
+                customer_number: callEvent.customer_number || lead?.phone || '',
+                agent_name: callEvent.agent_name || agentName,
+                unique_id: refId,
+            }));
+
+            const newStatus = callEvent.call_status?.toLowerCase();
+            if (newStatus === 'answered by agent' || newStatus === 'answered') {
+                if (callState !== 'connected') {
+                    setCallState('connected');
+                    startDurationTimer();
+                }
+            } else if (newStatus === 'hangup' || newStatus === 'missed') {
+                toast({ title: "Call Ended", description: "The call was terminated." });
+                onOpenChange(false);
+            }
+        }
+    });
+
+    return () => {
+        isComponentMounted = false;
+        console.log("Unsubscribing from Firebase path:", refId);
+        off(callRef);
+        cleanup();
     };
+
   }, [isOpen, lead, database, agentName, toast, onOpenChange, cleanup, callState]);
   
   const startDurationTimer = () => {
