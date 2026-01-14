@@ -38,9 +38,11 @@ interface CallStatusDialogProps {
 }
 
 const SUBSCRIBE_TO_CALLS = `
-  subscription OnPublishCallUpdate($unique_id: String!) {
-    onPublishCallUpdate(unique_id: $unique_id) {
-      data
+  subscription OnCallUpdate($ref_id: ID!) {
+    onCallUpdate(ref_id: $ref_id) {
+      ref_id
+      call_id
+      status
     }
   }
 `;
@@ -136,28 +138,27 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
         const sub = amplifyClient.graphql({ 
             query: SUBSCRIBE_TO_CALLS,
-            variables: { unique_id: uniqueId }
+            variables: { ref_id: uniqueId }
         }).subscribe({
             next: ({ data }) => {
                 console.log("Received raw data from AppSync:", data);
-                if (!data || !data.onPublishCallUpdate || !data.onPublishCallUpdate.data) {
+                if (!data || !data.onCallUpdate) {
                     console.warn("Received incomplete data from subscription:", data);
                     return;
                 }
-                const rawString = data.onPublishCallUpdate.data;
-                const callEvent = JSON.parse(rawString);
+                const callEvent = data.onCallUpdate;
 
-                console.log("Received Full Call Update from AppSync:", callEvent);
+                console.log("Received Call Update from AppSync:", callEvent);
                 
-                if (callEvent.unique_id !== callInitiationId.current) {
-                    console.warn(`Received event for different unique_id. Current: ${callInitiationId.current}, Received: ${callEvent.unique_id}. Ignoring.`);
+                if (callEvent.ref_id !== callInitiationId.current) {
+                    console.warn(`Received event for different unique_id. Current: ${callInitiationId.current}, Received: ${callEvent.ref_id}. Ignoring.`);
                     return;
                 }
 
                 setActiveCall(prev => ({
-                    ...(prev || {call_id: '', duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.unique_id}),
+                    ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.ref_id}),
                     status: callEvent.status || 'ringing',
-                    agent_name: callEvent.agent_name || agentName,
+                    agent_name: prev?.agent_name || agentName,
                     call_id: callEvent.call_id || prev?.call_id,
                 }));
 
@@ -295,3 +296,5 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     </Dialog>
   );
 }
+
+    
