@@ -18,7 +18,8 @@ import type { Lead } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { getProfile } from '@/lib/auth';
-import { amplifyClient } from '@/lib/amplify-client';
+import { useDatabase } from '@/firebase';
+import { ref, onValue, off } from 'firebase/database';
 
 type CallState = 'idle' | 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup';
 
@@ -36,16 +37,6 @@ interface CallStatusDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   lead: Lead | null;
 }
-
-const SUBSCRIBE_TO_CALLS = `
-  subscription OnCallUpdate($ref_id: ID!) {
-    onCallUpdate(ref_id: $ref_id) {
-      ref_id
-      call_id
-      status
-    }
-  }
-`;
 
 function formatDuration(seconds: number) {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -69,9 +60,9 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const [agentName, setAgentName] = useState('');
   
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
   const callInitiationId = useRef<string | null>(null);
   const { toast } = useToast();
+  const database = useDatabase();
 
    useEffect(() => {
     async function fetchAgentName() {
@@ -85,10 +76,10 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
-    if (subscriptionRef.current) {
-      console.log("Unsubscribing from GraphQL subscription.");
-      subscriptionRef.current.unsubscribe();
-      subscriptionRef.current = null;
+    if (callInitiationId.current && database) {
+        const callRef = ref(database, `calls/${callInitiationId.current}`);
+        off(callRef);
+        console.log("Unsubscribed from Firebase listener.");
     }
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
@@ -99,7 +90,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setErrorMessage(null);
     setDuration(0);
     callInitiationId.current = null;
-  }, []);
+  }, [database]);
 
   useEffect(() => {
     if (isOpen && lead) {
@@ -108,8 +99,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       cleanup();
     }
     return () => cleanup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, lead]);
+  }, [isOpen, lead, cleanup]);
 
 
   const startCallProcess = async () => {
@@ -119,15 +109,14 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       const initiationResponse = await initiateCall(lead.id);
 
-      // Correctly access the nested unique_id
-      const uniqueId = initiationResponse?.unique_id;
+      const uniqueId = initiationResponse?.data?.ref_id;
 
       if (uniqueId) {
         callInitiationId.current = uniqueId;
-        console.log("Call initiated successfully, unique_id:", callInitiationId.current);
-        startSubscription(lead.id);
+        console.log("Call initiated successfully, tracking ref_id:", callInitiationId.current);
+        startSubscription(uniqueId);
       } else {
-        throw new Error('Did not receive a unique_id to track the call.');
+        throw new Error('Did not receive a ref_id to track the call.');
       }
     } catch (error: any) {
       console.error("Error in startCallProcess:", error.message);
@@ -136,59 +125,43 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     }
   };
 
-  const startSubscription = (subscriptionId: string) => {
-    setCallState('ringing');
-    console.log(`Starting GraphQL subscription for unique_id: ${subscriptionId}`);
-    try {
-        const sub = amplifyClient.graphql({ 
-            query: SUBSCRIBE_TO_CALLS,
-            variables: { ref_id: subscriptionId }
-        }).subscribe({
-            next: ({ data }) => {
-                console.log(">>>>>> [REAL-TIME EVENT RECEIVED] <<<<<<", data);
-                if (!data || !data.onCallUpdate) {
-                    console.warn("Received incomplete data from subscription:", data);
-                    return;
-                }
-                const callEvent = data.onCallUpdate;
-
-                console.log("Received Call Update from AppSync:", callEvent);
-                
-                if (callEvent.ref_id !== subscriptionId) {
-                    console.warn(`Received event for different ID. Current: ${subscriptionId}, Received: ${callEvent.ref_id}. Ignoring.`);
-                    return;
-                }
-
-                setActiveCall(prev => ({
-                    ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.ref_id}),
-                    status: callEvent.status || 'ringing',
-                    agent_name: prev?.agent_name || agentName,
-                    call_id: callEvent.call_id || prev?.call_id,
-                }));
-
-                if (callEvent.status?.toLowerCase() === 'answered' && callState !== 'connected') {
-                    setCallState('connected');
-                    startDurationTimer();
-                }
-                 if (callEvent.status?.toLowerCase() === 'hangup' || callEvent.status?.toLowerCase() === 'missed') {
-                    toast({ title: "Call Ended", description: "The call was terminated." });
-                    onOpenChange(false);
-                }
-            },
-            error: (err) => {
-                console.error("Subscription Error:", err);
-                setErrorMessage('Connection to real-time call updates failed.');
-                setCallState('failed');
-            }
-        });
-        subscriptionRef.current = sub;
-        console.log("Successfully subscribed to AppSync.");
-
-    } catch (error) {
-        console.error("Failed to start subscription:", error);
-        setErrorMessage('Could not connect to the real-time call service.');
+  const startSubscription = (trackingId: string) => {
+    if (!database) {
+        setErrorMessage("Real-time database service is not available.");
         setCallState('failed');
+        return;
     }
+    setCallState('ringing');
+    console.log(`Listening for updates on Firebase path: calls/${trackingId}`);
+    
+    const callRef = ref(database, `calls/${trackingId}`);
+
+    onValue(callRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const callEvent = snapshot.val();
+            console.log("Received Call Update from Firebase:", callEvent);
+
+            setActiveCall(prev => ({
+                ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: trackingId}),
+                status: callEvent.status || 'ringing',
+                agent_name: prev?.agent_name || agentName,
+                call_id: callEvent.call_id || prev?.call_id,
+            }));
+
+            if (callEvent.status?.toLowerCase() === 'answered' && callState !== 'connected') {
+                setCallState('connected');
+                startDurationTimer();
+            }
+            if (callEvent.status?.toLowerCase() === 'hangup' || callEvent.status?.toLowerCase() === 'missed') {
+                toast({ title: "Call Ended", description: "The call was terminated." });
+                onOpenChange(false);
+            }
+        }
+    }, (error) => {
+        console.error("Firebase subscription error:", error);
+        setErrorMessage('Connection to real-time call updates failed.');
+        setCallState('failed');
+    });
   };
   
   const startDurationTimer = () => {
