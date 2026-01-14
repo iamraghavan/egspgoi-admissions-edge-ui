@@ -1,38 +1,7 @@
-/**
- * This ruleset enforces a security model based on a combination of user ownership and specific roles
- * (Super Admin, Marketing Manager, Admission Executive, Finance). The model is designed for a CRM system
- * where data access is strictly controlled based on user responsibilities.
- *
- * Core Philosophy:
- * The rules default to denying all access. Permissions are explicitly granted based on the authenticated
- * user's UID for ownership-based paths or their role for shared data paths. This ensures a secure-by-default posture.
- *
- * Data Structure:
- * - User-Private Data: Data owned exclusively by a user (e.g., their assigned leads, their call records) is
- *   nested under the `/users/{userId}` path. This enables simple, highly performant, path-based security rules.
- * - Role-Based Shared Data: Data accessible to groups of users (e.g., marketing campaigns) is stored in
- *   top-level collections. Access is granted by checking the user's role, which is stored on their user document.
- *
- * Key Security Decisions:
- * - User Isolation: A user can only access data within their own `/users/{userId}` document tree. They cannot
- *   view, list, or modify the data of other users unless they have a "Super Admin" role.
- * - Role-Based Access Control (RBAC): Access to shared collections like `/campaigns` is determined by a `get()`
- *   call to the requesting user's profile document to check their `role` field.
- * - Super Admin Override: A "Super Admin" role is granted broad read and write access for administrative purposes.
- * - Prohibited Actions: Listing the entire `/users` collection is explicitly disallowed to protect user privacy.
- *   Some collections like `/leads/{leadId}/payments` are locked down entirely due to a data structure that
- *   prevents secure rule implementation.
- *
- * Denormalization for Authorization:
- * This ruleset relies on the principle of denormalizing authorization data. The path structure itself,
- * such as `/users/{userId}/leads/{leadId}`, acts as a security mechanism. For role-based access, the `role`
- * field is denormalized onto each user's document, allowing for a single `get()` to determine permissions.
- *
- * Structural Segregation:
- * User-private data (`leads`, `callRecords`) is structurally segregated into user-specific subcollections,
- * which provides a more secure and performant model for list operations than filtering a single large collection.
- */
+
 rules_version = '2';
+
+// Firestore Rules
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -262,3 +231,18 @@ service cloud.firestore {
     }
   }
 }
+
+// Realtime Database Rules
+// This is not standard, but required to force deployment.
+{
+  "rules": {
+    "smartflo_calls": {
+      // Allow any authenticated user to read from any sub-path of smartflo_calls
+      ".read": "auth != null",
+      // Keep writes restricted (only backend should write)
+      ".write": false
+    }
+  }
+}
+
+    

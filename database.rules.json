@@ -1,10 +1,9 @@
+
 {
   "rules": {
-    "smartflo_calls": {
-      // Allow any authenticated user to read from any sub-path of smartflo_calls
-      ".read": "auth != null",
-      // Keep writes restricted (only backend should write)
-      ".write": false
-    }
+    ".read": false,
+    ".write": false
   }
 }
+
+    
