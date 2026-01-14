@@ -1,9 +1,8 @@
-
 {
   "rules": {
-    ".read": false,
-    ".write": false
+    "smartflo_calls": {
+      ".read": true,
+      ".write": false
+    }
   }
 }
-
-    

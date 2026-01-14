@@ -231,18 +231,3 @@ service cloud.firestore {
     }
   }
 }
-
-// Realtime Database Rules
-// This is not standard, but required to force deployment.
-{
-  "rules": {
-    "smartflo_calls": {
-      // Allow anyone to read from any sub-path of smartflo_calls
-      ".read": true,
-      // Keep writes restricted (only backend should write)
-      ".write": false
-    }
-  }
-}
-
-    
