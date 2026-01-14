@@ -78,43 +78,43 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   }, []);
 
   // Effect to initiate the call once when the dialog opens
-    useEffect(() => {
-        if (!isOpen || !lead) {
-            return;
-        }
+  useEffect(() => {
+    if (!isOpen || !lead) {
+        return;
+    }
+    
+    let isComponentMounted = true;
+    
+    const startCallProcess = async () => {
+        if (!isComponentMounted) return;
         
-        let isComponentMounted = true;
-        
-        const startCallProcess = async () => {
-            if (!isComponentMounted) return;
-            
-            console.log('Starting call process...');
-            setCallState('initiating');
+        console.log('Starting call process...');
+        setCallState('initiating');
 
-            try {
-                const initiationResponse = await initiateCall(lead.id);
-                if (initiationResponse?.ref_id) {
-                    console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
-                    if (isComponentMounted) setCallState('ringing');
-                } else {
-                    throw new Error('Did not receive a ref_id to track the call.');
-                }
-            } catch (error: any) {
-                console.error("Error in startCallProcess:", error.message);
-                if (isComponentMounted) {
-                    setErrorMessage(error.message || 'Failed to initiate call.');
-                    setCallState('failed');
-                }
+        try {
+            const initiationResponse = await initiateCall(lead.id);
+            if (initiationResponse?.ref_id) {
+                console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
+                if (isComponentMounted) setCallState('ringing');
+            } else {
+                throw new Error('Did not receive a ref_id to track the call.');
             }
-        };
-
-        startCallProcess();
-
-        return () => {
-            isComponentMounted = false;
+        } catch (error: any) {
+            console.error("Error in startCallProcess:", error.message);
+            if (isComponentMounted) {
+                setErrorMessage(error.message || 'Failed to initiate call.');
+                setCallState('failed');
+            }
         }
+    };
 
-    }, [isOpen, lead]);
+    startCallProcess();
+
+    return () => {
+        isComponentMounted = false;
+    }
+
+  }, [isOpen, lead]);
 
 
   // Effect to listen for real-time updates from Firebase
