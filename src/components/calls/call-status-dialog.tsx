@@ -140,12 +140,15 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         }).subscribe({
             next: ({ data }) => {
                 console.log("Received raw data from AppSync:", data);
+                if (!data || !data.onPublishCallUpdate || !data.onPublishCallUpdate.data) {
+                    console.warn("Received incomplete data from subscription:", data);
+                    return;
+                }
                 const rawString = data.onPublishCallUpdate.data;
                 const callEvent = JSON.parse(rawString);
 
                 console.log("Received Full Call Update from AppSync:", callEvent);
                 
-                // Ensure we are only processing events for the current call
                 if (callEvent.unique_id !== callInitiationId.current) {
                     console.warn(`Received event for different unique_id. Current: ${callInitiationId.current}, Received: ${callEvent.unique_id}. Ignoring.`);
                     return;
@@ -196,7 +199,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       await hangupCall(activeCall.call_id);
       toast({ title: 'Hangup Initiated' });
-      // The dialog will close automatically on the 'hangup' event from the subscription
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
       setCallState('connected');
