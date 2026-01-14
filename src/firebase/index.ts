@@ -35,11 +35,13 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  // This is the correct databaseURL from the Firebase warning.
+  const databaseURL = "https://studio-4460931313-2c74b-default-rtdb.asia-southeast1.firebasedatabase.app";
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
-    database: getDatabase(firebaseApp),
+    database: getDatabase(firebaseApp, databaseURL),
   };
 }
 
