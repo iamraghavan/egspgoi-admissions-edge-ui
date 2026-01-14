@@ -119,9 +119,10 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       const initiationResponse = await initiateCall(lead.id);
       if (initiationResponse && initiationResponse.unique_id) {
-        console.log("Call initiated successfully, unique_id:", initiationResponse.unique_id);
         callInitiationId.current = initiationResponse.unique_id;
-        startSubscription(initiationResponse.unique_id);
+        console.log("Call initiated successfully, temp ref_id:", initiationResponse.unique_id);
+        // Use the permanent lead ID for the subscription
+        startSubscription(lead.id); 
       } else {
         throw new Error('Did not receive a unique_id to track the call.');
       }
@@ -132,13 +133,13 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     }
   };
 
-  const startSubscription = (uniqueId: string) => {
+  const startSubscription = (subscriptionId: string) => {
     setCallState('ringing');
-    console.log(`Starting GraphQL subscription for unique_id: ${uniqueId}`);
+    console.log(`Starting GraphQL subscription for permanent ID: ${subscriptionId}`);
     try {
         const sub = amplifyClient.graphql({ 
             query: SUBSCRIBE_TO_CALLS,
-            variables: { ref_id: uniqueId }
+            variables: { ref_id: subscriptionId }
         }).subscribe({
             next: ({ data }) => {
                 console.log("Received raw data from AppSync:", data);
@@ -150,8 +151,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
                 console.log("Received Call Update from AppSync:", callEvent);
                 
-                if (callEvent.ref_id !== callInitiationId.current) {
-                    console.warn(`Received event for different unique_id. Current: ${callInitiationId.current}, Received: ${callEvent.ref_id}. Ignoring.`);
+                if (callEvent.ref_id !== subscriptionId) {
+                    console.warn(`Received event for different ID. Current: ${subscriptionId}, Received: ${callEvent.ref_id}. Ignoring.`);
                     return;
                 }
 
@@ -296,5 +297,3 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     </Dialog>
   );
 }
-
-    
