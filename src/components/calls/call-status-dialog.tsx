@@ -60,7 +60,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const [agentName, setAgentName] = useState('');
   
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const callInitiationId = useRef<string | null>(null);
   const { toast } = useToast();
   const database = useDatabase();
 
@@ -76,11 +75,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
-    if (lead?.id && database) {
-        const callRef = ref(database, `smartflo_calls/${lead.id}`);
-        off(callRef);
-        console.log("Unsubscribed from Firebase listener for ref_id:", lead.id);
-    }
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
       durationIntervalRef.current = null;
@@ -89,108 +83,93 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setActiveCall(null);
     setErrorMessage(null);
     setDuration(0);
-    callInitiationId.current = null;
-  }, [database, lead]);
+  }, []);
 
-
-  const startCallProcess = async () => {
-    if (!lead) return;
-    setCallState('initiating');
-    console.log('Starting call process...');
-    try {
-      const initiationResponse = await initiateCall(lead.id);
-      
-      const uniqueId = initiationResponse?.ref_id;
-      if (uniqueId) {
-        callInitiationId.current = uniqueId;
-        console.log("Call initiated successfully, ref_id:", callInitiationId.current);
-        setCallState('ringing');
-      } else {
-        throw new Error('Did not receive a ref_id to track the call.');
-      }
-    } catch (error: any) {
-      console.error("Error in startCallProcess:", error.message);
-      setErrorMessage(error.message || 'Failed to initiate call.');
-      setCallState('failed');
-    }
-  };
-
-  // Dedicated effect for Firebase subscription
   useEffect(() => {
-    // We only want to run this effect when the dialog is open and we have a lead.
-    if (!isOpen || !lead?.id || !database) {
-        return;
+    if (!isOpen || !lead || !database) {
+      if (!isOpen) cleanup();
+      return;
     }
 
+    let isComponentMounted = true;
     const refId = lead.id;
-    console.log(`Listening for updates on: smartflo_calls/${refId}`);
     const callRef = ref(database, `smartflo_calls/${refId}`);
-    
-    const notFoundTimeout = setTimeout(() => {
-        if(callState === 'ringing') {
-            console.warn(`No data found at smartflo_calls/${refId} after 10 seconds.`);
-            setErrorMessage("Could not connect to the call. The tracking session may not have started correctly on the server.");
-            setCallState('not_found');
+
+    // Function to start the entire call process
+    const startCallProcess = async () => {
+      if (!isComponentMounted) return;
+      
+      setCallState('initiating');
+      console.log('Starting call process...');
+
+      try {
+        const initiationResponse = await initiateCall(lead.id);
+        if (initiationResponse?.ref_id) {
+          console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
+          if (isComponentMounted) setCallState('ringing');
+        } else {
+          throw new Error('Did not receive a ref_id to track the call.');
         }
-    }, 10000);
+      } catch (error: any) {
+        console.error("Error in startCallProcess:", error.message);
+        if (isComponentMounted) {
+            setErrorMessage(error.message || 'Failed to initiate call.');
+            setCallState('failed');
+        }
+      }
+    };
 
+    // Set up the Firebase listener
+    console.log(`Listening for updates on: smartflo_calls/${refId}`);
     const unsubscribe = onValue(callRef, (snapshot) => {
-        clearTimeout(notFoundTimeout);
-        if (snapshot.exists()) {
-            const callEvent = snapshot.val();
-            console.log("🔥 Received Call Update from Firebase:", callEvent);
+      if (!isComponentMounted) return;
 
-            setActiveCall(prev => ({
-                ...(prev || {}),
-                ...callEvent,
-                customer_number: callEvent.customer_number || lead?.phone || '',
-                agent_name: callEvent.agent_name || agentName,
-                unique_id: refId,
-            }));
+      if (snapshot.exists()) {
+        const callEvent = snapshot.val();
+        console.log("🔥 Received Call Update from Firebase:", callEvent);
 
-            const newStatus = callEvent.status?.toLowerCase();
-            
-            if (newStatus === 'answered') {
-                if (callState !== 'connected') {
-                    setCallState('connected');
-                    startDurationTimer();
-                }
-            } else if (newStatus === 'hangup' || newStatus === 'missed') {
-                 toast({ title: "Call Ended", description: "The call was terminated." });
-                 onOpenChange(false);
-            } else if (newStatus) {
+        setActiveCall(prev => ({
+          ...(prev || {}),
+          ...callEvent,
+          customer_number: callEvent.customer_number || lead?.phone || '',
+          agent_name: callEvent.agent_name || agentName,
+          unique_id: refId,
+        }));
+
+        const newStatus = callEvent.status?.toLowerCase();
+        if (newStatus === 'answered by agent' || newStatus === 'answered') {
+          if (callState !== 'connected') {
+            setCallState('connected');
+            startDurationTimer();
+          }
+        } else if (newStatus === 'hangup' || newStatus === 'missed') {
+          toast({ title: "Call Ended", description: "The call was terminated." });
+          onOpenChange(false);
+        } else if (newStatus) {
+            // To handle other statuses like 'ringing' from webhook
+            if (callState !== 'connected') {
                 setCallState(newStatus);
             }
         }
+      }
     }, (error) => {
-        console.error("Firebase subscription error:", error);
-        setErrorMessage('Connection to real-time call updates failed.');
-        setCallState('failed');
+      if (!isComponentMounted) return;
+      console.error("Firebase subscription error:", error);
+      setErrorMessage('Connection to real-time call updates failed.');
+      setCallState('failed');
     });
+
+    // Kick off the call process
+    startCallProcess();
 
     // Cleanup function for this effect
     return () => {
-        console.log("Unsubscribing from Firebase path:", refId);
-        clearTimeout(notFoundTimeout);
-        off(callRef);
+      isComponentMounted = false;
+      console.log("Unsubscribing from Firebase path:", refId);
+      off(callRef);
+      cleanup();
     };
-
-  }, [isOpen, lead, database, agentName, onOpenChange, toast, callState]);
-
-  // Main effect to handle dialog open/close
-  useEffect(() => {
-    if (isOpen && lead) {
-      startCallProcess();
-    }
-
-    // The cleanup function for the main effect will handle full resource cleanup.
-    return () => {
-        if (!isOpen) { // Only cleanup when dialog is truly closing
-            cleanup();
-        }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, lead]);
+  }, [isOpen, lead, database, agentName, toast, onOpenChange, cleanup, callState]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
@@ -207,21 +186,19 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       toast({ title: 'Hangup Initiated' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
-      // Revert state if hangup fails to allow retry
       if (activeCall?.status) setCallState(activeCall.status.toLowerCase() as CallState);
     }
   };
 
   const getStatusVariant = (status: string | undefined) => {
-      switch(status?.toLowerCase()){
-          case 'answered':
-          case 'connected':
-              return 'success';
-          case 'ringing':
-              return 'warning';
-          default:
-              return 'default';
+      const lowerStatus = status?.toLowerCase();
+      if (lowerStatus === 'answered by agent' || lowerStatus === 'answered') {
+          return 'success';
       }
+      if (lowerStatus === 'ringing') {
+          return 'warning';
+      }
+      return 'default';
   }
 
   const renderContent = () => {
