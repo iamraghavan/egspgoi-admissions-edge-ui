@@ -1,0 +1,492 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the Admissions Edge CRM.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., Super Admin, Marketing Manager, Admission Executive, Finance).",
+          "format": "string"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "email",
+        "firstName",
+        "lastName"
+      ]
+    },
+    "Lead": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Lead",
+      "type": "object",
+      "description": "Represents a lead in the admissions process.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the lead."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "Lead's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Lead's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Lead's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Lead's phone number."
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of the lead (e.g., web form, referral)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the lead (e.g., New, Contacted, Interested, Enrolled)."
+        },
+        "assignedToId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Lead) ID of the user assigned to the lead."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "source",
+        "status"
+      ]
+    },
+    "Campaign": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Campaign",
+      "type": "object",
+      "description": "Represents a marketing campaign.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the campaign."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the campaign."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date of the campaign.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date of the campaign.",
+          "format": "date-time"
+        },
+        "budget": {
+          "type": "number",
+          "description": "Budget allocated for the campaign."
+        },
+        "platform": {
+          "type": "string",
+          "description": "Platform used for the campaign (e.g., Google Ads, Facebook Ads)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the campaign (e.g., Draft, Active, Completed)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "startDate",
+        "endDate",
+        "budget",
+        "platform",
+        "status"
+      ]
+    },
+    "BudgetRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BudgetRequest",
+      "type": "object",
+      "description": "Represents a budget request.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget request."
+        },
+        "campaignId": {
+          "type": "string",
+          "description": "Reference to Campaign. (Relationship: Campaign 1:N BudgetRequest) ID of the campaign the budget request is for."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Requested budget amount."
+        },
+        "requestDate": {
+          "type": "string",
+          "description": "Date the budget request was made.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the budget request (e.g., Pending, Approved, Rejected)."
+        },
+        "proofId": {
+          "type": "string",
+          "description": "Reference to ProofOfPayment. (Relationship: ProofOfPayment 1:1 BudgetRequest) ID of the proof of payment for the budget request. Can be null if no proof is provided."
+        }
+      },
+      "required": [
+        "id",
+        "campaignId",
+        "amount",
+        "requestDate",
+        "status"
+      ]
+    },
+    "ProofOfPayment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProofOfPayment",
+      "type": "object",
+      "description": "Represents proof of payment for a budget request.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the proof of payment."
+        },
+        "budgetId": {
+          "type": "string",
+          "description": "Reference to BudgetRequest. (Relationship: BudgetRequest 1:1 ProofOfPayment) ID of the budget request this proof is for."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Date the proof of payment was uploaded.",
+          "format": "date-time"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the uploaded proof of payment file.",
+          "format": "uri"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Indicates whether the proof of payment has been verified by finance."
+        }
+      },
+      "required": [
+        "id",
+        "budgetId",
+        "uploadDate",
+        "fileUrl",
+        "verified"
+      ]
+    },
+    "CallRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CallRecord",
+      "type": "object",
+      "description": "Represents a call record from Smartflo.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the call record."
+        },
+        "leadId": {
+          "type": "string",
+          "description": "Reference to Lead. (Relationship: Lead 1:N CallRecord) ID of the lead associated with the call."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the call.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the call.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the call in seconds."
+        },
+        "recordingUrl": {
+          "type": "string",
+          "description": "URL of the call recording.",
+          "format": "uri"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N CallRecord) ID of the agent who made the call."
+        }
+      },
+      "required": [
+        "id",
+        "leadId",
+        "startTime",
+        "endTime",
+        "duration",
+        "recordingUrl"
+      ]
+    },
+    "AdSpend": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdSpend",
+      "type": "object",
+      "description": "Represents advertising spend data for a given platform and date.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ad spend record."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date for which the ad spend is recorded.",
+          "format": "date-time"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The advertising platform (e.g., Google Ads, Facebook Ads)."
+        },
+        "spend": {
+          "type": "number",
+          "description": "Amount spent on advertising for the platform on the given date."
+        },
+        "campaignId": {
+          "type": "string",
+          "description": "Reference to Campaign. (Relationship: Campaign 1:N AdSpend) ID of the campaign associated with the ad spend."
+        }
+      },
+      "required": [
+        "id",
+        "date",
+        "platform",
+        "spend"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents an incoming payment record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment record."
+        },
+        "leadId": {
+          "type": "string",
+          "description": "Reference to Lead. (Relationship: Lead 1:N Payment) ID of the lead associated with the payment."
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date the payment was received.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the payment."
+        },
+        "method": {
+          "type": "string",
+          "description": "Payment method used (e.g., Credit Card, Bank Transfer)."
+        }
+      },
+      "required": [
+        "id",
+        "leadId",
+        "paymentDate",
+        "amount",
+        "method"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Includes denormalized user role for simplified authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/leads/{leadId}",
+        "definition": {
+          "entityName": "Lead",
+          "schema": {
+            "$ref": "#/backend/entities/Lead"
+          },
+          "description": "Stores leads assigned to a specific user. This structure enables path-based access control, ensuring that users can only access leads assigned to them. Includes denormalized 'assignedToId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user the lead is assigned to."
+            },
+            {
+              "name": "leadId",
+              "description": "The unique identifier for the lead."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/campaigns/{campaignId}",
+        "definition": {
+          "entityName": "Campaign",
+          "schema": {
+            "$ref": "#/backend/entities/Campaign"
+          },
+          "description": "Stores campaign data.  Accessible to Marketing Managers.",
+          "params": [
+            {
+              "name": "campaignId",
+              "description": "The unique identifier for the campaign."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/campaigns/{campaignId}/budgetRequests/{budgetId}",
+        "definition": {
+          "entityName": "BudgetRequest",
+          "schema": {
+            "$ref": "#/backend/entities/BudgetRequest"
+          },
+          "description": "Stores budget requests associated with a campaign. Accessible to Marketing and Finance roles.",
+          "params": [
+            {
+              "name": "campaignId",
+              "description": "The unique identifier for the campaign."
+            },
+            {
+              "name": "budgetId",
+              "description": "The unique identifier for the budget request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/proofsOfPayment/{proofId}",
+        "definition": {
+          "entityName": "ProofOfPayment",
+          "schema": {
+            "$ref": "#/backend/entities/ProofOfPayment"
+          },
+          "description": "Stores proof of payment documents.",
+          "params": [
+            {
+              "name": "proofId",
+              "description": "The unique identifier for the proof of payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/callRecords/{callRecordId}",
+        "definition": {
+          "entityName": "CallRecord",
+          "schema": {
+            "$ref": "#/backend/entities/CallRecord"
+          },
+          "description": "Stores call records associated with leads, scoped to the assigned user.  Includes denormalized 'leadId' for simpler querying.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "callRecordId",
+              "description": "The unique identifier for the call record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/campaigns/{campaignId}/adSpend/{adSpendId}",
+        "definition": {
+          "entityName": "AdSpend",
+          "schema": {
+            "$ref": "#/backend/entities/AdSpend"
+          },
+          "description": "Stores advertising spend data associated with a campaign. Accessible to Marketing Managers.",
+          "params": [
+            {
+              "name": "campaignId",
+              "description": "The unique identifier for the campaign."
+            },
+            {
+              "name": "adSpendId",
+              "description": "The unique identifier for the ad spend record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/leads/{leadId}/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment records associated with a lead.",
+          "params": [
+            {
+              "name": "leadId",
+              "description": "The unique identifier for the lead."
+            },
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). The structure prioritizes denormalization for authorization, structural segregation for homogeneous security postures, and consistent access modeling.\n\n**Authorization Independence:**\n\n*   Authorization data (e.g., user roles, campaign memberships) is denormalized into subcollections or documents where needed. This avoids the need for `get()` calls in security rules, enabling atomic operations (transactions/batches) and simplifying debugging.\n\n**Structural Segregation:**\n\n*   Data with different access requirements are stored in separate collections.\n*   User-specific data is stored under `/users/{userId}`.\n\n**Access Modeling:**\n\n*   **Private Data:** User-owned data (Leads, CallRecords) is stored under `/users/{userId}`.\n\n**QAPs Support:**\n\n*   The segregation of data based on access requirements ensures that list operations can be secured effectively without resorting to filtering within the rules.\n\n**Specific Denormalization Examples:**\n\n*   Leads are stored under the user who are assigned to it `/users/{userId}/leads/{leadId}`. This allow an admission executive to only see its assigned leads.\n\nThis structure avoids hierarchical authorization dependencies and ensures that security rules can be written clearly and efficiently."
+  }
+}

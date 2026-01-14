@@ -1,0 +1,264 @@
+/**
+ * This ruleset enforces a security model based on a combination of user ownership and specific roles
+ * (Super Admin, Marketing Manager, Admission Executive, Finance). The model is designed for a CRM system
+ * where data access is strictly controlled based on user responsibilities.
+ *
+ * Core Philosophy:
+ * The rules default to denying all access. Permissions are explicitly granted based on the authenticated
+ * user's UID for ownership-based paths or their role for shared data paths. This ensures a secure-by-default posture.
+ *
+ * Data Structure:
+ * - User-Private Data: Data owned exclusively by a user (e.g., their assigned leads, their call records) is
+ *   nested under the `/users/{userId}` path. This enables simple, highly performant, path-based security rules.
+ * - Role-Based Shared Data: Data accessible to groups of users (e.g., marketing campaigns) is stored in
+ *   top-level collections. Access is granted by checking the user's role, which is stored on their user document.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only access data within their own `/users/{userId}` document tree. They cannot
+ *   view, list, or modify the data of other users unless they have a "Super Admin" role.
+ * - Role-Based Access Control (RBAC): Access to shared collections like `/campaigns` is determined by a `get()`
+ *   call to the requesting user's profile document to check their `role` field.
+ * - Super Admin Override: A "Super Admin" role is granted broad read and write access for administrative purposes.
+ * - Prohibited Actions: Listing the entire `/users` collection is explicitly disallowed to protect user privacy.
+ *   Some collections like `/leads/{leadId}/payments` are locked down entirely due to a data structure that
+ *   prevents secure rule implementation.
+ *
+ * Denormalization for Authorization:
+ * This ruleset relies on the principle of denormalizing authorization data. The path structure itself,
+ * such as `/users/{userId}/leads/{leadId}`, acts as a security mechanism. For role-based access, the `role`
+ * field is denormalized onto each user's document, allowing for a single `get()` to determine permissions.
+ *
+ * Structural Segregation:
+ * User-private data (`leads`, `callRecords`) is structurally segregated into user-specific subcollections,
+ * which provides a more secure and performant model for list operations than filtering a single large collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for readability and reuse.
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the requesting user's UID matches the provided userId.
+     * Use this for rules based on document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the user is the owner of an EXISTING document.
+     * CRITICAL: Use for all update and delete operations to prevent writes to non-existent paths.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Fetches the role from the requesting user's own user document.
+     * Caches the result of the get() call for the request evaluation.
+     */
+    function getUserData() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    /**
+     * Returns true if the user has the 'Super Admin' role.
+     */
+    function isSuperAdmin() {
+      return isSignedIn() && getUserData().role == 'Super Admin';
+    }
+
+    /**
+     * Returns true if the user has the 'Marketing Manager' role.
+     */
+    function isMarketingManager() {
+      return isSignedIn() && getUserData().role == 'Marketing Manager';
+    }
+
+    /**
+     * Returns true if the user has the 'Finance' role.
+     */
+    function isFinance() {
+      return isSignedIn() && getUserData().role == 'Finance';
+    }
+
+    /**
+     * @description
+     *   Manages user profiles. Users can create their own profile and manage their
+     *   own information. Only a Super Admin can modify user roles or delete accounts.
+     * @path
+     *   `/users/{userId}`
+     * @allow
+     *   A newly signed-up user (auth.uid: 'user123') can (create) their own profile at `/users/user123`.
+     *   An existing user (auth.uid: 'user123') can (update) their own profile at `/users/user123`.
+     * @deny
+     *   A user (auth.uid: 'user123') cannot (list) all documents in the `/users` collection.
+     *   A standard user cannot (update) the `role` field in their own document.
+     * @principle
+     *   Enforces Self-Creation and Ownership, with role-based restrictions on sensitive fields.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list: if false;
+      allow create: if (isOwner(userId) || isSuperAdmin()) && request.resource.data.id == userId;
+      allow update: if (isOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.role == resource.data.role && resource != null) || (isSuperAdmin() && resource != null);
+      allow delete: if isSuperAdmin() && resource != null;
+    }
+
+    /**
+     * @description
+     *   Manages leads assigned to a specific user. Access is restricted to the
+     *   user the lead is assigned to, ensuring data privacy between admission executives.
+     * @path
+     *   `/users/{userId}/leads/{leadId}`
+     * @allow
+     *   An admission executive (auth.uid: 'exec123') can (create) a lead at `/users/exec123/leads/leadABC`.
+     * @deny
+     *   An admission executive (auth.uid: 'exec123') cannot (get) a lead from `/users/exec456/leads/leadXYZ`.
+     * @principle
+     *   Restricts access to a user's own data tree using path-based security.
+     */
+    match /users/{userId}/leads/{leadId} {
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list: if isOwner(userId) || isSuperAdmin();
+      allow create: if (isOwner(userId) || isSuperAdmin()) && request.resource.data.assignedToId == userId;
+      allow update: if (isExistingOwner(userId) || isSuperAdmin()) && request.resource.data.assignedToId == resource.data.assignedToId;
+      allow delete: if isExistingOwner(userId) || isSuperAdmin();
+    }
+
+    /**
+     * @description
+     *   Manages marketing campaigns. Access is restricted to users with the
+     *   'Marketing Manager' role for creating and managing campaign data.
+     * @path
+     *   `/campaigns/{campaignId}`
+     * @allow
+     *   A user with the 'Marketing Manager' role can (create), (update), and (list) all campaigns.
+     * @deny
+     *   A user with an 'Admission Executive' role cannot (get) or (list) campaigns.
+     * @principle
+     *   Enforces Role-Based Access Control (RBAC) for shared marketing data.
+     */
+    match /campaigns/{campaignId} {
+      allow get: if isMarketingManager() || isSuperAdmin();
+      allow list: if isMarketingManager() || isSuperAdmin();
+      allow create: if isMarketingManager() || isSuperAdmin();
+      allow update: if (isMarketingManager() || isSuperAdmin()) && resource != null;
+      allow delete: if (isMarketingManager() || isSuperAdmin()) && resource != null;
+    }
+
+    /**
+     * @description
+     *   Manages budget requests within a campaign. Accessible by Marketing and Finance roles.
+     * @path
+     *   `/campaigns/{campaignId}/budgetRequests/{budgetId}`
+     * @allow
+     *   A 'Marketing Manager' can (create) a budget request. A 'Finance' user can (update) its status.
+     * @deny
+     *   An 'Admission Executive' cannot (get) or (list) any budget requests.
+     * @principle
+     *   Enforces multi-role RBAC for a workflow involving different departments.
+     */
+    match /campaigns/{campaignId}/budgetRequests/{budgetId} {
+      allow get: if isMarketingManager() || isFinance() || isSuperAdmin();
+      allow list: if isMarketingManager() || isFinance() || isSuperAdmin();
+      allow create: if (isMarketingManager() || isSuperAdmin()) && request.resource.data.campaignId == campaignId;
+      allow update: if ((isMarketingManager() || isFinance() || isSuperAdmin()) && resource != null) && request.resource.data.campaignId == resource.data.campaignId;
+      allow delete: if (isMarketingManager() || isSuperAdmin()) && resource != null;
+    }
+
+    /**
+     * @description
+     *   Stores proof of payment documents. Reads are allowed for relevant roles, but
+     *   writes are currently blocked due to a missing ownership field in the data model.
+     * @path
+     *   `/proofsOfPayment/{proofId}`
+     * @allow
+     *   A 'Finance' or 'Marketing Manager' user can (get) a proof of payment document.
+     * @deny
+     *   Any user attempting to (create) or (update) a proof of payment will be denied.
+     * @principle
+     *   Enforces a secure default by blocking writes that cannot be safely authorized.
+     */
+    match /proofsOfPayment/{proofId} {
+      // CRITICAL: Cannot implement secure owner-only writes. The 'ProofOfPayment' entity is missing
+      // an 'ownerId', 'creatorId', or 'marketingManagerId' field to validate against the requestor.
+      allow get: if isMarketingManager() || isFinance() || isSuperAdmin();
+      allow list: if isMarketingManager() || isFinance() || isSuperAdmin();
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description
+     *   Stores call records, scoped to the user who made the call.
+     * @path
+     *   `/users/{userId}/callRecords/{callRecordId}`
+     * @allow
+     *   A user (auth.uid: 'user123') can (create) and (list) their own call records in `/users/user123/callRecords`.
+     * @deny
+     *   A user (auth.uid: 'user123') cannot (get) a call record from `/users/user456/callRecords/recordXYZ`.
+     * @principle
+     *   Restricts access to a user's own data tree using path-based security.
+     */
+    match /users/{userId}/callRecords/{callRecordId} {
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list: if isOwner(userId) || isSuperAdmin();
+      allow create: if (isOwner(userId) || isSuperAdmin()) && request.resource.data.agentId == userId;
+      allow update: if (isExistingOwner(userId) || isSuperAdmin()) && request.resource.data.agentId == resource.data.agentId;
+      allow delete: if isExistingOwner(userId) || isSuperAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores advertising spend data, nested under the relevant campaign.
+     *   Access is restricted to 'Marketing Manager' roles.
+     * @path
+     *   `/campaigns/{campaignId}/adSpend/{adSpendId}`
+     * @allow
+     *   A 'Marketing Manager' can (create) and (list) ad spend records for any campaign.
+     * @deny
+     *   A 'Finance' user cannot (create) an ad spend record.
+     * @principle
+     *   Enforces Role-Based Access Control (RBAC) for a subcollection.
+     */
+    match /campaigns/{campaignId}/adSpend/{adSpendId} {
+      allow get: if isMarketingManager() || isSuperAdmin();
+      allow list: if isMarketingManager() || isSuperAdmin();
+      allow create: if (isMarketingManager() || isSuperAdmin()) && request.resource.data.campaignId == campaignId;
+      allow update: if ((isMarketingManager() || isSuperAdmin()) && resource != null) && request.resource.data.campaignId == resource.data.campaignId;
+      allow delete: if (isMarketingManager() || isSuperAdmin()) && resource != null;
+    }
+    
+    /**
+     * @description
+     *   CRITICAL: This collection is fully locked down. The data structure makes it
+     *   impossible to write a secure rule. To secure payments, they must be stored in a
+     *   subcollection of the lead they belong to (e.g., /users/{userId}/leads/{leadId}/payments/{paymentId}).
+     * @path
+     *   `/leads/{leadId}/payments/{paymentId}`
+     * @allow
+     *   No operations are permitted.
+     * @deny
+     *   All users will be denied any read or write access.
+     * @principle
+     *   Enforces a secure default (deny all) when the data model prevents authorization checks.
+     */
+    match /leads/{leadId}/payments/{paymentId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
