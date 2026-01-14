@@ -188,22 +188,37 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 };
 
 export const initiateCall = async (leadId: string): Promise<{ unique_id: string }> => {
+    console.log("Initiating call process for lead:", leadId);
     const profile = await getProfile();
     const callerId = profile?.caller_id;
 
     if (!callerId) {
         throw new Error("Caller ID not found in your profile. Please update your settings.");
     }
+    console.log("Using Caller ID (as agent_number):", callerId);
 
     const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: callerId }),
     });
 
-    if(error) throw new Error(error.message);
-    if (!data?.data?.unique_id) throw new Error("API did not return a unique_id for tracking the call.");
+    console.log("Full API response from /call endpoint:", { data, error });
 
-    return data.data;
+    if(error) {
+        console.error("Error from /call API:", error);
+        throw new Error(error.message);
+    }
+    
+    // Check for 'ref_id' as a fallback to 'unique_id'
+    const uniqueId = data?.data?.unique_id || data?.data?.ref_id;
+
+    if (!uniqueId) {
+        console.error("API response did not contain unique_id or ref_id.", data);
+        throw new Error("API did not return a unique_id for tracking the call.");
+    }
+    
+    console.log("Received unique tracking ID:", uniqueId);
+    return { unique_id: uniqueId };
 };
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {

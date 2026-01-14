@@ -82,7 +82,9 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
    }, []);
 
   const cleanup = useCallback(() => {
+    console.log("Cleaning up call dialog resources.");
     if (subscriptionRef.current) {
+      console.log("Unsubscribing from GraphQL subscription.");
       subscriptionRef.current.unsubscribe();
       subscriptionRef.current = null;
     }
@@ -114,12 +116,15 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       const initiationResponse = await initiateCall(lead.id);
       if (initiationResponse && initiationResponse.unique_id) {
+        console.log("Call initiated successfully, unique_id:", initiationResponse.unique_id);
         callInitiationId.current = initiationResponse.unique_id;
         startSubscription(initiationResponse.unique_id);
       } else {
+        // This should now be caught by the error in `initiateCall`
         throw new Error('Did not receive a unique_id to track the call.');
       }
     } catch (error: any) {
+      console.error("Error in startCallProcess:", error.message);
       setErrorMessage(error.message || 'Failed to initiate call.');
       setCallState('failed');
     }
@@ -127,6 +132,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const startSubscription = (uniqueId: string) => {
     setCallState('ringing');
+    console.log(`Starting GraphQL subscription for unique_id: ${uniqueId}`);
     try {
         const sub = amplifyClient.graphql({ 
             query: SUBSCRIBE_TO_CALLS,
@@ -139,7 +145,10 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
                 console.log("Received Full Call Update from AppSync:", callEvent);
                 
                 // Ensure we are only processing events for the current call
-                if (callEvent.unique_id !== callInitiationId.current) return;
+                if (callEvent.unique_id !== callInitiationId.current) {
+                    console.warn(`Received event for different unique_id. Current: ${callInitiationId.current}, Received: ${callEvent.unique_id}. Ignoring.`);
+                    return;
+                }
 
                 setActiveCall(prev => ({
                     ...(prev || {call_id: '', duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.unique_id}),
@@ -164,6 +173,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             }
         });
         subscriptionRef.current = sub;
+        console.log("Successfully subscribed to AppSync.");
 
     } catch (error) {
         console.error("Failed to start subscription:", error);
