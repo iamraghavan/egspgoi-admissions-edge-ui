@@ -39,7 +39,7 @@ interface CallStatusDialogProps {
 
 const SUBSCRIBE_TO_CALLS = `
   subscription OnPublishCallUpdate($unique_id: String!) {
-    publishCallUpdate(unique_id: $unique_id) {
+    onPublishCallUpdate(unique_id: $unique_id) {
       data
     }
   }
@@ -111,7 +111,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const startCallProcess = async () => {
     if (!lead) return;
-
+    console.log("Starting call process...");
     setCallState('initiating');
     try {
       const initiationResponse = await initiateCall(lead.id);
@@ -120,7 +120,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         callInitiationId.current = initiationResponse.unique_id;
         startSubscription(initiationResponse.unique_id);
       } else {
-        // This should now be caught by the error in `initiateCall`
         throw new Error('Did not receive a unique_id to track the call.');
       }
     } catch (error: any) {
@@ -139,7 +138,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             variables: { unique_id: uniqueId }
         }).subscribe({
             next: ({ data }) => {
-                const rawString = data.publishCallUpdate.data;
+                console.log("Received raw data from AppSync:", data);
+                const rawString = data.onPublishCallUpdate.data;
                 const callEvent = JSON.parse(rawString);
 
                 console.log("Received Full Call Update from AppSync:", callEvent);
