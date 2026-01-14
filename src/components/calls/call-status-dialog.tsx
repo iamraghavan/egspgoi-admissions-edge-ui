@@ -77,9 +77,9 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
     if (callInitiationId.current && database) {
-        const callRef = ref(database, `calls/${callInitiationId.current}`);
+        const callRef = ref(database, `smartflo_calls/${callInitiationId.current}`);
         off(callRef);
-        console.log("Unsubscribed from Firebase listener.");
+        console.log("Unsubscribed from Firebase listener for ref_id:", callInitiationId.current);
     }
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
@@ -98,8 +98,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     } else {
       cleanup();
     }
-    return () => cleanup();
-  }, [isOpen, lead, cleanup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, lead]);
 
 
   const startCallProcess = async () => {
@@ -113,7 +113,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
       if (uniqueId) {
         callInitiationId.current = uniqueId;
-        console.log("Call initiated successfully, tracking ref_id:", callInitiationId.current);
+        console.log("Call initiated successfully, ref_id:", callInitiationId.current);
         startSubscription(uniqueId);
       } else {
         throw new Error('Did not receive a ref_id to track the call.');
@@ -125,16 +125,16 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     }
   };
 
-  const startSubscription = (trackingId: string) => {
+  const startSubscription = (uniqueId: string) => {
     if (!database) {
         setErrorMessage("Real-time database service is not available.");
         setCallState('failed');
         return;
     }
     setCallState('ringing');
-    console.log(`Listening for updates on Firebase path: calls/${trackingId}`);
+    console.log(`Subscribing to Firebase Realtime Database at path: smartflo_calls/${uniqueId}`);
     
-    const callRef = ref(database, `calls/${trackingId}`);
+    const callRef = ref(database, `smartflo_calls/${uniqueId}`);
 
     onValue(callRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -142,7 +142,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             console.log("Received Call Update from Firebase:", callEvent);
 
             setActiveCall(prev => ({
-                ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: trackingId}),
+                ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: uniqueId}),
                 status: callEvent.status || 'ringing',
                 agent_name: prev?.agent_name || agentName,
                 call_id: callEvent.call_id || prev?.call_id,
@@ -156,6 +156,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
                 toast({ title: "Call Ended", description: "The call was terminated." });
                 onOpenChange(false);
             }
+        } else {
+             console.log("No data found at path, waiting for updates...");
         }
     }, (error) => {
         console.error("Firebase subscription error:", error);
