@@ -89,7 +89,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setDuration(0);
   }, []);
 
-
   // Effect to initiate the call once when the dialog opens
   useEffect(() => {
     if (!isOpen || !lead) {
@@ -181,7 +180,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         cleanup();
     };
 
-  }, [isOpen, lead, database, agentName, toast, onOpenChange, cleanup]);
+  }, [isOpen, lead, database, agentName, onOpenChange, cleanup, callState, toast]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
