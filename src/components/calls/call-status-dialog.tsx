@@ -11,16 +11,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Phone, PhoneOff, AlertCircle, User, Clock, RadioTower } from 'lucide-react';
-import { initiateCall, pollForActiveCall, hangupCall } from '@/lib/data';
+import { Loader2, Phone, PhoneOff, AlertCircle, User, Clock } from 'lucide-react';
+import { initiateCall, hangupCall } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import type { Lead } from '@/lib/types';
 import { Badge } from '../ui/badge';
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { getProfile } from '@/lib/auth';
+import { amplifyClient } from '@/lib/amplify-client';
 
-type CallState = 'idle' | 'initiating' | 'polling' | 'connected' | 'failed' | 'hangedup';
+type CallState = 'idle' | 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup';
 
 interface ActiveCallDetails {
     call_id: string;
@@ -28,6 +28,7 @@ interface ActiveCallDetails {
     duration: string;
     agent_name: string;
     customer_number: string;
+    unique_id: string;
 }
 
 interface CallStatusDialogProps {
@@ -35,6 +36,14 @@ interface CallStatusDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   lead: Lead | null;
 }
+
+const SUBSCRIBE_TO_CALLS = `
+  subscription OnPublishCallUpdate($unique_id: String!) {
+    publishCallUpdate(unique_id: $unique_id) {
+      data
+    }
+  }
+`;
 
 function formatDuration(seconds: number) {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -50,7 +59,6 @@ const CallDetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType,
     </div>
 );
 
-
 export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialogProps) {
   const [callState, setCallState] = useState<CallState>('idle');
   const [activeCall, setActiveCall] = useState<ActiveCallDetails | null>(null);
@@ -58,8 +66,9 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const [duration, setDuration] = useState(0);
   const [agentName, setAgentName] = useState('');
   
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const callInitiationId = useRef<string | null>(null);
   const { toast } = useToast();
 
    useEffect(() => {
@@ -73,14 +82,19 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
    }, []);
 
   const cleanup = useCallback(() => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-    if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
-    pollingIntervalRef.current = null;
-    durationIntervalRef.current = null;
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+    }
+    if (durationIntervalRef.current) {
+      clearInterval(durationIntervalRef.current);
+      durationIntervalRef.current = null;
+    }
     setCallState('idle');
     setActiveCall(null);
     setErrorMessage(null);
     setDuration(0);
+    callInitiationId.current = null;
   }, []);
 
   useEffect(() => {
@@ -89,9 +103,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     } else {
       cleanup();
     }
-    return () => {
-        cleanup();
-    };
+    return () => cleanup();
   }, [isOpen, lead, cleanup]);
 
 
@@ -101,10 +113,11 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setCallState('initiating');
     try {
       const initiationResponse = await initiateCall(lead.id);
-      if (initiationResponse && initiationResponse.poll_url) {
-        startPolling(initiationResponse.poll_url);
+      if (initiationResponse && initiationResponse.unique_id) {
+        callInitiationId.current = initiationResponse.unique_id;
+        startSubscription(initiationResponse.unique_id);
       } else {
-        throw new Error('Did not receive a poll URL to track the call.');
+        throw new Error('Did not receive a unique_id to track the call.');
       }
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to initiate call.');
@@ -112,47 +125,53 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     }
   };
 
-  const startPolling = (pollUrl: string) => {
-    setCallState('polling');
-    
-    const pollingTimeout = setTimeout(() => {
-      if (pollingIntervalRef.current) {
-        cleanup();
-        setCallState('failed');
-        setErrorMessage('Call did not connect in time. Please try again.');
-      }
-    }, 30000); // Stop polling after 30 seconds if not connected
+  const startSubscription = (uniqueId: string) => {
+    setCallState('ringing');
+    try {
+        const sub = amplifyClient.graphql({ 
+            query: SUBSCRIBE_TO_CALLS,
+            variables: { unique_id: uniqueId }
+        }).subscribe({
+            next: ({ data }) => {
+                const rawString = data.publishCallUpdate.data;
+                const callEvent = JSON.parse(rawString);
+                
+                // Ensure we are only processing events for the current call
+                if (callEvent.unique_id !== callInitiationId.current) return;
 
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const pollResponse = await pollForActiveCall(pollUrl);
-        if (pollResponse?.active && pollResponse.call_id) {
-          clearTimeout(pollingTimeout);
-          if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-          
-          setActiveCall({
-              ...pollResponse,
-              agent_name: pollResponse.agent_name || agentName,
-          });
-          setCallState('connected');
-          startDurationTimer();
-        } else if (pollResponse) {
-             setActiveCall(prev => ({
-                ...(prev || {call_id: '', duration: '0', customer_number: lead?.phone || ''}),
-                status: pollResponse.status || 'Ringing',
-                agent_name: pollResponse.agent_name || agentName,
-            }));
-        }
-      } catch (error: any) {
-        clearTimeout(pollingTimeout);
-        cleanup();
-        setErrorMessage(error.message || 'Polling for call status failed.');
+                setActiveCall(prev => ({
+                    ...(prev || {call_id: callEvent.call_id, duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.unique_id}),
+                    status: callEvent.status || 'ringing',
+                    agent_name: callEvent.agent_name || agentName,
+                    call_id: callEvent.call_id || prev?.call_id,
+                }));
+
+                if (callEvent.status?.toLowerCase() === 'answered' && callState !== 'connected') {
+                    setCallState('connected');
+                    startDurationTimer();
+                }
+                 if (callEvent.status?.toLowerCase() === 'hangup') {
+                    toast({ title: "Call Ended", description: "The call was terminated." });
+                    onOpenChange(false);
+                }
+            },
+            error: (err) => {
+                console.error("Subscription Error:", err);
+                setErrorMessage('Connection to real-time call updates failed.');
+                setCallState('failed');
+            }
+        });
+        subscriptionRef.current = sub;
+
+    } catch (error) {
+        console.error("Failed to start subscription:", error);
+        setErrorMessage('Could not connect to the real-time call service.');
         setCallState('failed');
-      }
-    }, 5000); // Poll every 5 seconds
+    }
   };
   
   const startDurationTimer = () => {
+      if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
       durationIntervalRef.current = setInterval(() => {
           setDuration(prev => prev + 1);
       }, 1000);
@@ -160,14 +179,14 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const handleHangup = async () => {
     if (!activeCall?.call_id) return;
-    setCallState('hangedup'); // Set state to indicate hangup is in progress
+    setCallState('hangedup');
     try {
       await hangupCall(activeCall.call_id);
-      toast({ title: 'Call Ended' });
-      onOpenChange(false);
+      toast({ title: 'Hangup Initiated' });
+      // The dialog will close automatically on the 'hangup' event from the subscription
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
-      setCallState('connected'); // Revert state if hangup fails
+      setCallState('connected');
     }
   };
 
@@ -186,12 +205,12 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const renderContent = () => {
     switch (callState) {
       case 'initiating':
-      case 'polling':
+      case 'ringing':
         return (
           <div className="flex flex-col items-center justify-center h-56 gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="text-lg font-medium">Connecting to {lead?.name}...</p>
-            <p className="text-sm text-muted-foreground">{callState === 'initiating' ? 'Initiating call...' : `Status: ${activeCall?.status || 'Waiting for connection...'}`}</p>
+            <p className="text-sm text-muted-foreground capitalize">{callState}...</p>
           </div>
         );
       case 'connected':

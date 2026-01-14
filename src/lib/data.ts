@@ -187,47 +187,28 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     if(error) throw new Error(error.message);
 };
 
-export const initiateCall = async (leadId: string): Promise<{ poll_url: string }> => {
+export const initiateCall = async (leadId: string): Promise<{ unique_id: string }> => {
     const profile = await getProfile();
     const callerId = profile?.caller_id;
+    const agentNumber = profile?.agent_number;
 
     if (!callerId) {
         throw new Error("Caller ID not found. Please update your profile.");
     }
+     if (!agentNumber) {
+        throw new Error("Agent Number not found. Please update your profile.");
+    }
 
     const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
-        body: JSON.stringify({ agent_number: callerId }),
+        body: JSON.stringify({ agent_number: agentNumber }),
     });
 
     if(error) throw new Error(error.message);
-    if (!data?.data?.poll_url) throw new Error("API did not return a poll_url for tracking the call.");
+    if (!data?.data?.unique_id) throw new Error("API did not return a unique_id for tracking the call.");
 
     return data.data;
 };
-
-export const pollForActiveCall = async (pollUrl: string): Promise<{ active: boolean, call_id?: string, status?: string, agent_name?: string, customer_number?: string }> => {
-    const profile = await getProfile();
-    const callerId = profile?.caller_id;
-
-    if (!callerId) {
-        throw new Error("Caller ID (agent phone number) not found in profile.");
-    }
-    
-    // The pollUrl from the backend already includes the necessary path.
-    // We just need to append the agent_number query parameter.
-    const endpoint = pollUrl.startsWith('/api/v1') ? pollUrl.substring(7) : pollUrl;
-    const urlWithAgent = `${endpoint}?agent_number=${callerId}`;
-    
-    const { data, error } = await apiClient<{ data: { active: boolean, call_id?: string, status?: string, agent_name?: string, customer_number?: string } }>(urlWithAgent);
-
-    if (error) {
-        throw new Error(error.message);
-    }
-    
-    return data!.data;
-};
-
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
     const { data, error } = await apiClient(`/leads/${leadId}/transfer`, {
