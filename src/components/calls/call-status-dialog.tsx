@@ -113,7 +113,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
       if (uniqueId) {
         callInitiationId.current = uniqueId;
-        console.log("Call initiated successfully, ref_id:", callInitiationId.current);
+        console.log("Call initiated successfully, unique_id:", callInitiationId.current);
         startSubscription(uniqueId);
       } else {
         throw new Error('Did not receive a ref_id to track the call.');
@@ -139,19 +139,25 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     onValue(callRef, (snapshot) => {
         if (snapshot.exists()) {
             const callEvent = snapshot.val();
-            console.log("Received Call Update from Firebase:", callEvent);
+            console.log("🔥 Received Call Update from Firebase:", callEvent);
 
             setActiveCall(prev => ({
-                ...(prev || {duration: '0', customer_number: lead?.phone || '', unique_id: uniqueId}),
-                status: callEvent.status || 'ringing',
-                agent_name: prev?.agent_name || agentName,
-                call_id: callEvent.call_id || prev?.call_id,
+                ...(prev || {}),
+                ...callEvent,
+                customer_number: callEvent.customer_number || lead?.phone || '',
+                agent_name: callEvent.agent_name || agentName,
+                unique_id: uniqueId,
             }));
 
-            if (callEvent.status?.toLowerCase() === 'answered' && callState !== 'connected') {
-                setCallState('connected');
-                startDurationTimer();
+            if (callEvent.status?.toLowerCase() === 'answered') {
+                if (callState !== 'connected') {
+                    setCallState('connected');
+                    startDurationTimer();
+                }
+            } else if (callEvent.status) {
+                setCallState(callEvent.status.toLowerCase());
             }
+            
             if (callEvent.status?.toLowerCase() === 'hangup' || callEvent.status?.toLowerCase() === 'missed') {
                 toast({ title: "Call Ended", description: "The call was terminated." });
                 onOpenChange(false);
@@ -181,7 +187,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       toast({ title: 'Hangup Initiated' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
-      setCallState('connected');
+      // Revert state if hangup fails to allow retry
+      if (activeCall?.status) setCallState(activeCall.status.toLowerCase() as CallState);
     }
   };
 
@@ -246,6 +253,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         return (
              <div className="flex flex-col items-center justify-center h-56 gap-4">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                 <p className="text-lg font-medium">Please wait...</p>
+                <p className="text-sm text-muted-foreground capitalize">{callState}...</p>
              </div>
         );
     }
