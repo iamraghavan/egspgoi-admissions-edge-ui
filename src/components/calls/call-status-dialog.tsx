@@ -135,12 +135,14 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             next: ({ data }) => {
                 const rawString = data.publishCallUpdate.data;
                 const callEvent = JSON.parse(rawString);
+
+                console.log("Received Full Call Update from AppSync:", callEvent);
                 
                 // Ensure we are only processing events for the current call
                 if (callEvent.unique_id !== callInitiationId.current) return;
 
                 setActiveCall(prev => ({
-                    ...(prev || {call_id: callEvent.call_id, duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.unique_id}),
+                    ...(prev || {call_id: '', duration: '0', customer_number: lead?.phone || '', unique_id: callEvent.unique_id}),
                     status: callEvent.status || 'ringing',
                     agent_name: callEvent.agent_name || agentName,
                     call_id: callEvent.call_id || prev?.call_id,
