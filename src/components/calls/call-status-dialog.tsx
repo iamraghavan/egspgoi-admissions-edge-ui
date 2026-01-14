@@ -65,18 +65,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const { toast } = useToast();
   const database = useDatabase();
 
-   useEffect(() => {
-    if (isOpen) {
-        async function fetchAgentName() {
-            const profile = await getProfile();
-            if (profile?.name) {
-                setAgentName(profile.name);
-            }
-        }
-        fetchAgentName();
-    }
-   }, [isOpen]);
-
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
     if (durationIntervalRef.current) {
@@ -129,57 +117,51 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   }, [isOpen, lead]);
 
 
-  // Effect to listen to Firebase for real-time updates
+  // Effect to listen for real-time updates from Firebase
   useEffect(() => {
     if (!isOpen || !lead || !database) {
-        return;
+      return;
     }
 
-    let isComponentMounted = true;
-    const refId = lead.id;
-    console.log(`Listening for updates on: smartflo_calls/${refId}`);
-    const callRef = ref(database, `smartflo_calls/${refId}`);
-    
-    const onCallUpdate = (snapshot: DataSnapshot) => {
-        if (!isComponentMounted) return;
-        
-        if (snapshot.exists()) {
-            const callEvent = snapshot.val();
-            console.log("🔥 Received Call Update from Firebase:", callEvent);
+    const callRef = ref(database, `smartflo_calls/${lead.id}`);
+    console.log(`Listening for updates on: smartflo_calls/${lead.id}`);
 
-            setActiveCall(prev => ({
-                ...(prev || {}),
-                ...callEvent,
-                customer_number: callEvent.customer_number || lead?.phone || '',
-                agent_name: callEvent.agent_name || agentName,
-                unique_id: refId,
-            }));
+    const unsubscribe = onValue(callRef, (snapshot) => {
+      console.log("🔥 Received Call Update from Firebase:", snapshot.val());
+      if (snapshot.exists()) {
+        const callEvent = snapshot.val();
 
-            const newStatus = callEvent.call_status?.toLowerCase();
+        setActiveCall(prev => ({
+          ...(prev || {}),
+          ...callEvent,
+          customer_number: callEvent.customer_number || lead?.phone || '',
+          agent_name: callEvent.agent_name || agentName,
+        }));
 
-            if (newStatus === 'answered by agent' || newStatus === 'answered') {
-                if (callState !== 'connected') {
-                    setCallState('connected');
-                    startDurationTimer();
-                }
-            } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
-                toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
-                onOpenChange(false);
-            } else if (newStatus && callState !== 'ringing') {
-                setCallState('ringing');
-            }
+        const newStatus = callEvent.call_status?.toLowerCase();
+
+        if (newStatus === 'answered by agent' || newStatus === 'answered') {
+          if (callState !== 'connected') {
+            setCallState('connected');
+            startDurationTimer();
+          }
+        } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+          if (isOpen) {
+            toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
+            onOpenChange(false);
+          }
+        } else if (newStatus) {
+            setCallState('ringing');
         }
-    };
-    
-    const unsubscribe = onValue(callRef, onCallUpdate);
+      }
+    });
 
+    // Cleanup function
     return () => {
-        isComponentMounted = false;
-        console.log("Unsubscribing from Firebase path:", refId);
-        unsubscribe();
-        cleanup();
+      console.log("Unsubscribing from Firebase path:", lead.id);
+      unsubscribe();
+      cleanup();
     };
-
   }, [isOpen, lead, database, agentName, onOpenChange, cleanup, callState, toast]);
   
   const startDurationTimer = () => {
@@ -195,7 +177,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       await hangupCall(activeCall.call_id);
       toast({ title: 'Hangup Initiated' });
-    } catch (error: any) {
+    } catch (error: any) => {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
       if (activeCall?.status) setCallState(activeCall.status.toLowerCase() as CallState);
     }
