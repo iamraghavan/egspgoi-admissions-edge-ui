@@ -76,10 +76,10 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const cleanup = useCallback(() => {
     console.log("Cleaning up call dialog resources.");
-    if (callInitiationId.current && database) {
-        const callRef = ref(database, `smartflo_calls/${callInitiationId.current}`);
+    if (lead?.id && database) {
+        const callRef = ref(database, `smartflo_calls/${lead.id}`);
         off(callRef);
-        console.log("Unsubscribed from Firebase listener for ref_id:", callInitiationId.current);
+        console.log("Unsubscribed from Firebase listener for ref_id:", lead.id);
     }
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
@@ -90,12 +90,13 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setErrorMessage(null);
     setDuration(0);
     callInitiationId.current = null;
-  }, [database]);
+  }, [database, lead]);
 
 
   const startCallProcess = async () => {
     if (!lead) return;
     setCallState('initiating');
+    console.log('Starting call process...');
     try {
       const initiationResponse = await initiateCall(lead.id);
       
@@ -116,25 +117,25 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   // Dedicated effect for Firebase subscription
   useEffect(() => {
-    if (!isOpen || callState !== 'ringing' || !callInitiationId.current || !database) {
+    // We only want to run this effect when the dialog is open and we have a lead.
+    if (!isOpen || !lead?.id || !database) {
         return;
     }
 
-    const refId = callInitiationId.current;
+    const refId = lead.id;
     console.log(`Listening for updates on: smartflo_calls/${refId}`);
     const callRef = ref(database, `smartflo_calls/${refId}`);
     
-    // Check for initial data after a short delay
     const notFoundTimeout = setTimeout(() => {
         if(callState === 'ringing') {
-            console.warn(`No data found at smartflo_calls/${refId} after 5 seconds.`);
+            console.warn(`No data found at smartflo_calls/${refId} after 10 seconds.`);
             setErrorMessage("Could not connect to the call. The tracking session may not have started correctly on the server.");
             setCallState('not_found');
         }
-    }, 5000);
+    }, 10000);
 
     const unsubscribe = onValue(callRef, (snapshot) => {
-        clearTimeout(notFoundTimeout); // Clear the timeout if we get data
+        clearTimeout(notFoundTimeout);
         if (snapshot.exists()) {
             const callEvent = snapshot.val();
             console.log("🔥 Received Call Update from Firebase:", callEvent);
@@ -156,7 +157,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
                 }
             } else if (newStatus === 'hangup' || newStatus === 'missed') {
                  toast({ title: "Call Ended", description: "The call was terminated." });
-                 onOpenChange(false); // This will trigger the cleanup effect
+                 onOpenChange(false);
             } else if (newStatus) {
                 setCallState(newStatus);
             }
@@ -174,7 +175,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         off(callRef);
     };
 
-  }, [isOpen, callState, database, lead, agentName, onOpenChange, toast]);
+  }, [isOpen, lead, database, agentName, onOpenChange, toast, callState]);
 
   // Main effect to handle dialog open/close
   useEffect(() => {
@@ -188,6 +189,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             cleanup();
         }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, lead]);
   
   const startDurationTimer = () => {
