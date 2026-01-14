@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter, Space_Grotesk } from 'next/font/google';
 import Head from 'next/head';
 import Script from 'next/script';
+import { FirebaseClientProvider } from '@/firebase';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -59,7 +60,9 @@ export default function RootLayout({
       </Head>
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
       <body className={cn("font-sans antialiased", "min-h-screen bg-background font-sans")} suppressHydrationWarning>
-        {children}
+        <FirebaseClientProvider>
+          {children}
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>
