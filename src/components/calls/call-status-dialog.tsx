@@ -118,11 +118,14 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setCallState('initiating');
     try {
       const initiationResponse = await initiateCall(lead.id);
-      if (initiationResponse && (initiationResponse as any).ref_id) {
-        callInitiationId.current = (initiationResponse as any).ref_id;
+
+      // Correctly access the nested unique_id
+      const uniqueId = initiationResponse?.unique_id;
+
+      if (uniqueId) {
+        callInitiationId.current = uniqueId;
         console.log("Call initiated successfully, unique_id:", callInitiationId.current);
-        // Use the permanent lead ID for the subscription
-        startSubscription(lead.id); 
+        startSubscription(lead.id);
       } else {
         throw new Error('Did not receive a unique_id to track the call.');
       }

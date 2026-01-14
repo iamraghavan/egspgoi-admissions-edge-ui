@@ -210,7 +210,7 @@ export const initiateCall = async (leadId: string): Promise<{ unique_id: string 
     }
     
     // Check for 'ref_id' as a fallback to 'unique_id'
-    const uniqueId = data?.data?.unique_id || data?.data?.ref_id;
+    const uniqueId = data?.data?.ref_id || data?.data?.unique_id;
 
     if (!uniqueId) {
         console.error("API response did not contain unique_id or ref_id.", data);
@@ -574,3 +574,4 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         message: data?.message
     };
 };
+
