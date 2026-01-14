@@ -1,7 +1,7 @@
 {
   "rules": {
     "smartflo_calls": {
-      ".read": true,
+      ".read": "auth != null",
       ".write": false
     }
   }
