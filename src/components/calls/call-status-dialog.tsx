@@ -21,7 +21,7 @@ import { getProfile } from '@/lib/auth';
 import { useDatabase } from '@/firebase';
 import { ref, onValue, off } from 'firebase/database';
 
-type CallState = 'idle' | 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup';
+type CallState = 'idle' | 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup' | 'not_found';
 
 interface ActiveCallDetails {
     call_id: string;
@@ -92,29 +92,18 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     callInitiationId.current = null;
   }, [database]);
 
-  useEffect(() => {
-    if (isOpen && lead) {
-      startCallProcess();
-    } else {
-      cleanup();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, lead]);
-
 
   const startCallProcess = async () => {
     if (!lead) return;
-    console.log("Starting call process...");
     setCallState('initiating');
     try {
       const initiationResponse = await initiateCall(lead.id);
-
+      
       const uniqueId = initiationResponse?.ref_id;
-
       if (uniqueId) {
         callInitiationId.current = uniqueId;
-        console.log("Call initiated successfully, unique_id:", callInitiationId.current);
-        startSubscription(uniqueId);
+        console.log("Call initiated successfully, ref_id:", callInitiationId.current);
+        setCallState('ringing');
       } else {
         throw new Error('Did not receive a ref_id to track the call.');
       }
@@ -125,18 +114,27 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     }
   };
 
-  const startSubscription = (uniqueId: string) => {
-    if (!database) {
-        setErrorMessage("Real-time database service is not available.");
-        setCallState('failed');
+  // Dedicated effect for Firebase subscription
+  useEffect(() => {
+    if (!isOpen || callState !== 'ringing' || !callInitiationId.current || !database) {
         return;
     }
-    setCallState('ringing');
-    console.log(`Subscribing to Firebase Realtime Database at path: smartflo_calls/${uniqueId}`);
-    
-    const callRef = ref(database, `smartflo_calls/${uniqueId}`);
 
-    onValue(callRef, (snapshot) => {
+    const refId = callInitiationId.current;
+    console.log(`Listening for updates on: smartflo_calls/${refId}`);
+    const callRef = ref(database, `smartflo_calls/${refId}`);
+    
+    // Check for initial data after a short delay
+    const notFoundTimeout = setTimeout(() => {
+        if(callState === 'ringing') {
+            console.warn(`No data found at smartflo_calls/${refId} after 5 seconds.`);
+            setErrorMessage("Could not connect to the call. The tracking session may not have started correctly on the server.");
+            setCallState('not_found');
+        }
+    }, 5000);
+
+    const unsubscribe = onValue(callRef, (snapshot) => {
+        clearTimeout(notFoundTimeout); // Clear the timeout if we get data
         if (snapshot.exists()) {
             const callEvent = snapshot.val();
             console.log("🔥 Received Call Update from Firebase:", callEvent);
@@ -146,31 +144,51 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
                 ...callEvent,
                 customer_number: callEvent.customer_number || lead?.phone || '',
                 agent_name: callEvent.agent_name || agentName,
-                unique_id: uniqueId,
+                unique_id: refId,
             }));
 
-            if (callEvent.status?.toLowerCase() === 'answered') {
+            const newStatus = callEvent.status?.toLowerCase();
+            
+            if (newStatus === 'answered') {
                 if (callState !== 'connected') {
                     setCallState('connected');
                     startDurationTimer();
                 }
-            } else if (callEvent.status) {
-                setCallState(callEvent.status.toLowerCase());
+            } else if (newStatus === 'hangup' || newStatus === 'missed') {
+                 toast({ title: "Call Ended", description: "The call was terminated." });
+                 onOpenChange(false); // This will trigger the cleanup effect
+            } else if (newStatus) {
+                setCallState(newStatus);
             }
-            
-            if (callEvent.status?.toLowerCase() === 'hangup' || callEvent.status?.toLowerCase() === 'missed') {
-                toast({ title: "Call Ended", description: "The call was terminated." });
-                onOpenChange(false);
-            }
-        } else {
-             console.log("No data found at path, waiting for updates...");
         }
     }, (error) => {
         console.error("Firebase subscription error:", error);
         setErrorMessage('Connection to real-time call updates failed.');
         setCallState('failed');
     });
-  };
+
+    // Cleanup function for this effect
+    return () => {
+        console.log("Unsubscribing from Firebase path:", refId);
+        clearTimeout(notFoundTimeout);
+        off(callRef);
+    };
+
+  }, [isOpen, callState, database, lead, agentName, onOpenChange, toast]);
+
+  // Main effect to handle dialog open/close
+  useEffect(() => {
+    if (isOpen && lead) {
+      startCallProcess();
+    }
+
+    // The cleanup function for the main effect will handle full resource cleanup.
+    return () => {
+        if (!isOpen) { // Only cleanup when dialog is truly closing
+            cleanup();
+        }
+    };
+  }, [isOpen, lead]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
@@ -242,6 +260,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
           </div>
         );
       case 'failed':
+      case 'not_found':
          return (
           <div className="flex flex-col items-center justify-center h-56 gap-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
@@ -271,7 +290,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
         </DialogHeader>
         {renderContent()}
         <DialogFooter className="mt-4">
-            {callState === 'failed' ? (
+            {callState === 'failed' || callState === 'not_found' ? (
                 <Button onClick={() => onOpenChange(false)} className="w-full">Close</Button>
             ) : (
                 <Button onClick={handleHangup} disabled={!activeCall?.call_id || callState === 'hangedup'} variant="destructive" className="w-full">
