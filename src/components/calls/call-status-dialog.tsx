@@ -106,7 +106,8 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
       cleanup();
     }
     return () => cleanup();
-  }, [isOpen, lead, cleanup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, lead]);
 
 
   const startCallProcess = async () => {
