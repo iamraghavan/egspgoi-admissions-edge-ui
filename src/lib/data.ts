@@ -187,7 +187,7 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     if(error) throw new Error(error.message);
 };
 
-export const initiateCall = async (leadId: string): Promise<{ unique_id: string }> => {
+export const initiateCall = async (leadId: string): Promise<any> => {
     console.log("Initiating call process for lead:", leadId);
     const profile = await getProfile();
     const callerId = profile?.caller_id;
@@ -209,16 +209,8 @@ export const initiateCall = async (leadId: string): Promise<{ unique_id: string 
         throw new Error(error.message);
     }
     
-    // Check for 'ref_id' as a fallback to 'unique_id'
-    const uniqueId = data?.data?.ref_id || data?.data?.unique_id;
-
-    if (!uniqueId) {
-        console.error("API response did not contain unique_id or ref_id.", data);
-        throw new Error("API did not return a unique_id for tracking the call.");
-    }
-    
-    console.log("Received unique tracking ID:", uniqueId);
-    return { unique_id: uniqueId };
+    // Return just the nested data object which contains ref_id
+    return data?.data;
 };
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
@@ -574,4 +566,3 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         message: data?.message
     };
 };
-

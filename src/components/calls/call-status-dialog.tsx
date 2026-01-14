@@ -109,7 +109,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       const initiationResponse = await initiateCall(lead.id);
 
-      const uniqueId = initiationResponse?.data?.ref_id;
+      const uniqueId = initiationResponse?.ref_id;
 
       if (uniqueId) {
         callInitiationId.current = uniqueId;
