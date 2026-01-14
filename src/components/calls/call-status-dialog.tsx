@@ -118,9 +118,9 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setCallState('initiating');
     try {
       const initiationResponse = await initiateCall(lead.id);
-      if (initiationResponse && initiationResponse.unique_id) {
-        callInitiationId.current = initiationResponse.unique_id;
-        console.log("Call initiated successfully, temp ref_id:", initiationResponse.unique_id);
+      if (initiationResponse && (initiationResponse as any).ref_id) {
+        callInitiationId.current = (initiationResponse as any).ref_id;
+        console.log("Call initiated successfully, unique_id:", callInitiationId.current);
         // Use the permanent lead ID for the subscription
         startSubscription(lead.id); 
       } else {
@@ -135,14 +135,14 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
   const startSubscription = (subscriptionId: string) => {
     setCallState('ringing');
-    console.log(`Starting GraphQL subscription for permanent ID: ${subscriptionId}`);
+    console.log(`Starting GraphQL subscription for unique_id: ${subscriptionId}`);
     try {
         const sub = amplifyClient.graphql({ 
             query: SUBSCRIBE_TO_CALLS,
             variables: { ref_id: subscriptionId }
         }).subscribe({
             next: ({ data }) => {
-                console.log("Received raw data from AppSync:", data);
+                console.log(">>>>>> [REAL-TIME EVENT RECEIVED] <<<<<<", data);
                 if (!data || !data.onCallUpdate) {
                     console.warn("Received incomplete data from subscription:", data);
                     return;
@@ -167,7 +167,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
                     setCallState('connected');
                     startDurationTimer();
                 }
-                 if (callEvent.status?.toLowerCase() === 'hangup') {
+                 if (callEvent.status?.toLowerCase() === 'hangup' || callEvent.status?.toLowerCase() === 'missed') {
                     toast({ title: "Call Ended", description: "The call was terminated." });
                     onOpenChange(false);
                 }
