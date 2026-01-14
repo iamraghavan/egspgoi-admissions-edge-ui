@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { Lead } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { getProfile } from '@/lib/auth';
 import { useDatabase } from '@/firebase';
 import { ref, onValue, off, type DataSnapshot } from 'firebase/database';
 
@@ -59,7 +58,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   const [activeCall, setActiveCall] = useState<ActiveCallDetails | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
-  const [agentName, setAgentName] = useState('');
   
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -77,84 +75,86 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setDuration(0);
   }, []);
 
-  // Main effect to handle call initiation and real-time listening
+  // Effect to initiate the call
   useEffect(() => {
-    if (!isOpen || !lead || !database) {
-        return;
-    }
+    if (!isOpen || !lead) return;
 
     let isComponentMounted = true;
-    let unsubscribeFirebase: (() => void) | null = null;
-    
-    const startCallAndListen = async () => {
+
+    const startCallProcess = async () => {
         if (!isComponentMounted) return;
 
         console.log('Starting call process...');
         setCallState('initiating');
         
         try {
-            // 1. Initiate the call via API
             const initiationResponse = await initiateCall(lead.id);
             if (!initiationResponse?.ref_id) {
                 throw new Error('Did not receive a ref_id to track the call.');
             }
             console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
-            
-            if (!isComponentMounted) return;
-            setCallState('ringing');
-            
-            // 2. Set up the Firebase listener
-            const callRefPath = `smartflo_calls/${lead.id}`;
-            console.log(`Listening for updates on: ${callRefPath}`);
-            const callRef = ref(database, callRefPath);
-
-            const handleSnapshot = (snapshot: DataSnapshot) => {
-                console.log("🔥 Received Call Update from Firebase:", snapshot.val());
-                if (!snapshot.exists()) return;
-
-                const callEvent = snapshot.val();
-                setActiveCall(prev => ({ ...(prev || {}), ...callEvent }));
-
-                const newStatus = callEvent.call_status?.toLowerCase();
-
-                if (newStatus === 'answered by agent' || newStatus === 'answered') {
-                    if (callState !== 'connected') {
-                        setCallState('connected');
-                        startDurationTimer();
-                    }
-                } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
-                    if (isOpen) {
-                        toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
-                        onOpenChange(false);
-                    }
-                }
-            };
-
-            unsubscribeFirebase = onValue(callRef, handleSnapshot);
-
+            if (isComponentMounted) {
+                setCallState('ringing');
+            }
         } catch (error: any) {
-            console.error("Error in startCallAndListen:", error.message);
+            console.error("Error in startCallProcess:", error.message);
             if (isComponentMounted) {
                 setErrorMessage(error.message || 'Failed to initiate call.');
                 setCallState('failed');
             }
         }
     };
-    
-    startCallAndListen();
 
-    // Cleanup function
+    startCallProcess();
+
     return () => {
         isComponentMounted = false;
-        if (unsubscribeFirebase) {
-            console.log("Unsubscribing from Firebase path:", `smartflo_calls/${lead.id}`);
-            unsubscribeFirebase();
-        }
         cleanup();
     };
-  // This effect should only run when the dialog is opened for a specific lead
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, lead, database]);
+  }, [isOpen, lead, cleanup]);
+
+  // Effect to listen for Firebase updates
+  useEffect(() => {
+    if (!isOpen || !lead || !database) return;
+
+    const callRefPath = `smartflo_calls/${lead.id}`;
+    console.log(`Listening for updates on: ${callRefPath}`);
+    const callRef = ref(database, callRefPath);
+
+    const handleSnapshot = (snapshot: DataSnapshot) => {
+      console.log("🔥 Received Call Update from Firebase:", snapshot.val());
+      const callEvent = snapshot.val();
+      
+      if (!callEvent) return;
+
+      setActiveCall(prev => ({ ...(prev || {}), ...callEvent }));
+
+      const newStatus = callEvent.call_status?.toLowerCase();
+
+      if (newStatus === 'answered by agent' || newStatus === 'answered') {
+        if (callState !== 'connected') {
+          setCallState('connected');
+          startDurationTimer();
+        }
+      } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+        if (isOpen) {
+          toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
+          onOpenChange(false);
+        }
+      }
+    };
+
+    const unsubscribeFirebase = onValue(callRef, handleSnapshot, (error) => {
+        console.error("Firebase listener error:", error);
+        setErrorMessage("Could not connect to real-time call updates.");
+        setCallState('failed');
+    });
+
+    return () => {
+      console.log("Unsubscribing from Firebase path:", callRefPath);
+      unsubscribeFirebase();
+    };
+  }, [isOpen, lead, database, callState, onOpenChange, toast]);
   
   const startDurationTimer = () => {
       if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
@@ -218,7 +218,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
             </div>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full max-w-sm">
-                <CallDetailItem icon={User} label="Agent" value={activeCall?.agent_name || agentName || '...'} />
+                <CallDetailItem icon={User} label="Agent" value={activeCall?.agent_name || '...'} />
                 <CallDetailItem icon={Phone} label="Number" value={activeCall?.customer_number || lead?.phone || '...'} />
             </div>
           </div>
@@ -267,5 +267,3 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     </Dialog>
   );
 }
-
-    
