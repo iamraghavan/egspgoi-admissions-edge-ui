@@ -78,43 +78,43 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
   }, []);
 
   // Effect to initiate the call once when the dialog opens
-  useEffect(() => {
-    if (!isOpen || !lead) {
-      return;
-    }
-    
-    let isComponentMounted = true;
-    
-    const startCallProcess = async () => {
-      if (!isComponentMounted) return;
-      
-      console.log('Starting call process...');
-      setCallState('initiating');
-
-      try {
-        const initiationResponse = await initiateCall(lead.id);
-        if (initiationResponse?.ref_id) {
-          console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
-          if (isComponentMounted) setCallState('ringing');
-        } else {
-          throw new Error('Did not receive a ref_id to track the call.');
+    useEffect(() => {
+        if (!isOpen || !lead) {
+            return;
         }
-      } catch (error: any) {
-        console.error("Error in startCallProcess:", error.message);
-        if (isComponentMounted) {
-            setErrorMessage(error.message || 'Failed to initiate call.');
-            setCallState('failed');
+        
+        let isComponentMounted = true;
+        
+        const startCallProcess = async () => {
+            if (!isComponentMounted) return;
+            
+            console.log('Starting call process...');
+            setCallState('initiating');
+
+            try {
+                const initiationResponse = await initiateCall(lead.id);
+                if (initiationResponse?.ref_id) {
+                    console.log("Call initiated successfully, ref_id:", initiationResponse.ref_id);
+                    if (isComponentMounted) setCallState('ringing');
+                } else {
+                    throw new Error('Did not receive a ref_id to track the call.');
+                }
+            } catch (error: any) {
+                console.error("Error in startCallProcess:", error.message);
+                if (isComponentMounted) {
+                    setErrorMessage(error.message || 'Failed to initiate call.');
+                    setCallState('failed');
+                }
+            }
+        };
+
+        startCallProcess();
+
+        return () => {
+            isComponentMounted = false;
         }
-      }
-    };
 
-    startCallProcess();
-
-    return () => {
-        isComponentMounted = false;
-    }
-
-  }, [isOpen, lead]);
+    }, [isOpen, lead]);
 
 
   // Effect to listen for real-time updates from Firebase
@@ -126,40 +126,42 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     const callRef = ref(database, `smartflo_calls/${lead.id}`);
     console.log(`Listening for updates on: smartflo_calls/${lead.id}`);
 
-    const unsubscribe = onValue(callRef, (snapshot) => {
-      console.log("🔥 Received Call Update from Firebase:", snapshot.val());
-      if (snapshot.exists()) {
-        const callEvent = snapshot.val();
+    const handleSnapshot = (snapshot: DataSnapshot) => {
+        console.log("🔥 Received Call Update from Firebase:", snapshot.val());
+        if (snapshot.exists()) {
+            const callEvent = snapshot.val();
 
-        setActiveCall(prev => ({
-          ...(prev || {}),
-          ...callEvent,
-          customer_number: callEvent.customer_number || lead?.phone || '',
-          agent_name: callEvent.agent_name || agentName,
-        }));
+            setActiveCall(prev => ({
+                ...(prev || {}),
+                ...callEvent,
+                customer_number: callEvent.customer_number || lead?.phone || '',
+                agent_name: callEvent.agent_name || agentName,
+            }));
 
-        const newStatus = callEvent.call_status?.toLowerCase();
+            const newStatus = callEvent.call_status?.toLowerCase();
 
-        if (newStatus === 'answered by agent' || newStatus === 'answered') {
-          if (callState !== 'connected') {
-            setCallState('connected');
-            startDurationTimer();
-          }
-        } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
-          if (isOpen) {
-            toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
-            onOpenChange(false);
-          }
-        } else if (newStatus) {
-            setCallState('ringing');
+            if (newStatus === 'answered by agent' || newStatus === 'answered') {
+                if (callState !== 'connected') {
+                    setCallState('connected');
+                    startDurationTimer();
+                }
+            } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+                if (isOpen) {
+                    toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
+                    onOpenChange(false);
+                }
+            } else if (newStatus) {
+                setCallState('ringing');
+            }
         }
-      }
-    });
+    }
+
+    const unsubscribe = onValue(callRef, handleSnapshot);
 
     // Cleanup function
     return () => {
       console.log("Unsubscribing from Firebase path:", lead.id);
-      unsubscribe();
+      off(callRef, 'value', handleSnapshot);
       cleanup();
     };
   }, [isOpen, lead, database, agentName, onOpenChange, cleanup, callState, toast]);
@@ -177,7 +179,7 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     try {
       await hangupCall(activeCall.call_id);
       toast({ title: 'Hangup Initiated' });
-    } catch (error: any) => {
+    } catch (error: any) {
       toast({ variant: 'destructive', title: 'Hangup Failed', description: error.message });
       if (activeCall?.status) setCallState(activeCall.status.toLowerCase() as CallState);
     }
