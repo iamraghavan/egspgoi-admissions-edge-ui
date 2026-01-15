@@ -40,7 +40,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
             <AppHeader />
         </div>
         <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-4 md:gap-8">
-          <div className="flex flex-col gap-4 lg:gap-6 h-full">
+          <div className="flex flex-col gap-4 lg:gap-6">
             {children}
           </div>
         </main>
