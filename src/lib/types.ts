@@ -78,17 +78,41 @@ export type PaginatedLeadsResponse = {
   } | null;
 }
 
-export type CampaignStatus = "Planning" | "Active" | "Completed" | "Archived";
+export type CampaignStatus = "draft" | "active" | "paused" | "completed";
 
 export type Campaign = {
   id: string;
   name: string;
-  startDate: string; // ISO 8601 date string
-  endDate: string; // ISO 8601 date string
+  start_date: string; // ISO 8601 date string
+  end_date: string; // ISO 8601 date string
   budget: number;
   status: CampaignStatus;
-  manager: string; // User ID
+  type: string;
+  platform: string;
+  institution: string;
+  objective: string;
+  kpi: string;
+  target_audience: {
+      age: string;
+      location: string;
+  };
+  settings: {
+      budget_daily: number;
+  };
+  assets?: Asset[];
 };
+
+export type Asset = {
+    id: string;
+    campaign_id: string;
+    name: string;
+    storage_url: string;
+    file_type: string;
+    version: number;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+};
+
 
 export type BudgetRequestStatus = "Pending" | "Approved" | "Rejected";
 

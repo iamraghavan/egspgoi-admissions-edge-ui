@@ -2,20 +2,21 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Campaign } from "@/lib/types"
+import { Campaign, CampaignStatus } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Trash2, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { formatCurrency } from "@/lib/formatters"
 
-const getStatusVariant = (status: string) => {
-    switch (status?.toLowerCase()) {
-        case 'active': return 'default';
+const getStatusVariant = (status: CampaignStatus) => {
+    switch (status) {
+        case 'active': return 'success';
         case 'draft': return 'secondary';
+        case 'paused': return 'warning';
         case 'completed': return 'outline';
         default: return 'secondary';
     }
@@ -45,14 +46,14 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
     ),
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "start_date",
     header: "Start Date",
-    cell: ({ row }) => format(new Date(row.getValue("startDate")), "LLL dd, y"),
+    cell: ({ row }) => format(new Date(row.getValue("start_date")), "LLL dd, y"),
   },
   {
-    accessorKey: "endDate",
+    accessorKey: "end_date",
     header: "End Date",
-    cell: ({ row }) => format(new Date(row.getValue("endDate")), "LLL dd, y"),
+    cell: ({ row }) => format(new Date(row.getValue("end_date")), "LLL dd, y"),
   },
   {
     accessorKey: "budget",
@@ -76,9 +77,10 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const campaign = row.original
       const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+      const meta = table.options.meta as { onDelete: (campaign: Campaign) => void; };
 
       return (
         <DropdownMenu>
@@ -92,8 +94,13 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
                 <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
                     View Details
                 </Link>
+            </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => meta.onDelete(campaign)} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

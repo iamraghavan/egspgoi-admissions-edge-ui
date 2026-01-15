@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -200,29 +200,23 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
 };
 
 export const initiateCall = async (leadId: string): Promise<string> => {
-    console.log("Initiating call process for lead:", leadId);
     const profile = await getProfile();
     const callerId = profile?.caller_id;
 
     if (!callerId) {
         throw new Error("Caller ID not found in your profile. Please update your settings.");
     }
-    console.log("Using Caller ID (as agent_number):", callerId);
 
     const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: callerId }),
     });
 
-    console.log("Full API response from /call endpoint:", { data, error });
 
     if (error) {
-        console.error("Error from /call API:", error);
         throw new Error(error.message);
     }
     
-    // CRITICAL: The API response nests the actual payload inside a 'data' property.
-    // The unique session ID (ref_id) is inside the nested data object.
     const ref_id = data?.data?.ref_id;
     if (!ref_id) {
         throw new Error("Call initiation successful, but did not receive a valid 'ref_id' from the API.");
@@ -300,8 +294,6 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
     if(error) throw new Error(error.message);
     return data!.data.map((c: any) => ({
         ...c,
-        startDate: c.start_date,
-        endDate: c.end_date,
         budget: c.settings?.budget_daily || 0,
     })) as Campaign[];
 };
@@ -309,11 +301,9 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const { data, error } = await apiClient<any>(`/campaigns/${id}`);
     if(error) {
-        // If the API returns a not found error, gracefully return null
         if (error.status === 404) {
             return null;
         }
-        // For other errors, we might still want to throw
         throw new Error(error.message);
     };
     if (!data || !data.data) {
@@ -322,13 +312,12 @@ export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const campaign = data.data;
     return { 
         ...campaign,
-        startDate: campaign.start_date,
-        endDate: campaign.end_date,
         budget: campaign.settings?.budget_daily || 0,
+        assets: campaign.assets || [],
     };
 };
 
-export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status'>): Promise<Campaign> => {
+export const createCampaign = async (campaignData: Partial<Campaign>): Promise<Campaign> => {
      const { data, error } = await apiClient<any>('/campaigns', {
         method: 'POST',
         body: JSON.stringify(campaignData),
@@ -337,10 +326,55 @@ export const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'status
     const campaign = data.data;
     return {
         ...campaign,
-        startDate: campaign.start_date,
-        endDate: campaign.end_date,
         budget: campaign.settings?.budget_daily || 0,
     }
+};
+
+export const updateCampaign = async (id: string, campaignData: Partial<Campaign>): Promise<Campaign> => {
+    const { data, error } = await apiClient<any>(`/campaigns/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(campaignData),
+    });
+    if(error) throw new Error(error.message);
+    const campaign = data.data;
+    return {
+        ...campaign,
+        budget: campaign.settings?.budget_daily || 0,
+    }
+}
+
+export const updateCampaignStatus = async (id: string, status: CampaignStatus): Promise<Campaign> => {
+    const { data, error } = await apiClient<any>(`/campaigns/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    });
+    if(error) throw new Error(error.message);
+    const campaign = data.data;
+    return {
+        ...campaign,
+        budget: campaign.settings?.budget_daily || 0,
+    }
+};
+
+export const deleteCampaign = async (id: string): Promise<void> => {
+    const { error } = await apiClient<any>(`/campaigns/${id}`, {
+        method: 'DELETE',
+    });
+    if(error) throw new Error(error.message);
+};
+
+export const uploadAsset = async (assetData: { campaign_id: string; name: string; file: File }): Promise<Asset> => {
+    const formData = new FormData();
+    formData.append('campaign_id', assetData.campaign_id);
+    formData.append('name', assetData.name);
+    formData.append('file', assetData.file);
+
+    const { data, error } = await apiClient<any>('/assets', {
+        method: 'POST',
+        body: formData,
+    });
+    if(error) throw new Error(error.message);
+    return data.data;
 };
 
 export const getCalls = async (): Promise<Call[]> => {
@@ -464,7 +498,7 @@ export const getDashboardStats = async () => {
   const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
   return {
     newLeads: newLeadsCount,
-    activeCampaigns: campaigns.filter(c => c.status === 'Active').length,
+    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
     callsToday: 12, // mock
     conversionRate: Math.floor(Math.random() * 5 + 18),
   };
