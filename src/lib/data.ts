@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -177,6 +177,18 @@ export const addLeadNote = async (leadId: string, content: string): Promise<Note
         author_email: newNote.author_email,
         created_at: parseCustomDate(newNote.created_at)
     };
+};
+
+export const getLeadCallLogs = async (leadId: string): Promise<CallLog[]> => {
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/leads/${leadId}/call-logs`);
+    if (error) {
+        throw new Error(error.message);
+    }
+    return (data?.data || []).map((log: any) => ({
+        ...log,
+        start_stamp: log.start_stamp ? new Date(log.start_stamp).toLocaleString() : 'N/A',
+        end_stamp: log.end_stamp ? new Date(log.end_stamp).toLocaleString() : 'N/A',
+    }));
 };
 
 export const updateLeadStatus = async (leadId: string, status: LeadStatus): Promise<void> => {

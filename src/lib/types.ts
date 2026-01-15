@@ -56,6 +56,20 @@ export type Lead = {
   assigned_user: User | null;
 };
 
+export type CallLog = {
+    call_id: string;
+    start_stamp: string;
+    answer_stamp: string;
+    end_stamp: string;
+    call_status: 'answered' | 'missed' | 'failed' | 'not_answered';
+    direction: 'clicktocall' | 'inbound';
+    duration: string;
+    billsec: string;
+    recording_url: string;
+    answered_agent_name: string;
+    hangup_cause_description: string;
+}
+
 export type PaginatedLeadsResponse = {
   leads: Lead[];
   meta: {

@@ -13,6 +13,7 @@ import { LeadCourseInfo } from '@/components/leads/lead-course-info';
 import { LeadNotes } from '@/components/leads/lead-notes';
 import { LeadAssignedAgent } from '@/components/leads/lead-assigned-agent';
 import { LeadMetadata } from '@/components/leads/lead-metadata';
+import { LeadCallHistory } from '@/components/leads/lead-call-history';
 
 export default function LeadDetailPage() {
     const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
@@ -127,6 +128,7 @@ export default function LeadDetailPage() {
                     <LeadContactInfo lead={lead} />
                     <LeadCourseInfo lead={lead} />
                     <LeadNotes lead={lead} onNoteAdded={() => fetchLeadDetails(true)} />
+                     <LeadCallHistory leadId={lead.id} />
                 </div>
 
                 <div className="space-y-6">
