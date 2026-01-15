@@ -546,7 +546,7 @@ export async function globalSearch(query: string): Promise<any[]> {
         flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/campaigns/${item.id}` })));
     }
     if (results.users && Array.isArray(results.users)) {
-        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/users/${item.id}` })));
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/user-management/${item.id}` })));
     }
 
     if (flattenedResults.length === 0 && (results.leads?.length === 0 && results.campaigns?.length === 0 && results.users?.length === 0)) {

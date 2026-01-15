@@ -100,8 +100,8 @@ export default function LeadPrintPage() {
             });
             const imgData = canvas.toDataURL('image/png');
             
-            // A4 landscape dimensions in mm: 297 x 210
-            const pdf = new jsPDF('l', 'mm', 'a4');
+            // A4 portrait dimensions in mm: 210 x 297
+            const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
             
@@ -138,7 +138,7 @@ export default function LeadPrintPage() {
         <div>
             <style jsx global>{`
                 @page {
-                    size: A4 landscape;
+                    size: A4 portrait;
                     margin: 0;
                 }
                 @media print {
@@ -160,7 +160,7 @@ export default function LeadPrintPage() {
                 }
             `}</style>
             
-            <div className="max-w-6xl mx-auto p-4 md:p-8 no-print">
+            <div className="max-w-4xl mx-auto p-4 md:p-8 no-print">
                  <div className="flex justify-between items-center mb-8">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -182,7 +182,7 @@ export default function LeadPrintPage() {
                 </div>
             </div>
 
-            <div className="printable-area bg-white p-8 md:p-12 max-w-6xl mx-auto my-8 rounded-lg shadow-lg">
+            <div className="printable-area bg-white p-8 md:p-12 max-w-4xl mx-auto my-8 rounded-lg shadow-lg" ref={printRef}>
                 {loading ? (
                     <div className="space-y-8">
                         <Skeleton className="h-16 w-full" />
