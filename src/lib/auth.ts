@@ -43,6 +43,9 @@ export async function login(email: string, password: string): Promise<{ accessTo
     if (data && data.accessToken) {
         if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', data.accessToken);
+            if(data.refreshToken) {
+                localStorage.setItem('refreshToken', data.refreshToken);
+            }
             startSessionTimer(data.accessToken); // Start the session timer
             
             // Immediately fetch the full profile to get all details including preferences and correct role
@@ -67,8 +70,14 @@ export async function login(email: string, password: string): Promise<{ accessTo
  * @returns A promise that resolves when the token is refreshed.
  */
 export async function refreshToken(): Promise<void> {
+    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    if(!refreshToken) {
+      throw new Error("No refresh token available.");
+    }
+    
     const { data, error } = await apiClient<{accessToken: string}>('/auth/refresh', {
         method: 'POST',
+        body: JSON.stringify({ refreshToken })
     });
 
     if (error) {
@@ -109,7 +118,7 @@ export async function getProfile(): Promise<User | null> {
     
     // Always try to fetch the latest profile from the API if a token exists
     if (localStorage.getItem('accessToken')) {
-        const { data: apiResponse, error } = await apiClient<any>('/auth/auth/profile');
+        const { data: apiResponse, error } = await apiClient<any>('/users/users/profile');
         if (error) {
             console.error("Failed to fetch full user profile:", error.message);
             // Return the stale profile from local storage if API fails
@@ -139,7 +148,7 @@ export async function getProfile(): Promise<User | null> {
 }
 
 export async function updateUserProfile(payload: Partial<User>): Promise<User> {
-    const { data, error } = await apiClient<any>('/users/me', {
+    const { data, error } = await apiClient<any>('/users/users/profile', {
         method: 'PATCH',
         body: JSON.stringify(payload),
     });
@@ -194,6 +203,7 @@ export async function updateUserSettings(payload: { preferences: Partial<UserPre
 export function logout() {
     if (typeof window === 'undefined') return;
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userProfile');
     stopSessionTimer(); // Stop the session timer on logout
 }

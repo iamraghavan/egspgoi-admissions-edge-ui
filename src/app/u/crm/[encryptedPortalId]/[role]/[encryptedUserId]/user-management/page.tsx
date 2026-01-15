@@ -73,7 +73,7 @@ export default function UserManagementPage() {
                 await updateUser(selectedUser.id, userData);
                 toast({ title: 'User Updated', description: 'User details saved successfully.' });
             } else {
-                await createUser(userData as User);
+                await createUser(userData);
                 toast({ title: 'User Created', description: 'New user has been created.' });
             }
             fetchUsers();

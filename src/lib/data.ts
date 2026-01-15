@@ -427,7 +427,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
     if (!user) return null;
     return {
         ...user,
-        role: user.role_id,
+        role: roleIdToNameMap[user.role_id] || user.role,
         avatarUrl: user.avatarUrl || ''
     };
 };
@@ -457,7 +457,7 @@ export const getUsers = async (): Promise<User[]> => {
     }));
 }
 
-export const createUser = async (userData: User): Promise<User> => {
+export const createUser = async (userData: Partial<User>): Promise<User> => {
     const { data, error } = await apiClient<any>(`/users`, {
         method: 'POST',
         body: JSON.stringify(userData),
