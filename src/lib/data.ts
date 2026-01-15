@@ -187,7 +187,7 @@ export const updateLeadStatus = async (leadId: string, status: LeadStatus): Prom
     if(error) throw new Error(error.message);
 };
 
-export const initiateCall = async (leadId: string): Promise<any> => {
+export const initiateCall = async (leadId: string): Promise<string> => {
     console.log("Initiating call process for lead:", leadId);
     const profile = await getProfile();
     const callerId = profile?.caller_id;
@@ -204,14 +204,21 @@ export const initiateCall = async (leadId: string): Promise<any> => {
 
     console.log("Full API response from /call endpoint:", { data, error });
 
-    if(error) {
+    if (error) {
         console.error("Error from /call API:", error);
         throw new Error(error.message);
     }
     
-    // Return just the nested data object which contains ref_id
-    return data?.data;
+    // CRITICAL: The API response nests the actual payload inside a 'data' property.
+    // The unique session ID (ref_id) is inside the nested data object.
+    const ref_id = data?.data?.ref_id;
+    if (!ref_id) {
+        throw new Error("Call initiation successful, but did not receive a valid 'ref_id' from the API.");
+    }
+    
+    return ref_id;
 };
+
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
     const { data, error } = await apiClient(`/leads/${leadId}/transfer`, {
