@@ -124,14 +124,14 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4">
         <Breadcrumbs>
             <BreadcrumbItem href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/dashboard`}>Dashboard</BreadcrumbItem>
             <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
         </Breadcrumbs>
        <PageHeader title="Leads" description="Manage and track all your prospective students." />
         <div className="flex-grow">
-             <Tabs defaultValue="table" className="h-full flex flex-col">
+             <Tabs defaultValue="table" className="flex flex-col">
                 <TabsList>
                     <TabsTrigger value="table">Data Table</TabsTrigger>
                     <TabsTrigger value="board">Kanban Board</TabsTrigger>
