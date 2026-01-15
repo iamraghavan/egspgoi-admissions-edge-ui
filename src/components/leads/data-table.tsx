@@ -37,6 +37,7 @@ import { courseData } from '@/lib/course-data';
 import * as XLSX from 'xlsx';
 import { Lead, User } from "@/lib/types"
 import type { DateRange } from "react-day-picker"
+import { DataTablePagination } from "./data-table-pagination"
 
 
 interface DataTableProps<TData, TValue> {
@@ -358,25 +359,7 @@ export default function DataTable<TData, TValue>({
             </TableBody>
             </Table>
         </div>
-      <div className="flex items-center justify-center">
-          {onLoadMore && canLoadMore && (
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={onLoadMore}
-                disabled={isFetchingMore}
-                >
-                {isFetchingMore ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading...
-                    </>
-                ) : (
-                    'Load More'
-                )}
-                </Button>
-            )}
-      </div>
+        <DataTablePagination table={table} />
       <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
         setCreateDialogOpen(isOpen);
         if (!isOpen) {

@@ -141,9 +141,6 @@ export default function LeadsPage() {
                         columns={leadColumns}
                         data={leads}
                         loading={loading}
-                        onLoadMore={nextCursor ? () => fetchLeads({ cursor: nextCursor, range: dateRange }) : undefined}
-                        canLoadMore={!!nextCursor}
-                        isFetchingMore={isFetchingMore}
                         refreshData={handleSearch}
                         dateRange={dateRange}
                         setDateRange={handleDateRangeChange}
