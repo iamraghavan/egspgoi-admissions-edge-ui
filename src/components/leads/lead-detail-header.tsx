@@ -11,6 +11,8 @@ import type { Lead, User } from '@/lib/types';
 import { EditLeadDialog } from './edit-lead-dialog';
 import { TransferLeadDialog } from './transfer-lead-dialog';
 import { CallStatusDialog } from '../calls/call-status-dialog';
+import { initiateCall } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 interface LeadDetailHeaderProps {
   lead: Lead;
@@ -20,12 +22,24 @@ interface LeadDetailHeaderProps {
 
 export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDetailHeaderProps) {
   const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
+  const { toast } = useToast();
   const [isEditOpen, setEditOpen] = useState(false);
   const [isTransferOpen, setTransferOpen] = useState(false);
   const [isCallDialogOpen, setCallDialogOpen] = useState(false);
+  const [uniqueCallId, setUniqueCallId] = useState<string | null>(null);
 
   const printUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
   const leadsUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads`;
+  
+  const handleCallClick = async () => {
+    try {
+        const ref_id = await initiateCall(lead.id);
+        setUniqueCallId(ref_id);
+        setCallDialogOpen(true);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Call Failed', description: error.message });
+    }
+  };
 
 
   return (
@@ -46,7 +60,7 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
                  Print
              </Link>
            </Button>
-          <Button variant="outline" size="sm" onClick={() => setCallDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={handleCallClick}>
             <Phone className="mr-2 h-4 w-4" />
             Call Lead
           </Button>
@@ -78,6 +92,7 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
         isOpen={isCallDialogOpen}
         onOpenChange={setCallDialogOpen}
         lead={lead}
+        uniqueCallId={uniqueCallId}
       />
     </>
   );

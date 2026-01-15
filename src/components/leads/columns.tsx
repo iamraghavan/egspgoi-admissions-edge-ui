@@ -10,7 +10,7 @@ import { ArrowUpDown, MoreHorizontal, Phone, Trash2, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useEffect, useState } from "react"
-import { getUsers, deleteLead, getUserById, updateLeadStatus } from "@/lib/data"
+import { getUsers, deleteLead, getUserById, updateLeadStatus, initiateCall } from "@/lib/data"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -115,6 +115,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
       const { toast } = useToast();
       const [isCallDialogOpen, setCallDialogOpen] = useState(false);
       const [selectedLeadForCall, setSelectedLeadForCall] = useState<Lead | null>(null);
+      const [uniqueCallId, setUniqueCallId] = useState<string | null>(null);
       const [isConfirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
 
       const handleUpdateStatus = async (status: LeadStatus) => {
@@ -135,9 +136,16 @@ export const leadColumns: ColumnDef<Lead>[] = [
         }
       }
 
-      const handleCallClick = () => {
+      const handleCallClick = async () => {
         setSelectedLeadForCall(lead);
-        setCallDialogOpen(true);
+        try {
+            const ref_id = await initiateCall(lead.id);
+            setUniqueCallId(ref_id);
+            setCallDialogOpen(true);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Call Failed', description: error.message });
+            setSelectedLeadForCall(null);
+        }
       };
 
       const handleDelete = async (type: 'soft' | 'hard') => {
@@ -241,6 +249,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
                 isOpen={isCallDialogOpen}
                 onOpenChange={setCallDialogOpen}
                 lead={selectedLeadForCall}
+                uniqueCallId={uniqueCallId}
             />
             <ConfirmationDialog
                 isOpen={isConfirmHardDeleteOpen}

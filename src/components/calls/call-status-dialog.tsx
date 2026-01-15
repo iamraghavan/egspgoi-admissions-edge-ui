@@ -12,13 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, Phone, PhoneOff, AlertCircle, User, Clock, Radio, Info } from 'lucide-react';
-import { initiateCall, hangupCall } from '@/lib/data';
+import { hangupCall } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import type { Lead } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useDatabase } from '@/firebase';
-import { ref, onValue, off, type DataSnapshot } from 'firebase/database';
+import { ref, onValue, off } from 'firebase/database';
 
 type CallState = 'initiating' | 'ringing' | 'connected' | 'failed' | 'hangedup';
 
@@ -41,6 +41,7 @@ interface CallStatusDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   lead: Lead | null;
+  uniqueCallId: string | null;
 }
 
 const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: React.ReactNode }) => {
@@ -55,11 +56,10 @@ const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, lab
 };
 
 
-export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialogProps) {
+export function CallStatusDialog({ isOpen, onOpenChange, lead, uniqueCallId }: CallStatusDialogProps) {
   const [callState, setCallState] = useState<CallState>('initiating');
   const [activeCall, setActiveCall] = useState<ActiveCallDetails | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [uniqueCallId, setUniqueCallId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const database = useDatabase();
@@ -68,7 +68,6 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
 
 
   const cleanup = useCallback(() => {
-    console.log("Cleaning up call dialog resources.");
      if (unsubscribeFirebase.current) {
       console.log("Unsubscribing from Firebase path:", callRef.current?.toString());
       unsubscribeFirebase.current();
@@ -77,75 +76,55 @@ export function CallStatusDialog({ isOpen, onOpenChange, lead }: CallStatusDialo
     setCallState('initiating');
     setActiveCall(null);
     setErrorMessage(null);
-    setUniqueCallId(null);
     callRef.current = null;
   }, []);
 
-  // Effect to initiate the call and set up the listener
+  // Effect to set up the listener
   useEffect(() => {
-    if (!isOpen || !lead || !database) {
+    if (!isOpen || !uniqueCallId || !database) {
       if (!isOpen) cleanup();
       return;
     }
 
     let isComponentMounted = true;
     
-    const startCallProcess = async () => {
-      console.log('Starting call process...');
-      setCallState('initiating');
-      try {
-        const session_id = await initiateCall(lead.id);
-        console.log("Call initiated successfully, ref_id:", session_id);
-        
-        if (isComponentMounted) {
-            setUniqueCallId(session_id);
-            const path = `smartflo_calls/${session_id}`;
-            callRef.current = ref(database, path);
-            console.log("Listening for updates on:", path);
+    console.log("Listening for updates on:", `smartflo_calls/${uniqueCallId}`);
+    callRef.current = ref(database, `smartflo_calls/${uniqueCallId}`);
+    
+    unsubscribeFirebase.current = onValue(callRef.current, (snapshot) => {
+        const data = snapshot.val();
+        console.log("🔥 Received Call Update from Firebase:", data);
+        if (data && isComponentMounted) {
+            setActiveCall(prev => ({...prev, ...data}));
             
-            unsubscribeFirebase.current = onValue(callRef.current, (snapshot) => {
-                console.log("🔥 Received Call Update from Firebase:", snapshot.val());
-                const data = snapshot.val();
-                if (data) {
-                    setActiveCall(prev => ({...prev, ...data}));
-                    
-                    if(data.call_id && localStorage.getItem('call_id') !== data.call_id){
-                        localStorage.setItem('call_id', data.call_id);
-                        console.log('Stored call_id in localStorage:', data.call_id);
-                    }
+            if(data.call_id && localStorage.getItem('call_id') !== data.call_id){
+                localStorage.setItem('call_id', data.call_id);
+                console.log('Stored call_id in localStorage:', data.call_id);
+            }
 
-                    const newStatus = data.call_status?.toLowerCase();
-                    if (newStatus === 'answered' || newStatus === 'answered by agent') {
-                        setCallState('connected');
-                    } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
-                        toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
-                        onOpenChange(false);
-                    } else {
-                        setCallState('ringing');
-                    }
-                }
-            }, (error) => {
-                console.error("Firebase listener error:", error);
-                setErrorMessage("Could not connect to real-time call updates. " + error.message);
-                setCallState('failed');
-            });
+            const newStatus = data.call_status?.toLowerCase();
+            if (newStatus === 'answered' || newStatus === 'answered by agent' || data.status === 'answered') {
+                setCallState('connected');
+            } else if (newStatus === 'hangup' || newStatus === 'missed' || newStatus === 'cancel') {
+                toast({ title: "Call Ended", description: `The call was ${newStatus}.` });
+                onOpenChange(false);
+            } else {
+                setCallState('ringing');
+            }
         }
-      } catch (error: any) {
-        console.error("Error in startCallProcess:", error.message);
-        if (isComponentMounted) {
-          setErrorMessage(error.message || 'Failed to initiate call.');
-          setCallState('failed');
+    }, (error) => {
+        console.error("Firebase listener error:", error);
+        if(isComponentMounted) {
+            setErrorMessage("Could not connect to real-time call updates. " + error.message);
+            setCallState('failed');
         }
-      }
-    };
-
-    startCallProcess();
+    });
 
     return () => {
       isComponentMounted = false;
       cleanup();
     };
-  }, [isOpen, lead, database, onOpenChange, toast, cleanup]);
+  }, [isOpen, uniqueCallId, database, onOpenChange, toast, cleanup]);
 
   const handleHangup = async () => {
     const callIdToHangup = activeCall?.call_id || localStorage.getItem('call_id');
