@@ -100,8 +100,8 @@ export default function LeadPrintPage() {
             });
             const imgData = canvas.toDataURL('image/png');
             
-            // A4 page dimensions in mm: 210 x 297
-            const pdf = new jsPDF('p', 'mm', 'a4');
+            // A4 landscape dimensions in mm: 297 x 210
+            const pdf = new jsPDF('l', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
             
@@ -163,33 +163,31 @@ export default function LeadPrintPage() {
     return (
         <div className="bg-gray-100 print:bg-white">
             <style jsx global>{`
+                @page {
+                    size: A4 landscape;
+                    margin: 1cm;
+                }
                 @media print {
                   body {
-                    background-color: white !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
                   }
                   .no-print {
                     display: none !important;
                   }
                   .printable-area {
                     display: block !important;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
                     width: 100%;
                     height: auto;
-                    padding: 2rem;
-                    margin: 0;
-                    border: none;
-                    box-shadow: none;
+                    box-shadow: none !important;
+                    border: none !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                   }
-                }
-                 @page {
-                    size: A4;
-                    margin: 0;
                 }
             `}</style>
             
-            <div className="max-w-4xl mx-auto p-4 md:p-8 no-print">
+            <div className="max-w-6xl mx-auto p-4 md:p-8 no-print">
                  <div className="flex justify-between items-center mb-8">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -211,7 +209,7 @@ export default function LeadPrintPage() {
                 </div>
             </div>
             
-            <div ref={printRef} className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg print:shadow-none print:rounded-none print:border-none max-w-4xl mx-auto">
+            <div ref={printRef} className="printable-area bg-white p-8 md:p-12 rounded-lg shadow-lg max-w-6xl mx-auto">
                 <header className="flex justify-between items-start pb-8 border-b">
                     <div>
                         <Image src="https://egspgoi-admission.vercel.app/_next/static/media/egspgoi_svg.414b207b.svg" alt="College Logo" width={64} height={64} className="h-16 w-auto" />
@@ -265,7 +263,7 @@ export default function LeadPrintPage() {
 
                     <div className="mt-8">
                         <h2 className="text-lg font-semibold text-gray-700 mb-4">Notes History</h2>
-                        <div className="border rounded-lg">
+                        <div className="border rounded-lg max-h-48 overflow-y-auto">
                             {lead.notes && lead.notes.length > 0 ? (
                                 <div className="space-y-4 p-4">
                                     {[...lead.notes].reverse().map((note, index) => (
@@ -284,19 +282,9 @@ export default function LeadPrintPage() {
                     </div>
                 </main>
 
-                <footer className="mt-12 pt-8 border-t space-y-12">
-                    <div className="grid grid-cols-2 gap-8">
-                        <div>
-                            <div className="w-4/5 border-b border-gray-400"></div>
-                            <p className="text-sm text-gray-600 mt-2">Authorized Signature</p>
-                        </div>
-                         <div>
-                            <div className="w-4/5 border-b border-gray-400"></div>
-                            <p className="text-sm text-gray-600 mt-2">Date</p>
-                        </div>
-                    </div>
+                <footer className="mt-12 pt-8 border-t space-y-4">
                     <p className="text-xs text-gray-500 text-center">
-                        This is a computer-generated document and does not require a physical signature.
+                        This is a computer-generated document and does not require a physical signature. E.G.S. Pillay Group of Institutions.
                     </p>
                 </footer>
             </div>
