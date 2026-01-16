@@ -6,10 +6,8 @@ import '@/app/globals.css';
 // It does not include the main sidebar or header, so we get a clean page for printing.
 export default function PrintLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-        <body>
-            {children}
-        </body>
-    </html>
+    <>
+        {children}
+    </>
   );
 }

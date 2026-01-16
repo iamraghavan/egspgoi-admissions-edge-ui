@@ -1,15 +1,5 @@
-import PageHeader from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
-
-export default function SettingsPage() {
-    return (
-        <div>
-            <PageHeader title="Settings" description="Manage your account and application settings." />
-            <Card>
-                <CardContent className="pt-6">
-                    <p>Settings page coming soon.</p>
-                </CardContent>
-            </Card>
-        </div>
-    );
+// This file is a leftover from a previous refactoring and is not used.
+// It is intentionally left blank to prevent routing conflicts.
+export default function Placeholder() {
+  return null;
 }

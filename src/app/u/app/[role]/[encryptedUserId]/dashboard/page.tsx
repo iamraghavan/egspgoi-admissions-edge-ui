@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +14,10 @@ const AdminDashboard = dynamic(() => import('@/components/dashboard/admin-dashbo
 
 const AdmissionDashboard = dynamic(() => import('@/components/dashboard/admission-dashboard.tsx'), {
   loading: () => <AdminDashboardSkeleton />,
+});
+
+const ExecutiveDashboard = dynamic(() => import('@/components/dashboard/executive-dashboard.tsx'), {
+    loading: () => <AdminDashboardSkeleton />,
 });
 
 
@@ -45,12 +48,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
    useEffect(() => {
-    // Redirect if role is Admission Executive
-    if (roleSlug === 'ae') {
-        router.replace(`/u/app/${roleSlug}/${encryptedUserId}/leads`);
-        return; // Stop further execution
-    }
-
     const fetchProfile = async () => {
         setIsLoading(true);
         const profile = await getProfile();
@@ -63,10 +60,9 @@ export default function DashboardPage() {
   }, [roleSlug, router, encryptedUserId]);
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
-  const isAdmissionRole = userRole === 'Admission Manager' || userRole === 'Admission Executive';
-
-  // Render loading state while redirecting or fetching data
-  if (isLoading || roleSlug === 'ae') {
+  
+  // Render loading state while fetching data
+  if (isLoading) {
     return (
         <div className="flex flex-col gap-6">
             <Skeleton className="h-10 w-64" />
@@ -75,15 +71,26 @@ export default function DashboardPage() {
     )
   }
 
+  const renderDashboardByRole = () => {
+      switch (userRole) {
+          case 'Admission Executive':
+              return <ExecutiveDashboard />;
+          case 'Admission Manager':
+              return <AdmissionDashboard />;
+          case 'Marketing Manager':
+          case 'Finance':
+          case 'Super Admin':
+              return <AdminDashboard />;
+          default:
+              return <AdminDashboard />;
+      }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={`Welcome Back, ${userName}!`} description="Here's a snapshot of your admissions activity." />
       
-      {isAdmissionRole ? (
-        <AdmissionDashboard />
-      ) : (
-        <AdminDashboard />
-      )}
+      {renderDashboardByRole()}
     </div>
   );
 }
