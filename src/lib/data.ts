@@ -497,6 +497,21 @@ export const getDashboardStats = async (range?: string | number, startDate?: str
     return data;
 };
 
+export const getExecutiveStats = async (range?: string | number, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const { data, error } = await apiClient<any>(`/analytics/executive?${params.toString()}`);
+    if (error) {
+        console.error("Failed to fetch executive stats", error.message);
+        throw new Error(error.message || 'Failed to fetch executive stats');
+    }
+    return data;
+};
+
+
 export const getLeadsOverTime = async () => {
     const data = [
         { date: "Jan", leads: Math.floor(Math.random() * 20 + 80) },
