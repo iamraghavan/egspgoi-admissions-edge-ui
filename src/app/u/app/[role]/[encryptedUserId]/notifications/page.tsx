@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PageHeader from "@/components/page-header";
-import { getNotificationHistory } from '@/lib/data';
+import { getNotificationHistory, markAllNotificationsAsRead, markNotificationAsRead } from '@/lib/data';
 import type { AppNotification } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,41 +12,53 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { BellRing, Check, Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
+    const params = useParams();
 
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            setLoading(true);
-            try {
-                const history = await getNotificationHistory();
-                setNotifications(history);
-            } catch (error) {
-                console.error("Failed to fetch notification history:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Failed to load notifications'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchNotifications();
+    const fetchNotifications = useCallback(async () => {
+        setLoading(true);
+        try {
+            const history = await getNotificationHistory();
+            setNotifications(history);
+        } catch (error) {
+            console.error("Failed to fetch notification history:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Failed to load notifications'
+            });
+        } finally {
+            setLoading(false);
+        }
     }, [toast]);
 
-    const handleNotificationClick = (notification: AppNotification) => {
-        // Mark as read logic would go here
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+    const handleNotificationClick = async (notification: AppNotification) => {
+        if (!notification.read) {
+            await markNotificationAsRead(notification.id);
+            // Optimistically update UI
+            setNotifications(prev => prev.map(n => 
+                n.id === notification.id ? { ...n, read: true } : n
+            ));
+        }
         if (notification.data?.url) {
-            router.push(notification.data.url);
+            const dynamicUrl = notification.data.url
+                .replace(':role', params.role)
+                .replace(':encryptedUserId', params.encryptedUserId);
+            router.push(dynamicUrl);
         }
     };
     
-    const handleMarkAllAsRead = () => {
+    const handleMarkAllAsRead = async () => {
+        await markAllNotificationsAsRead();
         setNotifications(notifications.map(n => ({...n, read: true})));
         toast({ title: "All notifications marked as read."});
     }
@@ -57,7 +69,7 @@ export default function NotificationsPage() {
                 title="Notifications"
                 description="View all your recent updates and alerts."
             >
-                <Button onClick={handleMarkAllAsRead} disabled={notifications.every(n => n.read)}>
+                <Button onClick={handleMarkAllAsRead} disabled={notifications.every(n => n.read) || loading}>
                     <Check className="mr-2 h-4 w-4" />
                     Mark all as read
                 </Button>

@@ -82,7 +82,7 @@ export default function AdmissionDashboard() {
                     <CardTitle>Recent Leads</CardTitle>
                 </div>
                  <Button asChild size="sm" className="ml-auto gap-1">
-                    <Link href={`/u/portal/${role}/${encryptedUserId}/leads`}>
+                    <Link href={`/u/app/${role}/${encryptedUserId}/leads`}>
                         View All <ArrowUpRight className="h-4 w-4" />
                     </Link>
                 </Button>

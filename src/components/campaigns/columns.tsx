@@ -93,7 +93,7 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-                <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`}>
+                <Link href={`/u/app/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Details
                 </Link>

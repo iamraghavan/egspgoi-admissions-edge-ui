@@ -104,7 +104,7 @@ export const userColumns: ColumnDef<User>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
-                            <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/user-management/${user.id}`}>
+                            <Link href={`/u/app/${params.role}/${params.encryptedUserId}/user-management/${user.id}`}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                             </Link>

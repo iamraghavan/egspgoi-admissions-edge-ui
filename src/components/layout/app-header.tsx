@@ -4,12 +4,12 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Search, Menu } from 'lucide-react';
+import { Search, Menu, Bell } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Separator } from '../ui/separator';
 import { useState, useEffect, useCallback } from 'react';
-import { globalSearch } from '@/lib/data';
+import { globalSearch, getNotificationHistory, markAllNotificationsAsRead } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
 import { useRouter, useParams } from 'next/navigation';
@@ -18,7 +18,10 @@ import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
-import { debounce } from '@/lib/utils';
+import { debounce, cn } from '@/lib/utils';
+import { NotificationCenter } from '../notifications/notification-center';
+import type { AppNotification } from '@/lib/types';
+
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -42,6 +45,9 @@ export default function AppHeader() {
   const params = useParams();
   const { toast } = useToast();
   
+  const [isNotifOpen, setNotifOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+
   const handleLogout = useCallback(() => {
     logout();
     router.push('/');
@@ -51,6 +57,23 @@ export default function AppHeader() {
         description: "Your session has expired. Please log in again.",
     });
   }, [router, toast]);
+  
+  const checkUnread = useCallback(async () => {
+    try {
+        const notifs = await getNotificationHistory();
+        setHasUnread(notifs.some(n => !n.read));
+    } catch (e) {
+        // fail silently
+    }
+  }, []);
+
+  useEffect(() => {
+    checkUnread();
+    
+    // Periodically check for new notifications
+    const interval = setInterval(checkUnread, 30000); // every 30 seconds
+    return () => clearInterval(interval);
+  }, [checkUnread]);
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 2) {
@@ -97,6 +120,15 @@ export default function AppHeader() {
     setIsSearchOpen(false);
     setSearchQuery('');
   }
+  
+  const handleNotifOpenChange = async (open: boolean) => {
+    setNotifOpen(open);
+    if(open && hasUnread) {
+        await markAllNotificationsAsRead();
+        setHasUnread(false);
+    }
+  }
+
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
@@ -165,6 +197,18 @@ export default function AppHeader() {
       </div>
 
         <div className="flex items-center gap-2">
+           <Popover open={isNotifOpen} onOpenChange={handleNotifOpenChange}>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {hasUnread && <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />}
+                    <span className="sr-only">Notifications</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="end">
+                <NotificationCenter onOpenChange={setNotifOpen} />
+            </PopoverContent>
+          </Popover>
           <Separator orientation='vertical' className='h-8 mx-2' />
           <UserNav />
         </div>

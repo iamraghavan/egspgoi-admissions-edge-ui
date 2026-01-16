@@ -193,7 +193,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
         <>
             <div className="flex items-center justify-center gap-2">
                 <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
+                    <Link href={`/u/app/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">View Details</span>
                     </Link>

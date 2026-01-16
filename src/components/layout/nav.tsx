@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -29,61 +30,61 @@ import {
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/dashboard`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/dashboard`,
     icon: LayoutDashboard,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance'],
   },
   {
     title: 'Leads',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/leads`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/leads`,
     icon: Users,
     roles: ['Super Admin', 'Admission Manager', 'Admission Executive'],
   },
   {
     title: 'Campaigns',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/campaigns`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/campaigns`,
     icon: Megaphone,
     roles: ['Super Admin', 'Marketing Manager'],
   },
   {
     title: 'Budget Approvals',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/budget-approvals`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/budget-approvals`,
     icon: CircleDollarSign,
     roles: ['Super Admin', 'Marketing Manager', 'Finance'],
   },
   {
     title: 'Accounting',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/accounting`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/accounting`,
     icon: Landmark,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
   },
     {
     title: 'User Management',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/user-management`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/user-management`,
     icon: UserCog,
     roles: ['Super Admin'],
   },
   {
     title: 'Call Monitoring',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/call-monitoring`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-monitoring`,
     icon: Phone,
     roles: ['Super Admin', 'Admission Manager'],
   },
   {
     title: 'Call History',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/call-history`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-history`,
     icon: History,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
    {
     title: 'Notifications',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/notifications`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/notifications`,
     icon: Bell,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Preferences',
-    href: (role, encryptedUserId) => `/u/portal/${role}/${encryptedUserId}/settings`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/settings`,
     icon: Settings,
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },

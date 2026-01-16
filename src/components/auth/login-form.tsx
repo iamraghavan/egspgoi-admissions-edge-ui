@@ -85,7 +85,7 @@ export function LoginForm() {
 
       // Wait a moment for toast to be seen
       setTimeout(() => {
-        router.push(`/u/portal/${roleSlug}/${encryptedUserId}/${defaultPage}`);
+        router.push(`/u/app/${roleSlug}/${encryptedUserId}/${defaultPage}`);
       }, 1000);
 
     } catch (error: any) {

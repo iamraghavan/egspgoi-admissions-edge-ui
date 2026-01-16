@@ -28,8 +28,8 @@ export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDe
   const [isCallDialogOpen, setCallDialogOpen] = useState(false);
   const [uniqueCallId, setUniqueCallId] = useState<string | null>(null);
 
-  const printUrl = `/u/portal/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
-  const leadsUrl = `/u/portal/${params.role}/${params.encryptedUserId}/leads`;
+  const printUrl = `/u/app/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
+  const leadsUrl = `/u/app/${params.role}/${params.encryptedUserId}/leads`;
   
   const handleCallClick = async () => {
     try {
