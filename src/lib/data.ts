@@ -2,7 +2,7 @@
 
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification } from './types';
 import { subDays, subHours, format } from 'date-fns';
-import { getProfile } from './auth';
+import { getProfile, roleIdToNameMap } from './auth';
 import { apiClient } from './api-client';
 
 const parseCustomDate = (dateString: string | null | undefined): string => {
@@ -432,15 +432,6 @@ export const getUserById = async (id: string): Promise<User | null> => {
     };
 };
 
-const roleIdToNameMap: Record<string, Role> = {
-    "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
-    "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
-    "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin",
-    "477760ae-525b-45c6-a629-9cadde0503bb": "Marketing Manager",
-    "7b532b0d-641d-4569-9dd7-cd008013f14f": "Finance"
-};
-
-
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<any[]>(`/users`);
     if (error) {
@@ -492,16 +483,18 @@ export const deleteUser = async (userId: string, type: 'soft' | 'hard'): Promise
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
-export const getDashboardStats = async () => {
-  const { leads } = await getLeads();
-  const campaigns = await getCampaigns();
-  const newLeadsCount = leads.filter(l => new Date(l.last_contacted_at) > subDays(new Date(), 7)).length;
-  return {
-    newLeads: newLeadsCount,
-    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
-    callsToday: 12, // mock
-    conversionRate: Math.floor(Math.random() * 5 + 18),
-  };
+export const getDashboardStats = async (range?: string | number, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const { data, error } = await apiClient<any>(`/analytics/admin?${params.toString()}`);
+    if (error) {
+        console.error("Failed to fetch dashboard stats", error.message);
+        throw new Error(error.message || 'Failed to fetch dashboard stats');
+    }
+    return data;
 };
 
 export const getLeadsOverTime = async () => {
@@ -632,17 +625,30 @@ export async function saveDeviceToken(token: string): Promise<void> {
 }
 
 export async function getNotificationHistory(): Promise<AppNotification[]> {
-    // This endpoint is not in the postman collection, using mock data.
-    console.warn("getNotificationHistory is using mock data. Please implement the real API call.");
-    const mockNotifications: AppNotification[] = [
-        { id: '1', title: 'New Lead Assigned', body: 'A new lead "Jane Doe" has been assigned to you.', read: false, timestamp: new Date().toISOString(), data: { url: '/u/app/am/98a74109-1478-4f21-8f5a-64793bbd6611/leads/lead-1' } },
-        { id: '4', title: 'Call Missed', body: 'You missed a call from "Ramesh Kumar" (+91 9876543210).', read: false, timestamp: subHours(new Date(), 2).toISOString(), data: { url: '/u/app/am/98a74109-1478-4f21-8f5a-64793bbd6611/call-history' } },
-        { id: '2', title: 'Campaign Paused', body: 'The "Summer Admissions 2026" campaign was paused by an admin.', read: true, timestamp: subDays(new Date(), 1).toISOString(), data: { url: '/u/app/am/98a74109-1478-4f21-8f5a-64793bbd6611/campaigns/camp-1' } },
-        { id: '3', title: 'Budget Approved', body: 'Your budget request for "Fall Admissions 2024" has been approved.', read: true, timestamp: subDays(new Date(), 2).toISOString(), data: { url: '/u/app/am/98a74109-1478-4f21-8f5a-64793bbd6611/budget-approvals' } },
-        { id: '5', title: 'System Maintenance', body: 'A system update is scheduled for this Sunday at 2:00 AM.', read: true, timestamp: subDays(new Date(), 3).toISOString(), data: {} },
-    ];
-    return Promise.resolve(mockNotifications);
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/notifications');
+
+    if (error) {
+        console.error("Failed to fetch notification history:", error.message);
+        return []; // Fail gracefully for a non-critical feature.
+    }
+
+    if (data && data.success && Array.isArray(data.data)) {
+        const sortedNotifications = data.data
+            .map((item: any): AppNotification => ({
+                id: item.id,
+                title: item.title,
+                body: item.body,
+                read: !!item.read_at, // Convert timestamp/null to boolean
+                timestamp: item.created_at,
+                data: item.data || {},
+            }))
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        return sortedNotifications;
+    }
+
+    return [];
 }
+
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
     const { error } = await apiClient(`/notifications/${notificationId}/read`, {
