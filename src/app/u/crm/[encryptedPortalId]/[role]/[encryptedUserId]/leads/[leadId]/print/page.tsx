@@ -24,6 +24,15 @@ const PrintDetailItem = ({ label, value }: { label: string, value: React.ReactNo
     </div>
 );
 
+const PrintPageSkeleton = () => (
+    <div className="space-y-8">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-24 w-full" />
+    </div>
+);
+
+
 export default function LeadPrintPage() {
     const params = useParams() as { leadId: string };
     const router = useRouter();
@@ -34,6 +43,11 @@ export default function LeadPrintPage() {
     const [loading, setLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
 
     const handleLogout = useCallback(() => {
@@ -42,6 +56,8 @@ export default function LeadPrintPage() {
     }, [router]);
 
     useEffect(() => {
+        if (!isClient) return;
+
         const fetchLeadDetails = async () => {
             if (!params.leadId) return;
 
@@ -83,7 +99,7 @@ export default function LeadPrintPage() {
         };
 
         fetchLeadDetails();
-    }, [params.leadId, toast, handleLogout]);
+    }, [params.leadId, toast, handleLogout, isClient]);
     
     const handlePrint = () => {
         window.print();
@@ -167,14 +183,14 @@ export default function LeadPrintPage() {
                         Back to Lead Details
                     </Button>
                     <div className='flex items-center gap-2'>
-                        <Button onClick={handleDownloadPdf} disabled={isDownloading || loading}>
+                        <Button onClick={handleDownloadPdf} disabled={!isClient || isDownloading || loading}>
                             {isDownloading ? (
                                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Downloading...</>
                             ) : (
                                 <><Download className="mr-2 h-4 w-4" />Download PDF</>
                             )}
                         </Button>
-                        <Button onClick={handlePrint} variant="outline" disabled={loading}>
+                        <Button onClick={handlePrint} variant="outline" disabled={!isClient || loading}>
                             <Printer className="mr-2 h-4 w-4" />
                             Print
                         </Button>
@@ -183,12 +199,8 @@ export default function LeadPrintPage() {
             </div>
 
             <div className="printable-area bg-white p-8 md:p-12 max-w-4xl mx-auto my-8 rounded-lg shadow-lg" ref={printRef}>
-                {loading ? (
-                    <div className="space-y-8">
-                        <Skeleton className="h-16 w-full" />
-                        <Skeleton className="h-40 w-full" />
-                        <Skeleton className="h-24 w-full" />
-                    </div>
+               {!isClient ? <PrintPageSkeleton /> : loading ? (
+                    <PrintPageSkeleton />
                 ) : lead ? (
                     <div>
                         <header className="flex justify-between items-start pb-8 border-b">

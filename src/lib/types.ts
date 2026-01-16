@@ -173,3 +173,12 @@ export type InventoryResource = {
   name: string;
   count: number;
 };
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  read: boolean;
+  timestamp: string; // ISO 8601
+  data?: Record<string, any>;
+};

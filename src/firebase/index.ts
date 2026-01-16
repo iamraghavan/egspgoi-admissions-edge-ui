@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -5,7 +6,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
-
+import { getMessaging } from 'firebase/messaging';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -35,13 +36,13 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
-  // This is the correct databaseURL from the Firebase warning.
   const databaseURL = "https://studio-4460931313-2c74b-default-rtdb.asia-southeast1.firebasedatabase.app";
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
     database: getDatabase(firebaseApp, databaseURL),
+    messaging: getMessaging(firebaseApp)
   };
 }
 

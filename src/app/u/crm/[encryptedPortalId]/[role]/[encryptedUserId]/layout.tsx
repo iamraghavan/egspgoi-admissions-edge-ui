@@ -13,18 +13,18 @@ import { SessionTimeoutProvider, useSessionTimeout } from '@/hooks/use-session-t
 import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
 import { setSessionTimeoutContext } from '@/lib/session-context';
 import { initializeSessionTimer } from '@/lib/session-timer';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
   const isExpanded = isManuallyToggled || isHovering;
   
-  // Connect the session timeout context to the non-React world
   const sessionTimeout = useSessionTimeout();
   setSessionTimeoutContext(sessionTimeout);
 
   useEffect(() => {
-    // Initialize the session timer when the main layout mounts
     initializeSessionTimer();
+    requestNotificationPermission();
   }, []);
 
   return (

@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -23,7 +23,6 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
         }
 
         const [day, month, year] = datePart.split('/');
-        const [time, period] = timePart.split(' ');
         let [hours, minutes, seconds] = time.split(':');
 
         if (period?.toLowerCase() === 'pm' && hours !== '12') {
@@ -619,3 +618,25 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         message: data?.message
     };
 };
+
+export async function saveDeviceToken(token: string): Promise<void> {
+    const { error } = await apiClient('/users/users/device-token', {
+        method: 'POST',
+        body: JSON.stringify({ fcm_token: token }),
+    });
+    if (error) {
+        // It's often okay for this to fail silently as it's not critical for app functionality
+        console.error("Failed to save FCM token:", error.message);
+    }
+}
+
+export async function getNotificationHistory(): Promise<AppNotification[]> {
+    // This endpoint is not in the postman collection, using mock data.
+    console.warn("getNotificationHistory is using mock data. Please implement the real API call.");
+    const mockNotifications: AppNotification[] = [
+        { id: '1', title: 'New Lead Assigned', body: 'A new lead "Jane Doe" has been assigned to you.', read: false, timestamp: new Date().toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/leads/lead-1' } },
+        { id: '2', title: 'Campaign Paused', body: 'The "Summer Admissions 2026" campaign was paused by an admin.', read: true, timestamp: subDays(new Date(), 1).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/campaigns/camp-1' } },
+        { id: '3', title: 'Budget Approved', body: 'Your budget request for "Fall Admissions 2024" has been approved.', read: true, timestamp: subDays(new Date(), 2).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/budget-approvals' } },
+    ];
+    return Promise.resolve(mockNotifications);
+}

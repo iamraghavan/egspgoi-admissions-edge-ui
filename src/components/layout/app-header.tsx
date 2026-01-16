@@ -1,18 +1,13 @@
 
+
 'use client';
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu, Settings } from 'lucide-react';
+import { Bell, Search, Menu } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Nav from './nav';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { Separator } from '../ui/separator';
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { globalSearch } from '@/lib/data';
@@ -24,8 +19,10 @@ import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
-import { SidebarContext } from '../ui/sidebar';
 import { debounce } from '@/lib/utils';
+import { onMessage } from 'firebase/messaging';
+import { useFirebase } from '@/firebase';
+import { NotificationCenter } from '@/components/notifications/notification-center';
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -45,9 +42,11 @@ export default function AppHeader() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { messaging } = useFirebase();
   
   const handleLogout = useCallback(() => {
     logout();
@@ -58,6 +57,28 @@ export default function AppHeader() {
         description: "Your session has expired. Please log in again.",
     });
   }, [router, toast]);
+
+  useEffect(() => {
+    if (!messaging) return;
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Foreground Message:', payload);
+      toast({
+        title: payload.notification?.title || 'New Notification',
+        description: payload.notification?.body || '',
+      });
+      window.dispatchEvent(new CustomEvent('new-notification'));
+    });
+    return () => unsubscribe();
+  }, [messaging, toast]);
+
+   useEffect(() => {
+    const handleNewNotification = () => setHasUnread(true);
+    window.addEventListener('new-notification', handleNewNotification);
+    // You might also want to fetch initial unread status here
+    return () => {
+        window.removeEventListener('new-notification', handleNewNotification);
+    }
+  }, []);
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 2) {
@@ -96,7 +117,6 @@ export default function AppHeader() {
   const handleSelect = (url: string) => {
     const {encryptedPortalId, role, encryptedUserId} = params as {encryptedPortalId: string, role: string, encryptedUserId: string};
     
-    // a bit of a hack to make the search result links work
     const dynamicUrl = url
         .replace(':encryptedPortalId', encryptedPortalId)
         .replace(':role', role)
@@ -173,34 +193,22 @@ export default function AppHeader() {
         </Popover>
       </div>
 
-      <TooltipProvider>
         <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+            <Popover onOpenChange={(open) => { if (open) setHasUnread(false) }}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full relative">
+                  {hasUnread && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />}
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Toggle notifications</span>
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Notifications</p>
-              </TooltipContent>
-            </Tooltip>
-             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Settings className="h-5 w-5" />
-                   <span className="sr-only">Settings</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Settings</p>
-              </TooltipContent>
-            </Tooltip>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 p-0" align="end">
+                  <NotificationCenter />
+              </PopoverContent>
+            </Popover>
           <Separator orientation='vertical' className='h-8 mx-2' />
           <UserNav />
         </div>
-      </TooltipProvider>
     </header>
   );
 }
