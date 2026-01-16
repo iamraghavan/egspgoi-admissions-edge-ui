@@ -1,8 +1,6 @@
-
 'use client';
 import 'react-date-range/dist/styles.css'; 
 import 'react-date-range/dist/theme/default.css'; 
-import LeadsDataTable from '@/components/leads/data-table';
 import { leadColumns } from '@/components/leads/columns';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
@@ -20,6 +18,15 @@ const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
   ssr: false,
   loading: () => <Skeleton className="h-[500px] w-full" />,
 });
+
+const LeadsDataTable = dynamic(() => import('@/components/leads/data-table'), {
+    ssr: false,
+    loading: () => <div className="space-y-4">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-96 w-full" />
+    </div>,
+});
+
 
 const roleSlugMap: Record<string, Role> = {
     'sa': 'Super Admin',

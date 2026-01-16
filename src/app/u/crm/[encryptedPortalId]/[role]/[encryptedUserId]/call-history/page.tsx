@@ -1,11 +1,9 @@
-
 'use client';
 import 'react-date-range/dist/styles.css'; 
 import 'react-date-range/dist/theme/default.css'; 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/page-header";
-import DataTable from "@/components/leads/data-table";
 import { callRecordsColumns } from "@/components/calls/records-columns";
 import { getCallRecords, getUsers } from "@/lib/data";
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +19,17 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DateRangePicker } from 'react-date-range';
 import { cn } from '@/lib/utils';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const DataTable = dynamic(() => import('@/components/leads/data-table'), {
+    loading: () => <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-64 w-full" />
+    </div>,
+    ssr: false,
+});
+
 
 export default function CallHistoryPage() {
     const [records, setRecords] = useState([]);

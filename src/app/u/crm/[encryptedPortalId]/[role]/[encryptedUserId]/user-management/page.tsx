@@ -1,9 +1,7 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
-import DataTable from '@/components/leads/data-table'; 
 import { userColumns } from '@/components/users/columns';
 import { getUsers, createUser, updateUser, deleteUser } from '@/lib/data';
 import type { User } from '@/lib/types';
@@ -12,6 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserFormDialog } from '@/components/users/user-form-dialog';
+import dynamic from 'next/dynamic';
+
+const DataTable = dynamic(() => import('@/components/leads/data-table'), {
+    loading: () => <Skeleton className="h-96 w-full" />,
+    ssr: false
+});
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -88,15 +92,6 @@ export default function UserManagementPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col gap-8">
-                <PageHeader title="User Management" description="Manage all users in the system." />
-                <Skeleton className="h-96 w-full" />
-            </div>
-        )
-    }
-
     return (
         <div className="flex flex-col gap-8">
             <PageHeader title="User Management" description="Manage all users in the system.">
@@ -108,6 +103,7 @@ export default function UserManagementPage() {
             <DataTable 
                 columns={userColumns} 
                 data={users}
+                loading={loading}
                 searchKey="name"
                 searchPlaceholder="Filter by name or email..."
                 meta={{
