@@ -1,51 +1,57 @@
-// Using firebase v10.12.2 to stay modern and compatible
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+// public/firebase-messaging-sw.js
 
-// This config MUST match the one in your main app.
+// Use a more recent version of the Firebase SDK
+self.importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+self.importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+
+// This config should match your main app's config
 const firebaseConfig = {
-  apiKey: "AIzaSyDVYkjdG-Baa8gUZvxsFjjsPkNMXGS0xdo",
-  authDomain: "studio-4460931313-2c74b.firebaseapp.com",
-  projectId: "studio-4460931313-2c74b",
-  storageBucket: "studio-4460931313-2c74b.appspot.com",
-  messagingSenderId: "866648181583",
-  appId: "1:866648181583:web:81ee780f03f8ef0498533a"
+    "projectId": "studio-4460931313-2c74b",
+    "appId": "1:866648181583:web:81ee780f03f8ef0498533a",
+    "apiKey": "AIzaSyDVYkjdG-Baa8gUZvxsFjjsPkNMXGS0xdo",
+    "authDomain": "studio-4460931313-2c74b.firebaseapp.com",
+    "measurementId": "",
+    "messagingSenderId": "866648181583"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const messaging = firebase.messaging();
 
-// Background Message Handler
+// Handler for background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-
-  const notificationTitle = payload.notification.title;
+  
+  const notificationTitle = payload.notification?.title || 'New Notification';
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/apple-icon.png', // Use an existing icon from the project
-    data: payload.data // This allows us to pass a URL to open on click
+    body: payload.notification?.body || 'You have a new message.',
+    data: payload.data || { url: '/' } // Pass along data for click handling
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Handle notification click to open the correct URL or focus the window
+// Handler for notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
-  
+
+  // This is the URL that will be opened when the notification is clicked
+  const urlToOpen = event.notification.data?.url || '/';
+
+  // This looks for an open window with the same URL and focuses it.
+  // If no window is found, it opens a new one.
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      // Check if there's already a window open with the target URL
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url === targetUrl && 'focus' in client) {
+        // You might need to adjust the URL comparison logic
+        if (new URL(client.url).pathname === new URL(urlToOpen, self.location.origin).pathname && 'focus' in client) {
           return client.focus();
         }
       }
-      // If not, open a new window
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(urlToOpen);
       }
     })
   );

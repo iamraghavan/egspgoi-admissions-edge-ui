@@ -12,7 +12,8 @@ import {
   History,
   Settings,
   Landmark,
-  UserCog
+  UserCog,
+  Bell
 } from 'lucide-react';
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
@@ -39,6 +40,12 @@ const navItems: NavItem[] = [
     href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/leads`,
     icon: Users,
     roles: ['Super Admin', 'Admission Manager', 'Admission Executive'],
+  },
+  {
+    title: 'Notifications',
+    href: (encryptedPortalId, role, encryptedUserId) => `/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/notifications`,
+    icon: Bell,
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Campaigns',

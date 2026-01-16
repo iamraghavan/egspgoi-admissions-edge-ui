@@ -21,8 +21,9 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
              if(!isNaN(parsed.getTime())) return parsed.toISOString();
              throw new Error("Unrecognized date format");
         }
-
+        
         const [day, month, year] = datePart.split('/');
+        const [time, period] = timePart.split(' ');
         let [hours, minutes, seconds] = time.split(':');
 
         if (period?.toLowerCase() === 'pm' && hours !== '12') {
@@ -635,8 +636,10 @@ export async function getNotificationHistory(): Promise<AppNotification[]> {
     console.warn("getNotificationHistory is using mock data. Please implement the real API call.");
     const mockNotifications: AppNotification[] = [
         { id: '1', title: 'New Lead Assigned', body: 'A new lead "Jane Doe" has been assigned to you.', read: false, timestamp: new Date().toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/leads/lead-1' } },
+        { id: '4', title: 'Call Missed', body: 'You missed a call from "Ramesh Kumar" (+91 9876543210).', read: false, timestamp: subHours(new Date(), 2).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/call-history' } },
         { id: '2', title: 'Campaign Paused', body: 'The "Summer Admissions 2026" campaign was paused by an admin.', read: true, timestamp: subDays(new Date(), 1).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/campaigns/camp-1' } },
         { id: '3', title: 'Budget Approved', body: 'Your budget request for "Fall Admissions 2024" has been approved.', read: true, timestamp: subDays(new Date(), 2).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/budget-approvals' } },
+        { id: '5', title: 'System Maintenance', body: 'A system update is scheduled for this Sunday at 2:00 AM.', read: true, timestamp: subDays(new Date(), 3).toISOString(), data: {} },
     ];
     return Promise.resolve(mockNotifications);
 }

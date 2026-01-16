@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react';
 import { getNotificationHistory } from '@/lib/data';
 import type { AppNotification } from '@/lib/types';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { Skeleton } from '../ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { BellRing } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { BellRing, ArrowRight } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '../ui/button';
+import Link from 'next/link';
 
 export function NotificationCenter() {
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const params = useParams();
 
     const fetchNotifications = async () => {
         setLoading(true);
@@ -46,6 +49,8 @@ export function NotificationCenter() {
         }
     };
 
+    const notificationsUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/notifications`;
+
     if (loading) {
         return (
             <div className="space-y-2 p-4">
@@ -71,7 +76,7 @@ export function NotificationCenter() {
                     </div>
                 ) : (
                     <CommandGroup>
-                        {notifications.map(n => (
+                        {notifications.slice(0, 4).map(n => (
                             <CommandItem 
                                 key={n.id} 
                                 onSelect={() => handleNotificationClick(n)}
@@ -88,6 +93,15 @@ export function NotificationCenter() {
                     </CommandGroup>
                 )}
             </CommandList>
+            <CommandSeparator />
+             <div className="p-1">
+                 <Button variant="ghost" className="w-full justify-center text-sm" asChild>
+                    <Link href={notificationsUrl}>
+                        View all notifications
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+            </div>
         </Command>
     )
 }
