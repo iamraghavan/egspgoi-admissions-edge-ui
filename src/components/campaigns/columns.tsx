@@ -79,7 +79,7 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
     id: "actions",
     cell: ({ row, table }) => {
       const campaign = row.original
-      const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+      const params = useParams() as { role: string; encryptedUserId: string };
       const meta = table.options.meta as { onDelete: (campaign: Campaign) => void; };
 
       return (
@@ -93,7 +93,7 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-                <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`}>
+                <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Details
                 </Link>

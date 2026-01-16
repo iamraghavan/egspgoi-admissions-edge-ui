@@ -33,7 +33,7 @@ export default function AdmissionDashboard() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const params = useParams();
-  const { encryptedPortalId, encryptedUserId, role } = params as { encryptedPortalId: string; encryptedUserId: string; role: string };
+  const { encryptedUserId, role } = params as { encryptedUserId: string; role: string };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -82,7 +82,7 @@ export default function AdmissionDashboard() {
                     <CardTitle>Recent Leads</CardTitle>
                 </div>
                  <Button asChild size="sm" className="ml-auto gap-1">
-                    <Link href={`/u/crm/${encryptedPortalId}/${role}/${encryptedUserId}/leads`}>
+                    <Link href={`/u/portal/${role}/${encryptedUserId}/leads`}>
                         View All <ArrowUpRight className="h-4 w-4" />
                     </Link>
                 </Button>

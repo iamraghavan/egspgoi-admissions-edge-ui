@@ -80,13 +80,12 @@ export function LoginForm() {
       
       const roleSlug = roleToSlug[userProfile.role as Role] || 'ae'; // Default to Admission Executive
       const encryptedUserId = userProfile.id; 
-      const encryptedPortalId = "default"; 
-
+      
       const defaultPage = userProfile.role === 'Admission Executive' ? 'leads' : 'dashboard';
 
       // Wait a moment for toast to be seen
       setTimeout(() => {
-        router.push(`/u/crm/${encryptedPortalId}/${roleSlug}/${encryptedUserId}/${defaultPage}`);
+        router.push(`/u/portal/${roleSlug}/${encryptedUserId}/${defaultPage}`);
       }, 1000);
 
     } catch (error: any) {

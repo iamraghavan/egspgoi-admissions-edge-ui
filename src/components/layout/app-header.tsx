@@ -87,10 +87,9 @@ export default function AppHeader() {
   }, [searchQuery, debouncedSearch]);
 
   const handleSelect = (url: string) => {
-    const {encryptedPortalId, role, encryptedUserId} = params as {encryptedPortalId: string, role: string, encryptedUserId: string};
+    const { role, encryptedUserId } = params as { role: string, encryptedUserId: string };
     
     const dynamicUrl = url
-        .replace(':encryptedPortalId', encryptedPortalId)
         .replace(':role', role)
         .replace(':encryptedUserId', encryptedUserId);
     

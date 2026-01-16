@@ -75,7 +75,7 @@ export const userColumns: ColumnDef<User>[] = [
         cell: ({ row, table }) => {
             const user = row.original;
             const meta = table.options.meta as { onEdit: (user: User) => void; onDelete: (userId: string, type: 'soft' | 'hard') => void; };
-            const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+            const params = useParams() as { role: string; encryptedUserId: string };
             
             const [isConfirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
 
@@ -104,7 +104,7 @@ export const userColumns: ColumnDef<User>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
-                            <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/user-management/${user.id}`}>
+                            <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/user-management/${user.id}`}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                             </Link>

@@ -21,15 +21,15 @@ interface LeadDetailHeaderProps {
 }
 
 export function LeadDetailHeader({ lead, onLeadUpdate, availableAgents }: LeadDetailHeaderProps) {
-  const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string; leadId: string };
+  const params = useParams() as { role: string; encryptedUserId: string; leadId: string };
   const { toast } = useToast();
   const [isEditOpen, setEditOpen] = useState(false);
   const [isTransferOpen, setTransferOpen] = useState(false);
   const [isCallDialogOpen, setCallDialogOpen] = useState(false);
   const [uniqueCallId, setUniqueCallId] = useState<string | null>(null);
 
-  const printUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
-  const leadsUrl = `/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads`;
+  const printUrl = `/u/portal/${params.role}/${params.encryptedUserId}/leads/${params.leadId}/print`;
+  const leadsUrl = `/u/portal/${params.role}/${params.encryptedUserId}/leads`;
   
   const handleCallClick = async () => {
     try {

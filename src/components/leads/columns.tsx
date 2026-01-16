@@ -111,7 +111,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
     header: () => <div className="text-center">Actions</div>,
     cell: ({ row, table }) => {
       const lead = row.original
-      const params = useParams() as { encryptedPortalId: string; role: string; encryptedUserId: string };
+      const params = useParams() as { role: string; encryptedUserId: string };
       const { toast } = useToast();
       const [isCallDialogOpen, setCallDialogOpen] = useState(false);
       const [selectedLeadForCall, setSelectedLeadForCall] = useState<Lead | null>(null);
@@ -193,7 +193,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
         <>
             <div className="flex items-center justify-center gap-2">
                 <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/u/crm/${params.encryptedPortalId}/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
+                    <Link href={`/u/portal/${params.role}/${params.encryptedUserId}/leads/${lead.id}`}>
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">View Details</span>
                     </Link>

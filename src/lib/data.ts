@@ -229,7 +229,7 @@ export const initiateCall = async (leadId: string): Promise<string> => {
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
     const { data, error } = await apiClient(`/leads/${leadId}/transfer`, {
         method: 'POST',
-        body: JSON.stringify({ new_agent_id: newAgentId }),
+        body: JSON.stringify({ new_agent_id: newAgentId })
     });
     if(error) throw new Error(error.message);
     return data;
@@ -540,13 +540,13 @@ export async function globalSearch(query: string): Promise<any[]> {
     const results = data.data;
     const flattenedResults = [];
     if (results.leads && Array.isArray(results.leads)) {
-        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/leads/${item.id}` })));
+        flattenedResults.push(...results.leads.map((item: any) => ({ ...item, type: 'lead', url: `/u/portal/:role/:encryptedUserId/leads/${item.id}` })));
     }
     if (results.campaigns && Array.isArray(results.campaigns)) {
-        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/campaigns/${item.id}` })));
+        flattenedResults.push(...results.campaigns.map((item: any) => ({ ...item, type: 'campaign', url: `/u/portal/:role/:encryptedUserId/campaigns/${item.id}` })));
     }
     if (results.users && Array.isArray(results.users)) {
-        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/crm/:encryptedPortalId/:role/:encryptedUserId/user-management/${item.id}` })));
+        flattenedResults.push(...results.users.map((item: any) => ({ ...item, type: 'user', url: `/u/portal/:role/:encryptedUserId/user-management/${item.id}` })));
     }
 
     if (flattenedResults.length === 0 && (results.leads?.length === 0 && results.campaigns?.length === 0 && results.users?.length === 0)) {
@@ -635,10 +635,10 @@ export async function getNotificationHistory(): Promise<AppNotification[]> {
     // This endpoint is not in the postman collection, using mock data.
     console.warn("getNotificationHistory is using mock data. Please implement the real API call.");
     const mockNotifications: AppNotification[] = [
-        { id: '1', title: 'New Lead Assigned', body: 'A new lead "Jane Doe" has been assigned to you.', read: false, timestamp: new Date().toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/leads/lead-1' } },
-        { id: '4', title: 'Call Missed', body: 'You missed a call from "Ramesh Kumar" (+91 9876543210).', read: false, timestamp: subHours(new Date(), 2).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/call-history' } },
-        { id: '2', title: 'Campaign Paused', body: 'The "Summer Admissions 2026" campaign was paused by an admin.', read: true, timestamp: subDays(new Date(), 1).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/campaigns/camp-1' } },
-        { id: '3', title: 'Budget Approved', body: 'Your budget request for "Fall Admissions 2024" has been approved.', read: true, timestamp: subDays(new Date(), 2).toISOString(), data: { url: '/u/crm/egspgoi/am/98a74109-1478-4f21-8f5a-64793bbd6611/budget-approvals' } },
+        { id: '1', title: 'New Lead Assigned', body: 'A new lead "Jane Doe" has been assigned to you.', read: false, timestamp: new Date().toISOString(), data: { url: '/u/portal/am/98a74109-1478-4f21-8f5a-64793bbd6611/leads/lead-1' } },
+        { id: '4', title: 'Call Missed', body: 'You missed a call from "Ramesh Kumar" (+91 9876543210).', read: false, timestamp: subHours(new Date(), 2).toISOString(), data: { url: '/u/portal/am/98a74109-1478-4f21-8f5a-64793bbd6611/call-history' } },
+        { id: '2', title: 'Campaign Paused', body: 'The "Summer Admissions 2026" campaign was paused by an admin.', read: true, timestamp: subDays(new Date(), 1).toISOString(), data: { url: '/u/portal/am/98a74109-1478-4f21-8f5a-64793bbd6611/campaigns/camp-1' } },
+        { id: '3', title: 'Budget Approved', body: 'Your budget request for "Fall Admissions 2024" has been approved.', read: true, timestamp: subDays(new Date(), 2).toISOString(), data: { url: '/u/portal/am/98a74109-1478-4f21-8f5a-64793bbd6611/budget-approvals' } },
         { id: '5', title: 'System Maintenance', body: 'A system update is scheduled for this Sunday at 2:00 AM.', read: true, timestamp: subDays(new Date(), 3).toISOString(), data: {} },
     ];
     return Promise.resolve(mockNotifications);

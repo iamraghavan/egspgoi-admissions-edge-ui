@@ -164,7 +164,7 @@ export type AdSpend = {
 
 export type NavItem = {
   title: string;
-  href: (encryptedPortalId: string, role: string, encryptedUserId: string) => string;
+  href: (role: string, encryptedUserId: string) => string;
   icon: React.ElementType;
   roles: Role[];
 };
