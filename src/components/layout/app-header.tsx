@@ -4,12 +4,11 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Bell, Search, Menu } from 'lucide-react';
+import { Search, Menu } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
-import Nav from './nav';
 import { Separator } from '../ui/separator';
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { globalSearch } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
@@ -20,9 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AppSidebarContent } from './app-sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
 import { debounce } from '@/lib/utils';
-import { onMessage } from 'firebase/messaging';
-import { useFirebase } from '@/firebase';
-import { NotificationCenter } from '@/components/notifications/notification-center';
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -42,11 +38,9 @@ export default function AppHeader() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUnread, setHasUnread] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { messaging } = useFirebase();
   
   const handleLogout = useCallback(() => {
     logout();
@@ -57,28 +51,6 @@ export default function AppHeader() {
         description: "Your session has expired. Please log in again.",
     });
   }, [router, toast]);
-
-  useEffect(() => {
-    if (!messaging) return;
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Foreground Message:', payload);
-      toast({
-        title: payload.notification?.title || 'New Notification',
-        description: payload.notification?.body || '',
-      });
-      window.dispatchEvent(new CustomEvent('new-notification'));
-    });
-    return () => unsubscribe();
-  }, [messaging, toast]);
-
-   useEffect(() => {
-    const handleNewNotification = () => setHasUnread(true);
-    window.addEventListener('new-notification', handleNewNotification);
-    // You might also want to fetch initial unread status here
-    return () => {
-        window.removeEventListener('new-notification', handleNewNotification);
-    }
-  }, []);
 
   const handleSearch = async (query: string) => {
     if (query.trim().length > 2) {
@@ -194,18 +166,6 @@ export default function AppHeader() {
       </div>
 
         <div className="flex items-center gap-2">
-            <Popover onOpenChange={(open) => { if (open) setHasUnread(false) }}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full relative">
-                  {hasUnread && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />}
-                  <Bell className="h-5 w-5" />
-                  <span className="sr-only">Toggle notifications</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-96 p-0" align="end">
-                  <NotificationCenter />
-              </PopoverContent>
-            </Popover>
           <Separator orientation='vertical' className='h-8 mx-2' />
           <UserNav />
         </div>

@@ -7,6 +7,7 @@ import { Firestore } from 'firebase/firestore';
 import { Database } from 'firebase/database';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { Messaging } from 'firebase/messaging';
+import { Performance } from 'firebase/performance';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
 interface FirebaseProviderProps {
@@ -16,6 +17,7 @@ interface FirebaseProviderProps {
   auth: Auth;
   database: Database;
   messaging: Messaging;
+  performance: Performance;
 }
 
 // Internal state for user authentication
@@ -33,6 +35,7 @@ export interface FirebaseContextState {
   auth: Auth | null; // The Auth service instance
   database: Database | null;
   messaging: Messaging | null;
+  performance: Performance | null;
   // User authentication state
   user: User | null;
   isUserLoading: boolean; // True during initial auth check
@@ -46,6 +49,7 @@ export interface FirebaseServicesAndUser {
   auth: Auth;
   database: Database;
   messaging: Messaging;
+  performance: Performance;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -70,7 +74,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
   database,
-  messaging
+  messaging,
+  performance
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
@@ -102,7 +107,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
-    const servicesAvailable = !!(firebaseApp && firestore && auth && database && messaging);
+    const servicesAvailable = !!(firebaseApp && firestore && auth && database && messaging && performance);
     return {
       areServicesAvailable: servicesAvailable,
       firebaseApp: servicesAvailable ? firebaseApp : null,
@@ -110,11 +115,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth: servicesAvailable ? auth : null,
       database: servicesAvailable ? database : null,
       messaging: servicesAvailable ? messaging : null,
+      performance: servicesAvailable ? performance : null,
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
       userError: userAuthState.userError,
     };
-  }, [firebaseApp, firestore, auth, database, messaging, userAuthState]);
+  }, [firebaseApp, firestore, auth, database, messaging, performance, userAuthState]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -135,7 +141,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.database || !context.messaging) {
+  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.database || !context.messaging || !context.performance) {
     throw new Error('Firebase core services not available. Check FirebaseProvider props.');
   }
 
@@ -145,6 +151,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     auth: context.auth,
     database: context.database,
     messaging: context.messaging,
+    performance: context.performance,
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,
@@ -181,6 +188,11 @@ export const useMessaging = (): Messaging => {
   return messaging;
 };
 
+/** Hook to access Firebase Performance instance. */
+export const usePerformance = (): Performance => {
+  const { performance } = useFirebase();
+  return performance;
+};
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 

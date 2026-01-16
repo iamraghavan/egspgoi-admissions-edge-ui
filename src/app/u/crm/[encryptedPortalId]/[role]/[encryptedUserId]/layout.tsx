@@ -13,7 +13,6 @@ import { SessionTimeoutProvider, useSessionTimeout } from '@/hooks/use-session-t
 import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
 import { setSessionTimeoutContext } from '@/lib/session-context';
 import { initializeSessionTimer } from '@/lib/session-timer';
-import { requestNotificationPermission } from '@/lib/notifications';
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -24,7 +23,6 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeSessionTimer();
-    requestNotificationPermission();
   }, []);
 
   return (
