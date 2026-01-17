@@ -4,6 +4,7 @@ import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardHeader, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import placeholderImagesData from '@/lib/placeholder-images.json';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -13,10 +14,17 @@ export default function LoginPage() {
   const loginImage = placeholderImagesData.placeholderImages.find(p => p.id === "login-background");
 
   return (
-    <div 
-      className="w-full min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
-      style={{ backgroundImage: `url(${loginImage?.imageUrl})` }}
-    >
+    <div className="w-full min-h-screen relative flex items-center justify-center p-4">
+       {loginImage && (
+        <Image
+          src={loginImage.imageUrl}
+          alt={loginImage.description}
+          fill
+          priority
+          className="object-cover"
+          data-ai-hint="university campus"
+        />
+      )}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
       <Card className="mx-auto max-w-sm w-full z-10">
         <CardHeader className="text-center">
