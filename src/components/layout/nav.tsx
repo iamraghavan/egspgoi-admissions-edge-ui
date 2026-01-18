@@ -143,7 +143,8 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     if (activeCollapsible && !openCollapsibles.includes(activeCollapsible.title)) {
       setOpenCollapsibles(prev => [...prev, activeCollapsible.title]);
     }
-  }, [pathname, roleSlug, encryptedUserId, visibleNavItems, openCollapsibles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, roleSlug, encryptedUserId]);
   
   const toggleCollapsible = (title: string) => {
     setOpenCollapsibles(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
@@ -155,15 +156,13 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     const isActive = pathname === href || (item.title === 'Leads' && pathname.includes('/leads'));
 
     const commonClasses = cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-        isActive && "bg-muted text-primary",
-        isMobile && "text-base",
-        !isExpanded && "justify-center"
+        "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
+        isActive && "bg-muted text-primary"
     );
     
     const content = (
         <>
-            {item.icon && <item.icon className="h-4 w-4" />}
+            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
             <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
         </>
     );
@@ -173,7 +172,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn( "h-9 w-9", commonClasses)}>
+                         <Link href={href} className={cn(commonClasses, "h-9 w-9 justify-center p-0")}>
                             {content}
                         </Link>
                     </TooltipTrigger>
@@ -185,7 +184,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         )
     }
 
-    return <Link key={item.title} href={href} className={commonClasses}>{content}</Link>
+    return <Link key={item.title} href={href} className={cn(commonClasses, "px-3")}>{content}</Link>
   }
 
   const renderCollapsible = (item: NavItem) => {
@@ -236,7 +235,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         <TooltipProvider key={item.title}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-9 w-9 justify-center", "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
+                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-9 w-9 justify-center p-0 flex items-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
                          <item.icon className="h-4 w-4" />
                     </Link>
                 </TooltipTrigger>
@@ -249,9 +248,6 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   const renderNavItem = (item: NavItem) => {
-    if (item.subItems && item.title === 'CMS' && userRole === 'Super Admin') {
-        return renderCollapsible(item);
-    }
     if (item.subItems) {
         return renderCollapsible(item);
     }
@@ -264,4 +260,3 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     </nav>
   );
 }
-

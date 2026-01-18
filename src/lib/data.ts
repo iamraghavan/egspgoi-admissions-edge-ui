@@ -2,7 +2,7 @@
 
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site } from './types';
 import { subDays, subHours, format } from 'date-fns';
-import { getProfile, roleIdToNameMap } from './auth';
+import { getProfile } from './auth';
 import { apiClient } from './api-client';
 
 const parseCustomDate = (dateString: string | null | undefined): string => {
@@ -43,6 +43,12 @@ const parseCustomDate = (dateString: string | null | undefined): string => {
         console.error("Could not parse date:", dateString, e);
         return new Date().toISOString(); // Fallback to current date on parsing failure
     }
+};
+
+const roleIdToNameMap: Record<string, Role> = {
+    "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
+    "5ad3c8c2-28f5-4685-848c-3b07ffe1d6e3": "Admission Executive",
+    "1847e5ff-ca6c-46b9-8cce-993f69b90ff5": "Super Admin", // Assuming this is Super Admin
 };
 
 type ApiPaginatedResponse = {
@@ -701,7 +707,7 @@ export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
         body: JSON.stringify(siteData),
     });
     if (error) throw new Error(error.message);
-    return data;
+    return data.data;
 };
 
 export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
@@ -710,7 +716,7 @@ export const updateSite = async (siteId: string, siteData: Partial<Site>): Promi
         body: JSON.stringify(siteData),
     });
     if (error) throw new Error(error.message);
-    return data;
+    return data.data;
 };
 
 export const deleteSite = async (siteId: string): Promise<void> => {
