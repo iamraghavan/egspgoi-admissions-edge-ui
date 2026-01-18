@@ -74,9 +74,6 @@ export const getLeads = async (
     const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
     if(error){
-        if (error.status === 401 || error.status === 403) {
-            return { leads: [], meta: null, error };
-        }
         throw new Error(error.message || 'Failed to fetch leads');
     }
     
@@ -152,7 +149,9 @@ export const uploadLeads = async (file: File): Promise<{ message: string }> => {
 
 export const getLeadNotes = async (leadId: string): Promise<Note[]> => {
     const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/api/v1/leads/${leadId}/notes`);
-    if(error) throw new Error(error.message);
+    if(error) {
+        throw new Error(error.message);
+    }
     
     return (data?.data || []).map((note: any) => ({
         id: note.note_id,
@@ -297,7 +296,9 @@ export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolv
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
     const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/campaigns');
-    if(error) throw new Error(error.message);
+    if(error) {
+        throw new Error(error.message);
+    }
     return data!.data.map((c: any) => ({
         ...c,
         budget: c.settings?.budget_daily || 0,
@@ -307,7 +308,7 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`);
     if(error) {
-        if (error.status === 404) {
+        if (error.status === 401 || error.status === 403 || error.status === 404) {
             return null;
         }
         throw new Error(error.message);
@@ -441,9 +442,6 @@ export const getUserById = async (id: string): Promise<User | null> => {
 export const getUsers = async (): Promise<User[]> => {
     const { data, error } = await apiClient<any[]>(`/api/v1/users`);
     if (error) {
-        if (error.status === 401 || error.status === 403) {
-            return []; // Gracefully return empty array on auth errors
-        }
         throw new Error(error.message || 'Failed to fetch users');
     }
     const users = Array.isArray(data) ? data : [];
@@ -705,10 +703,10 @@ export const getSites = async (): Promise<Site[]> => {
 
 
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
+    const apiKey = `public_key_${Date.now()}${Math.random().toString(36).substring(2, 8)}`;
     const payload = {
-        name: siteData.name,
-        domain: siteData.domain,
-        settings: siteData.settings,
+        ...siteData,
+        api_key: apiKey,
     };
     const { data, error } = await apiClient<{ data: Site }>('/api/v1/cms/admin/sites', {
         method: 'POST',

@@ -49,12 +49,6 @@ export default function LeadPrintPage() {
         setIsClient(true);
     }, []);
 
-
-    const handleLogout = useCallback(() => {
-        logout();
-        router.push('/');
-    }, [router]);
-
     useEffect(() => {
         if (!isClient) return;
 
@@ -79,27 +73,18 @@ export default function LeadPrintPage() {
                 }
             } catch (error: any) {
                 console.error("Failed to fetch lead details", error);
-                if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                    toast({
-                        variant: "destructive",
-                        title: "Session Expired",
-                        description: "Your session has expired. Please log in again.",
-                    });
-                    handleLogout();
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Failed to fetch lead",
-                        description: error.message || "An unexpected error occurred.",
-                    });
-                }
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch lead",
+                    description: error.message || "An unexpected error occurred.",
+                });
             } finally {
                 setLoading(false);
             }
         };
 
         fetchLeadDetails();
-    }, [params.leadId, toast, handleLogout, isClient]);
+    }, [params.leadId, toast, isClient]);
     
     const handlePrint = () => {
         window.print();

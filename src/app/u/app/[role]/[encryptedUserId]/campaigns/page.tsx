@@ -37,12 +37,7 @@ export default function CampaignsPage() {
             if(isMounted) setCampaigns(fetchedCampaigns);
         } catch (error: any) {
             if (isMounted) {
-                if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-                    toast({ variant: "destructive", title: "Session Expired", description: "Your session has expired. Please log in again." });
-                    handleLogout();
-                } else {
-                    toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
-                }
+                toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
             }
         } finally {
             if(isMounted) setLoading(false);
@@ -51,7 +46,7 @@ export default function CampaignsPage() {
         return () => {
             isMounted = false;
         };
-    }, [toast, handleLogout]);
+    }, [toast]);
 
     useEffect(() => {
         fetchCampaigns();

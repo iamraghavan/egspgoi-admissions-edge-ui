@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +29,9 @@ const formSchema = z.object({
     theme_color: z.string().optional(),
     logo: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   }),
+  seo_global: z.object({
+    title_suffix: z.string().optional().or(z.literal('')),
+  }),
 });
 
 export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFormDialogProps) {
@@ -47,12 +51,16 @@ export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFor
                         theme_color: site.settings?.theme_color || '#000000',
                         logo: site.settings?.logo || '',
                     },
+                    seo_global: {
+                        title_suffix: site.seo_global?.title_suffix || '',
+                    },
                 });
             } else {
                 form.reset({
                     name: '',
                     domain: '',
                     settings: { theme_color: '#000000', logo: '' },
+                    seo_global: { title_suffix: '' },
                 });
             }
         }
@@ -95,6 +103,15 @@ export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFor
                                 )}/>
                                 <FormField control={form.control} name="settings.logo" render={({ field }) => (
                                     <FormItem><FormLabel>Logo URL (Optional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-md font-medium mb-2 border-b pb-2">SEO</h3>
+                            <div className="grid md:grid-cols-1 gap-4 mt-4">
+                               <FormField control={form.control} name="seo_global.title_suffix" render={({ field }) => (
+                                    <FormItem><FormLabel>Title Suffix</FormLabel><FormControl><Input {...field} placeholder="e.g. | My Awesome Blog" /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                         </div>
