@@ -14,6 +14,7 @@ import {
   Landmark,
   UserCog,
   Bell,
+  BookText,
 } from 'lucide-react';
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
@@ -58,7 +59,13 @@ const navItems: NavItem[] = [
     icon: Landmark,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
   },
-    {
+  {
+    title: 'CMS',
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms`,
+    icon: BookText,
+    roles: ['Super Admin'],
+  },
+  {
     title: 'User Management',
     href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/user-management`,
     icon: UserCog,

@@ -182,3 +182,81 @@ export type AppNotification = {
   timestamp: string; // ISO 8601
   data?: Record<string, any>;
 };
+
+// --- CMS Types ---
+
+export type SiteSettings = {
+  theme_color?: string;
+  logo?: string;
+};
+
+export type SiteSeo = {
+  title_suffix?: string;
+};
+
+export type Site = {
+  id: string;
+  name: string;
+  domain: string;
+  api_key: string;
+  settings: SiteSettings;
+  seo_global: SiteSeo;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Category = {
+  id: string;
+  site_id: string;
+  name: string;
+  slug: string;
+  order: number;
+  show_on_menu: boolean;
+};
+
+export type Page = {
+    id: string;
+    site_id: string;
+    title: string;
+    slug: string;
+    content: string;
+    location: 'header' | 'footer' | 'none';
+    status: 'published' | 'draft';
+    order: number;
+    seo: {
+        meta_title?: string;
+        meta_description?: string;
+    };
+};
+
+export type Post = {
+    id: string;
+    site_id: string;
+    title: string;
+    slug: string;
+    summary: string;
+    content: string;
+    category_id: string;
+    tags: string[];
+    status: 'published' | 'draft';
+    video?: {
+        url?: string;
+        embed_code?: string;
+    };
+    seo: {
+        meta_title?: string;
+        keywords?: string;
+    };
+    featured_image_url?: string;
+};
+
+export type Ad = {
+    id: string;
+    site_id: string;
+    space_key: string;
+    type: 'image' | 'code';
+    image_url?: string;
+    target_url?: string;
+    code_block?: string;
+    status: 'active' | 'inactive';
+};

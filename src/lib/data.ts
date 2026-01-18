@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile, roleIdToNameMap } from './auth';
 import { apiClient } from './api-client';
@@ -685,3 +685,37 @@ export async function markAllNotificationsAsRead(): Promise<void> {
         console.error("Failed to mark all notifications as read:", error.message);
     }
 }
+
+
+// --- CMS DATA FUNCTIONS ---
+
+export const getSites = async (): Promise<Site[]> => {
+    const { data, error } = await apiClient<any>('/cms/admin/sites');
+    if (error) throw new Error(error.message);
+    return data.data;
+};
+
+export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
+    const { data, error } = await apiClient<any>('/cms/admin/sites', {
+        method: 'POST',
+        body: JSON.stringify(siteData),
+    });
+    if (error) throw new Error(error.message);
+    return data;
+};
+
+export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
+    const { data, error } = await apiClient<any>(`/cms/admin/sites/${siteId}`, {
+        method: 'PUT',
+        body: JSON.stringify(siteData),
+    });
+    if (error) throw new Error(error.message);
+    return data;
+};
+
+export const deleteSite = async (siteId: string): Promise<void> => {
+    const { error } = await apiClient(`/cms/admin/sites/${siteId}`, {
+        method: 'DELETE',
+    });
+    if (error) throw new Error(error.message);
+};
