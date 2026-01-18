@@ -161,7 +161,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-10 w-10 p-0 flex items-center justify-center")}>
+                         <Link href={href} className={cn(commonClasses, "h-9 w-9 p-0 flex items-center justify-center")}>
                             <item.icon className="h-5 w-5" />
                         </Link>
                     </TooltipTrigger>
@@ -233,7 +233,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
                 <TooltipTrigger asChild>
                     <div
                       className={cn(
-                          "flex h-10 w-10 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary cursor-pointer",
+                          "flex h-9 w-9 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary cursor-pointer",
                           isAnySubItemActive && "bg-muted text-primary"
                       )}
                       onClick={() => toggleCollapsible(item.title)}

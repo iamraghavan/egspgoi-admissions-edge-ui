@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -694,11 +694,11 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites');
+    const { data: responseData, error } = await apiClient<any>('/api/v1/cms/admin/sites');
     if (error) {
         throw new Error(error.message);
     }
-    const sites = (Array.isArray(data) ? data : data?.data) || [];
+    const sites = (Array.isArray(responseData) ? responseData : responseData?.data) || [];
     return sites.map((site: any) => ({
         ...site,
         status: site.verification?.status || 'pending',
@@ -756,4 +756,41 @@ export const verifySite = async (siteId: string): Promise<any> => {
     throw new Error(error.message);
   }
   return data;
+};
+
+// --- CMS CATEGORY FUNCTIONS ---
+
+export const getCategories = async (siteId: string): Promise<Category[]> => {
+    if (!siteId) return [];
+    const { data, error } = await apiClient<any>(`/api/v1/cms/admin/categories?siteId=${siteId}`);
+    if (error) {
+        throw new Error(error.message);
+    }
+    const categories = (Array.isArray(data) ? data : data?.data) || [];
+    return categories;
+};
+
+export const createCategory = async (categoryData: Partial<Category>): Promise<Category> => {
+    const { data, error } = await apiClient<{ data: any }>('/api/v1/cms/admin/categories', {
+        method: 'POST',
+        body: JSON.stringify(categoryData),
+    });
+    if (error) throw new Error(error.message);
+    return data!.data;
+};
+
+export const updateCategory = async (categoryId: string, categoryData: Partial<Category>): Promise<Category> => {
+    const { data, error } = await apiClient<{ data: any }>(`/api/v1/cms/admin/categories/${categoryId}`, {
+        method: 'PUT',
+        body: JSON.stringify(categoryData),
+    });
+    if (error) throw new Error(error.message);
+    return data!.data;
+};
+
+export const deleteCategory = async (categoryId: string): Promise<void> => {
+    const { error } = await apiClient(`/api/v1/cms/admin/categories/${categoryId}`, {
+        method: 'DELETE',
+    });
+    if (error) throw new Error(error.message);
 };

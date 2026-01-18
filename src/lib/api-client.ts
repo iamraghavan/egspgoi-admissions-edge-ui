@@ -1,11 +1,12 @@
 
 
-import { getAuthHeaders } from './auth';
+import { getAuthHeaders, logout } from './auth';
+import { toast } from '@/hooks/use-toast';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app";
 
 type ApiResult<T> = {
-    data: T | null; // Allow data to be null on error
+    data: T | null; 
     error: { message: string, status: number, [key: string]: any } | null;
 }
 
@@ -16,7 +17,7 @@ export async function apiClient<T>(
 ): Promise<ApiResult<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    const headers: HeadersInit = { ...options.headers };
+    let headers: HeadersInit = { ...options.headers };
 
     if (options.body && !(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json';
@@ -33,13 +34,18 @@ export async function apiClient<T>(
         const response = await fetch(url, finalOptions);
         
         if (response.status === 401 && !isPublic) {
-            // Don't throw, just return the error. Let the caller decide how to handle it.
+            // Instead of logging out, just show a toast.
+            // The user can continue working with potentially stale data or choose to log out.
+            toast({
+                variant: 'destructive',
+                title: 'Session Expired',
+                description: 'Your session has expired. Please log in again to ensure data is up-to-date.',
+            });
             return { data: null, error: { message: 'Your session has expired. Please log in again.', status: 401 } };
         }
         
-        // Handle cases with no content, like a 204 response
         if (response.status === 204 || response.headers.get('content-length') === '0') {
-             return { data: {} as T, error: null }; // Return an empty object as data
+             return { data: {} as T, error: null };
         }
 
         const responseData = await response.json().catch(() => null);
