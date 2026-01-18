@@ -5,14 +5,12 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { getLiveCalls } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { logout } from '@/lib/auth';
 import LiveCallCard from '@/components/calls/live-call-card';
 import { cn } from '@/lib/utils';
 import { isEqual } from 'lodash';
@@ -22,13 +20,7 @@ export default function CallMonitoringPage() {
     const [loadingLiveCalls, setLoadingLiveCalls] = useState(true);
     
     const { toast } = useToast();
-    const router = useRouter();
 
-    const handleLogout = useCallback(() => {
-        logout();
-        router.push('/');
-    }, [router]);
-    
     const fetchLiveCalls = useCallback(async () => {
         try {
             // Only show initial loading spinner
@@ -50,14 +42,11 @@ export default function CallMonitoringPage() {
 
         } catch (error: any) {
             console.error("Failed to fetch live calls:", error);
-            if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token') || error.message.includes('Session expired')) {
-                 toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
-                 handleLogout();
-            }
+            toast({ variant: "destructive", title: "Failed to Fetch Live Calls", description: error.message });
         } finally {
             setLoadingLiveCalls(false);
         }
-    }, [handleLogout, toast, liveCalls.length]);
+    }, [toast, liveCalls.length]);
 
     useEffect(() => {
         fetchLiveCalls();

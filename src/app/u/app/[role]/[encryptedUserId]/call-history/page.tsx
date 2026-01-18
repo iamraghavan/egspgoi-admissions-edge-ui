@@ -8,7 +8,6 @@ import PageHeader from "@/components/page-header";
 import { callRecordsColumns } from "@/components/calls/records-columns";
 import { getCallRecords, getUsers } from "@/lib/data";
 import { useToast } from '@/hooks/use-toast';
-import { logout } from '@/lib/auth';
 import type { User } from '@/lib/types';
 import type { DateRange as DateRangeType } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
@@ -45,12 +44,6 @@ export default function CallHistoryPage() {
     const [playingRecording, setPlayingRecording] = useState<string | null>(null);
 
     const { toast } = useToast();
-    const router = useRouter();
-
-    const handleLogout = useCallback(() => {
-        logout();
-        router.push('/');
-    }, [router]);
     
     const fetchRecords = useCallback(async (isNewSearch = false) => {
         setLoading(true);
@@ -88,25 +81,15 @@ export default function CallHistoryPage() {
                  throw new Error(response.message || 'Failed to fetch records');
             }
         } catch (error: any) {
-             if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token') || error.message.includes('Session expired')) {
-                toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
-                handleLogout();
-            } else {
-                toast({ variant: "destructive", title: "Failed to fetch records", description: error.message });
-            }
+            toast({ variant: "destructive", title: "Failed to fetch records", description: error.message });
         } finally {
             setLoading(false);
         }
-    }, [page, dateRange, direction, agent, toast, handleLogout, records, users]);
+    }, [page, dateRange, direction, agent, toast, records, users]);
 
     useEffect(() => {
         getUsers().then(setUsers).catch(err => {
-            if (err.message.includes('Authentication token') || err.message.includes('Invalid or expired token') || err.message.includes('Session expired')) {
-                 toast({ variant: "destructive", title: "Session Expired", description: "Please log in again." });
-                 handleLogout();
-            } else {
-                toast({ variant: "destructive", title: "Failed to load agents", description: err.message });
-            }
+            toast({ variant: "destructive", title: "Failed to load agents", description: err.message });
         });
         fetchRecords(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps

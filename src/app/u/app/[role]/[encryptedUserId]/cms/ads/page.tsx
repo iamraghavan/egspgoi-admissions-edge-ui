@@ -1,17 +1,6 @@
 
-import PageHeader from "@/components/page-header";
-
-export default function CmsAdsPage() {
-    return (
-        <div className="flex flex-col gap-8">
-            <PageHeader 
-                title="CMS Ads"
-                description="Manage advertisements for your sites."
-            />
-            <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-96">
-                <h3 className="text-xl font-semibold">Coming Soon</h3>
-                <p className="text-muted-foreground mt-2">Ad management functionality will be available here.</p>
-            </div>
-        </div>
-    );
+// This file is a placeholder to prevent routing conflicts.
+// The actual content for this page should be created separately.
+export default function Placeholder() {
+  return null;
 }

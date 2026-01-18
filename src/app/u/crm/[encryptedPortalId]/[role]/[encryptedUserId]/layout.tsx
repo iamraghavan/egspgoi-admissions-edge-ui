@@ -1,3 +1,4 @@
+
 import type { ReactNode } from 'react';
 
 // This is a placeholder layout to prevent routing conflicts.

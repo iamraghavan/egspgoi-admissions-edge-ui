@@ -396,7 +396,7 @@ export const getLiveCalls = async (): Promise<any[]> => {
     if(error) {
         throw new Error(error.message || 'Failed to fetch live calls');
     };
-    return data.data || [];
+    return data?.data || [];
 }
 
 export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
@@ -698,10 +698,6 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 export const getSites = async (): Promise<Site[]> => {
     const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/cms/admin/sites');
     if (error) {
-        if (error.status === 401 || error.status === 403) {
-            // Silently return empty array if not authorized, page will show message
-            return [];
-        }
         throw new Error(error.message);
     }
     return data?.data || [];
@@ -709,12 +705,17 @@ export const getSites = async (): Promise<Site[]> => {
 
 
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
+    const payload = {
+        name: siteData.name,
+        domain: siteData.domain,
+        settings: siteData.settings,
+    };
     const { data, error } = await apiClient<{ data: Site }>('/api/v1/cms/admin/sites', {
         method: 'POST',
-        body: JSON.stringify(siteData),
+        body: JSON.stringify(payload),
     });
     if (error) throw new Error(error.message);
-    return data.data;
+    return data!.data;
 };
 
 export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
@@ -723,7 +724,7 @@ export const updateSite = async (siteId: string, siteData: Partial<Site>): Promi
         body: JSON.stringify(siteData),
     });
     if (error) throw new Error(error.message);
-    return data.data;
+    return data!.data;
 };
 
 export const deleteSite = async (siteId: string): Promise<void> => {

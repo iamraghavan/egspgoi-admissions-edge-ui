@@ -13,7 +13,6 @@ import { globalSearch, getNotificationHistory, markAllNotificationsAsRead } from
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
 import { useRouter, useParams } from 'next/navigation';
-import { logout } from '@/lib/auth';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppSidebarContent } from './app-sidebar';
@@ -48,16 +47,6 @@ export default function AppHeader() {
   const [isNotifOpen, setNotifOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    router.push('/');
-     toast({
-        variant: "destructive",
-        title: "Session Expired",
-        description: "Your session has expired. Please log in again.",
-    });
-  }, [router, toast]);
-  
   const checkUnread = useCallback(async () => {
     try {
         const notifs = await getNotificationHistory();
@@ -84,15 +73,11 @@ export default function AppHeader() {
         setIsSearchOpen(true);
       } catch (error: any) {
         console.error("Search failed:", error);
-        if (error.message.includes('Authentication token') || error.message.includes('Invalid or expired token')) {
-            handleLogout();
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Search Failed",
-                description: error.message || "An unexpected error occurred during search.",
-            });
-        }
+        toast({
+            variant: "destructive",
+            title: "Search Failed",
+            description: error.message || "An unexpected error occurred during search.",
+        });
         setSearchResults([]);
       } finally {
         setIsLoading(false);
@@ -103,7 +88,7 @@ export default function AppHeader() {
     }
   };
 
-  const debouncedSearch = useCallback(debounce(handleSearch, 300), [handleLogout]);
+  const debouncedSearch = useCallback(debounce(handleSearch, 300), []);
 
   useEffect(() => {
     debouncedSearch(searchQuery);
