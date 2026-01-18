@@ -25,24 +25,16 @@ export function AppSidebarContent({ isMobile = false }: { isMobile?: boolean }) 
     const [user, setUser] = useState<User | null>(null);
     const { isManuallyToggled, setManuallyToggled } = useContext(SidebarContext);
 
-    const handleLogout = () => {
-        logout();
-        router.push('/');
-    };
-
     useEffect(() => {
         async function fetchProfile() {
-        try {
-            const profile = await getProfile();
-            if (profile) {
-                setUser(profile);
-            } else {
-                handleLogout();
+            try {
+                const profile = await getProfile();
+                if (profile) {
+                    setUser(profile);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user profile for sidebar", error);
             }
-        } catch (error) {
-            console.error("Failed to fetch user profile for sidebar", error);
-            handleLogout();
-        }
         }
         fetchProfile();
     }, []);

@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -42,12 +43,9 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
         const profile = await getProfile();
         if (profile) {
             setUser(profile);
-        } else {
-            handleLogout();
         }
       } catch (error) {
         console.error("Failed to fetch user profile", error);
-        handleLogout();
       }
     }
     fetchProfile();

@@ -32,6 +32,11 @@ export async function apiClient<T>(
 
         const response = await fetch(url, finalOptions);
         
+        if (response.status === 401 && !isPublic) {
+            // Don't throw, just return the error. Let the caller decide how to handle it.
+            return { data: null, error: { message: 'Your session has expired. Please log in again.', status: 401 } };
+        }
+        
         // Handle cases with no content, like a 204 response
         if (response.status === 204 || response.headers.get('content-length') === '0') {
              return { data: {} as T, error: null }; // Return an empty object as data
@@ -40,9 +45,6 @@ export async function apiClient<T>(
         const responseData = await response.json().catch(() => null);
 
         if (!response.ok) {
-            if (response.status === 401) {
-                 return { data: null, error: { message: 'Your session has expired. Please refresh the page or log in again.', status: 401 } };
-            }
              const errorMessage = responseData?.message || responseData?.error || `Request failed with status ${response.status}`;
              const errorDetails = responseData ? { ...responseData } : {};
              return { data: null, error: { message: errorMessage, status: response.status, ...errorDetails } };

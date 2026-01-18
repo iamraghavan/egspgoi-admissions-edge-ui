@@ -74,7 +74,7 @@ export const getLeads = async (
     const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
     if(error){
-        throw new Error(error.message || 'Failed to fetch leads');
+        return { leads: [], meta: null, error };
     }
     
     if (data && data.success && Array.isArray(data.data)) {
@@ -694,11 +694,16 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/cms/admin/sites');
+    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites');
     if (error) {
         throw new Error(error.message);
     }
-    return data?.data || [];
+    const sites = (Array.isArray(data) ? data : data?.data) || [];
+    return sites.map((site: any) => ({
+        ...site,
+        status: site.verification?.status || 'pending',
+        verification_token: site.verification?.token,
+    }));
 };
 
 
@@ -708,21 +713,31 @@ export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
         ...siteData,
         api_key: apiKey,
     };
-    const { data, error } = await apiClient<{ data: Site }>('/api/v1/cms/admin/sites', {
+    const { data, error } = await apiClient<{ data: any }>('/api/v1/cms/admin/sites', {
         method: 'POST',
         body: JSON.stringify(payload),
     });
     if (error) throw new Error(error.message);
-    return data!.data;
+    const site = data!.data;
+    return {
+        ...site,
+        status: site.verification?.status || 'pending',
+        verification_token: site.verification?.token,
+    };
 };
 
 export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
-    const { data, error } = await apiClient<{ data: Site }>(`/api/v1/cms/admin/sites/${siteId}`, {
+    const { data, error } = await apiClient<{ data: any }>(`/api/v1/cms/admin/sites/${siteId}`, {
         method: 'PUT',
         body: JSON.stringify(siteData),
     });
     if (error) throw new Error(error.message);
-    return data!.data;
+    const site = data!.data;
+     return {
+        ...site,
+        status: site.verification?.status || 'pending',
+        verification_token: site.verification?.token,
+    };
 };
 
 export const deleteSite = async (siteId: string): Promise<void> => {
