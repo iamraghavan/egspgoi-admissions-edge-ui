@@ -1,6 +1,6 @@
 
-import { getAuthHeaders, logout } from './auth';
-import { getSessionTimeoutContext } from './session-context';
+
+import { getAuthHeaders } from './auth';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app";
 
@@ -37,14 +37,9 @@ export async function apiClient<T>(
 
         const response = await fetch(url, finalOptions);
 
-        if (response.status === 401 || response.status === 403) {
-            const sessionContext = getSessionTimeoutContext();
-            if (sessionContext && !sessionContext.isTimeoutDialogOpen) {
-                sessionContext.openTimeoutDialog();
-            } else if (!sessionContext) {
-                console.error("Session context not available to open timeout dialog.");
-                 if (typeof window !== 'undefined') logout();
-            }
+        if ((response.status === 401 || response.status === 403) && !isPublic) {
+            // The token is invalid or expired. We no longer automatically log out.
+            // The UI component that made the call will receive the error and can decide how to handle it.
             return { data: null, error: { message: 'Session expired. Please log in again.', status: response.status }};
         }
 

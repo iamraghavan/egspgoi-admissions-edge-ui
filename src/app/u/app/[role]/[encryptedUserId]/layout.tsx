@@ -3,28 +3,18 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import AppSidebar from '@/components/layout/app-sidebar';
 import AppHeader from '@/components/layout/app-header';
 import { SidebarProvider, SidebarContext } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import InfoMarquee from '@/components/layout/info-marquee';
-import { SessionTimeoutProvider, useSessionTimeout } from '@/hooks/use-session-timeout';
-import { SessionTimeoutDialog } from '@/components/auth/session-timeout-dialog';
-import { setSessionTimeoutContext } from '@/lib/session-context';
-import { initializeSessionTimer } from '@/lib/session-timer';
+
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
   const isExpanded = isManuallyToggled || isHovering;
   
-  const sessionTimeout = useSessionTimeout();
-  setSessionTimeoutContext(sessionTimeout);
-
-  useEffect(() => {
-    initializeSessionTimer();
-  }, []);
-
   return (
     <div className="bg-muted/40 min-h-screen w-full">
       <AppSidebar />
@@ -43,7 +33,6 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
-      <SessionTimeoutDialog />
     </div>
   )
 }
@@ -51,9 +40,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
 export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <SessionTimeoutProvider>
-        <CrmLayoutContent>{children}</CrmLayoutContent>
-      </SessionTimeoutProvider>
+      <CrmLayoutContent>{children}</CrmLayoutContent>
     </SidebarProvider>
   );
 }

@@ -3,7 +3,6 @@
 
 import type { User, UserPreferences, Role } from './types';
 import { apiClient } from './api-client';
-import { startSessionTimer, stopSessionTimer } from './session-timer';
 
 const roleIdToNameMap: Record<string, Role> = {
     "1c71bf70-49cf-410b-8d81-990825bed137": "Admission Manager",
@@ -46,7 +45,6 @@ export async function login(email: string, password: string): Promise<{ accessTo
             if(data.refreshToken) {
                 localStorage.setItem('refreshToken', data.refreshToken);
             }
-            startSessionTimer(data.accessToken); // Start the session timer
             
             // Immediately fetch the full profile to get all details including preferences and correct role
             const fullProfile = await getProfile();
@@ -87,7 +85,6 @@ export async function refreshToken(): Promise<void> {
     if (data && data.accessToken) {
         if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', data.accessToken);
-            startSessionTimer(data.accessToken); // Reset the session timer with the new token
         }
     } else {
         throw new Error('Refresh response did not include a new accessToken.');
@@ -205,5 +202,4 @@ export function logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userProfile');
-    stopSessionTimer(); // Stop the session timer on logout
 }

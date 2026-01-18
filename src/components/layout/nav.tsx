@@ -159,21 +159,14 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
         isActive && "bg-muted text-primary"
     );
-    
-    const content = (
-        <>
-            {item.icon && <item.icon className="h-6 w-6 shrink-0" />}
-            <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
-        </>
-    );
 
     if (!isExpanded && !isMobile) {
         return (
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-10 w-10 justify-center p-0")}>
-                            {content}
+                         <Link href={href} className={cn(commonClasses, "h-10 w-10 items-center justify-center")}>
+                            <item.icon className="h-6 w-6" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -183,6 +176,13 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
             </TooltipProvider>
         )
     }
+
+    const content = (
+        <>
+            {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+            <span className="truncate">{item.title}</span>
+        </>
+    );
 
     return <Link key={item.title} href={href} className={cn(commonClasses, "px-3")}>{content}</Link>
   }
@@ -197,7 +197,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
                 (isAnySubItemActive || isOpen) && "text-primary"
             )}>
             <div className="flex items-center gap-3">
-                <item.icon className="h-6 w-6" />
+                <item.icon className="h-5 w-5" />
                 <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
             </div>
             <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
@@ -235,7 +235,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         <TooltipProvider key={item.title}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-10 w-10 justify-center p-0 flex items-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
+                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
                          <item.icon className="h-6 w-6" />
                     </Link>
                 </TooltipTrigger>
@@ -255,7 +255,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   return (
-    <nav className={cn("grid gap-1 text-sm font-medium", isMobile ? "p-4" : "p-2 py-4", isExpanded ? "items-start" : "items-center")}>
+    <nav className={cn("grid gap-1 text-sm font-medium p-2 py-4", isMobile && "p-4")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );

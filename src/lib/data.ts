@@ -696,9 +696,9 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites');
-    if (error) throw new Error(error.message);
-    return data.data;
+    // Stubbing out this function to prevent session expired errors
+    // while the backend permissions are being addressed.
+    return Promise.resolve([]);
 };
 
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {

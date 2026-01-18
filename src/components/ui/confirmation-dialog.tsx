@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -8,8 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldAlert } from 'lucide-react';
-import { login } from '@/lib/auth';
-import { getProfile } from '@/lib/auth';
+import { login, getProfile } from '@/lib/auth';
 
 
 interface ConfirmationDialogProps {
