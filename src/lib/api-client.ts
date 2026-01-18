@@ -2,7 +2,7 @@
 import { getAuthHeaders, logout } from './auth';
 import { getSessionTimeoutContext } from './session-context';
 
-const API_BASE_URL = "https://cms-egspgoi.vercel.app/api/v1";
+const API_BASE_URL = "https://cms-egspgoi.vercel.app";
 
 type ApiResult<T> = {
     data: T;

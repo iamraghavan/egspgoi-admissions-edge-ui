@@ -63,7 +63,7 @@ export const getLeads = async (
     if (filters.endDate) params.append('endDate', format(filters.endDate, 'yyyy-MM-dd'));
     if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
 
-    const url = `/leads?${params.toString()}`;
+    const url = `/api/v1/leads?${params.toString()}`;
     
     const { data, error } = await apiClient<ApiPaginatedResponse>(url, { method: 'GET' });
 
@@ -102,7 +102,7 @@ export const getLeads = async (
 };
 
 export const createLead = async (leadData: { name: string; email: string; phone: string; college: string; course: string; }): Promise<Lead> => {
-     const { data, error } = await apiClient<Lead>('/leads', {
+     const { data, error } = await apiClient<Lead>('/api/v1/leads', {
         method: 'POST',
         body: JSON.stringify({
             ...leadData,
@@ -122,7 +122,7 @@ export const updateLead = async (leadId: string, leadData: Partial<Lead>): Promi
         delete leadToUpdate.agent_id;
     }
     
-    const { data, error } = await apiClient<Lead>(`/leads/${leadId}`, {
+    const { data, error } = await apiClient<Lead>(`/api/v1/leads/${leadId}`, {
         method: 'PUT',
         body: JSON.stringify(leadToUpdate),
     });
@@ -135,7 +135,7 @@ export const uploadLeads = async (file: File): Promise<{ message: string }> => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const { data, error } = await apiClient<{ message: string }>('/leads/bulk/upload', {
+  const { data, error } = await apiClient<{ message: string }>('/api/v1/leads/bulk/upload', {
     method: 'POST',
     body: formData,
   });
@@ -145,7 +145,7 @@ export const uploadLeads = async (file: File): Promise<{ message: string }> => {
 };
 
 export const getLeadNotes = async (leadId: string): Promise<Note[]> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/leads/${leadId}/notes`);
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/api/v1/leads/${leadId}/notes`);
     if(error) throw new Error(error.message);
     
     return (data?.data || []).map((note: any) => ({
@@ -161,7 +161,7 @@ export const getLeadNotes = async (leadId: string): Promise<Note[]> => {
 
 
 export const addLeadNote = async (leadId: string, content: string): Promise<Note> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any }>(`/leads/${leadId}/notes`, {
+    const { data, error } = await apiClient<{ success: boolean; data: any }>(`/api/v1/leads/${leadId}/notes`, {
         method: 'POST',
         body: JSON.stringify({ content }),
     });
@@ -180,7 +180,7 @@ export const addLeadNote = async (leadId: string, content: string): Promise<Note
 };
 
 export const getLeadCallLogs = async (leadId: string): Promise<CallLog[]> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/leads/${leadId}/call-logs`);
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>(`/api/v1/leads/${leadId}/call-logs`);
     if (error) {
         throw new Error(error.message);
     }
@@ -192,7 +192,7 @@ export const getLeadCallLogs = async (leadId: string): Promise<CallLog[]> => {
 };
 
 export const updateLeadStatus = async (leadId: string, status: LeadStatus): Promise<void> => {
-     const { error } = await apiClient(`/leads/${leadId}/status`, {
+     const { error } = await apiClient(`/api/v1/leads/${leadId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: status }),
     });
@@ -207,7 +207,7 @@ export const initiateCall = async (leadId: string): Promise<string> => {
         throw new Error("Caller ID not found in your profile. Please update your settings.");
     }
 
-    const { data, error } = await apiClient<any>(`/leads/${leadId}/call`, {
+    const { data, error } = await apiClient<any>(`/api/v1/leads/${leadId}/call`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: callerId }),
     });
@@ -227,7 +227,7 @@ export const initiateCall = async (leadId: string): Promise<string> => {
 
 
 export const transferLead = async (leadId: string, newAgentId: string): Promise<any> => {
-    const { data, error } = await apiClient(`/leads/${leadId}/transfer`, {
+    const { data, error } = await apiClient(`/api/v1/leads/${leadId}/transfer`, {
         method: 'POST',
         body: JSON.stringify({ new_agent_id: newAgentId })
     });
@@ -236,7 +236,7 @@ export const transferLead = async (leadId: string, newAgentId: string): Promise<
 };
 
 export const bulkTransferLeads = async (leadIds: string[], newAgentId: string): Promise<any> => {
-    const { data, error } = await apiClient('/leads/bulk-transfer', {
+    const { data, error } = await apiClient('/api/v1/leads/bulk-transfer', {
         method: 'POST',
         body: JSON.stringify({ lead_ids: leadIds, new_agent_id: newAgentId })
     });
@@ -245,7 +245,7 @@ export const bulkTransferLeads = async (leadIds: string[], newAgentId: string): 
 };
 
 export const deleteLead = async (leadId: string, type: 'soft' | 'hard' = 'soft'): Promise<void> => {
-    let url = `/leads/${leadId}`;
+    let url = `/api/v1/leads/${leadId}`;
     if (type === 'hard') {
         url += '?type=hard';
     }
@@ -257,7 +257,7 @@ export const deleteLead = async (leadId: string, type: 'soft' | 'hard' = 'soft')
 
 
 export const getLeadById = async (id: string): Promise<{data: Lead | null, error: any}> => {
-    const { data, error } = await apiClient<{ success: boolean, data: any }>(`/leads/${id}`, { method: 'GET' });
+    const { data, error } = await apiClient<{ success: boolean, data: any }>(`/api/v1/leads/${id}`, { method: 'GET' });
     if(error) return { data: null, error };
     if (data && data.success && data.data) {
         const lead = data.data;
@@ -290,7 +290,7 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
 export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Interested", "Enrolled", "Failed"]);
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/campaigns');
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/campaigns');
     if(error) throw new Error(error.message);
     return data!.data.map((c: any) => ({
         ...c,
@@ -299,7 +299,7 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
 };
 
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
-    const { data, error } = await apiClient<any>(`/campaigns/${id}`);
+    const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`);
     if(error) {
         if (error.status === 404) {
             return null;
@@ -318,7 +318,7 @@ export const getCampaignById = async (id: string): Promise<Campaign | null> => {
 };
 
 export const createCampaign = async (campaignData: Partial<Campaign>): Promise<Campaign> => {
-     const { data, error } = await apiClient<any>('/campaigns', {
+     const { data, error } = await apiClient<any>('/api/v1/campaigns', {
         method: 'POST',
         body: JSON.stringify(campaignData),
     });
@@ -331,7 +331,7 @@ export const createCampaign = async (campaignData: Partial<Campaign>): Promise<C
 };
 
 export const updateCampaign = async (id: string, campaignData: Partial<Campaign>): Promise<Campaign> => {
-    const { data, error } = await apiClient<any>(`/campaigns/${id}`, {
+    const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`, {
         method: 'PUT',
         body: JSON.stringify(campaignData),
     });
@@ -344,7 +344,7 @@ export const updateCampaign = async (id: string, campaignData: Partial<Campaign>
 }
 
 export const updateCampaignStatus = async (id: string, status: CampaignStatus): Promise<Campaign> => {
-    const { data, error } = await apiClient<any>(`/campaigns/${id}/status`, {
+    const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
     });
@@ -357,7 +357,7 @@ export const updateCampaignStatus = async (id: string, status: CampaignStatus): 
 };
 
 export const deleteCampaign = async (id: string): Promise<void> => {
-    const { error } = await apiClient<any>(`/campaigns/${id}`, {
+    const { error } = await apiClient<any>(`/api/v1/campaigns/${id}`, {
         method: 'DELETE',
     });
     if(error) throw new Error(error.message);
@@ -369,7 +369,7 @@ export const uploadAsset = async (assetData: { campaign_id: string; name: string
     formData.append('name', assetData.name);
     formData.append('file', assetData.file);
 
-    const { data, error } = await apiClient<any>('/assets', {
+    const { data, error } = await apiClient<any>('/api/v1/assets', {
         method: 'POST',
         body: formData,
     });
@@ -386,7 +386,7 @@ export const getCalls = async (): Promise<Call[]> => {
 }
 
 export const getLiveCalls = async (): Promise<any[]> => {
-    const { data, error } = await apiClient<any>(`/smartflo/live-calls`);
+    const { data, error } = await apiClient<any>(`/api/v1/smartflo/live-calls`);
     if(error) {
         throw new Error(error.message || 'Failed to fetch live calls');
     };
@@ -419,7 +419,7 @@ export const getAdSpends = async (): Promise<AdSpend[]> => {
 
 export const getUserById = async (id: string): Promise<User | null> => {
     if (!id) return null;
-    const { data, error } = await apiClient<{data: any}>(`/users/${id}`);
+    const { data, error } = await apiClient<{data: any}>(`/api/v1/users/${id}`);
     if (error) {
         return null;
     }
@@ -433,7 +433,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 };
 
 export const getUsers = async (): Promise<User[]> => {
-    const { data, error } = await apiClient<any[]>(`/users`);
+    const { data, error } = await apiClient<any[]>(`/api/v1/users`);
     if (error) {
         if (error.status === 401 || error.status === 403) {
             return []; // Gracefully return empty array on auth errors
@@ -449,7 +449,7 @@ export const getUsers = async (): Promise<User[]> => {
 }
 
 export const createUser = async (userData: Partial<User>): Promise<User> => {
-    const { data, error } = await apiClient<any>(`/users`, {
+    const { data, error } = await apiClient<any>(`/api/v1/users`, {
         method: 'POST',
         body: JSON.stringify(userData),
     });
@@ -462,7 +462,7 @@ export const createUser = async (userData: Partial<User>): Promise<User> => {
 };
 
 export const updateUser = async (userId: string, userData: Partial<User>): Promise<User> => {
-    const { data, error } = await apiClient<any>(`/users/${userId}`, {
+    const { data, error } = await apiClient<any>(`/api/v1/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(userData),
     });
@@ -475,7 +475,7 @@ export const updateUser = async (userId: string, userData: Partial<User>): Promi
 };
 
 export const deleteUser = async (userId: string, type: 'soft' | 'hard'): Promise<void> => {
-    const { error } = await apiClient(`/users/${userId}?type=${type}`, {
+    const { error } = await apiClient(`/api/v1/users/${userId}?type=${type}`, {
         method: 'DELETE',
     });
     if (error) throw new Error(error.message);
@@ -489,7 +489,7 @@ export const getDashboardStats = async (range?: string | number, startDate?: str
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const { data, error } = await apiClient<any>(`/analytics/admin?${params.toString()}`);
+    const { data, error } = await apiClient<any>(`/api/v1/analytics/admin?${params.toString()}`);
     if (error) {
         console.error("Failed to fetch dashboard stats", error.message);
         throw new Error(error.message || 'Failed to fetch dashboard stats');
@@ -503,7 +503,7 @@ export const getExecutiveStats = async (range?: string | number, startDate?: str
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const { data, error } = await apiClient<any>(`/analytics/executive?${params.toString()}`);
+    const { data, error } = await apiClient<any>(`/api/v1/analytics/executive?${params.toString()}`);
     if (error) {
         console.error("Failed to fetch executive stats", error.message);
         throw new Error(error.message || 'Failed to fetch executive stats');
@@ -536,7 +536,7 @@ export async function globalSearch(query: string): Promise<any[]> {
     if (query.trim().length < 3) {
         return [];
     }
-    const { data, error } = await apiClient<any>(`/search?q=${encodeURIComponent(query)}`, {
+    const { data, error } = await apiClient<any>(`/api/v1/search?q=${encodeURIComponent(query)}`, {
         method: 'GET',
     });
 
@@ -567,7 +567,7 @@ export async function globalSearch(query: string): Promise<any[]> {
 
 // Smartflo API integrations
 export const hangupCall = async (callId: string): Promise<any> => {
-    const { data, error } = await apiClient(`/smartflo/call/hangup`, {
+    const { data, error } = await apiClient(`/api/v1/smartflo/call/hangup`, {
         method: 'POST',
         body: JSON.stringify({ call_id: callId }),
     });
@@ -583,7 +583,7 @@ export const dialNumber = async (numberToDial: string): Promise<any> => {
         throw new Error("Agent number not found in profile.");
     }
 
-    const { data, error } = await apiClient(`/smartflo/call/dial`, {
+    const { data, error } = await apiClient(`/api/v1/smartflo/call/dial`, {
         method: 'POST',
         body: JSON.stringify({ agent_number: agentNumber, customer_number: numberToDial }),
     });
@@ -611,7 +611,7 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
         }
     });
 
-    const endpoint = `/smartflo/call/records?${query.toString()}`;
+    const endpoint = `/api/v1/smartflo/call/records?${query.toString()}`;
     
     const { data, error } = await apiClient<any>(endpoint, {
         method: 'GET',
@@ -629,7 +629,7 @@ export const getCallRecords = async (params: GetCallRecordsParams): Promise<any>
 };
 
 export async function saveDeviceToken(token: string): Promise<void> {
-    const { error } = await apiClient('/users/users/device-token', {
+    const { error } = await apiClient('/api/v1/users/users/device-token', {
         method: 'POST',
         body: JSON.stringify({ fcm_token: token }),
     });
@@ -640,7 +640,7 @@ export async function saveDeviceToken(token: string): Promise<void> {
 }
 
 export async function getNotificationHistory(): Promise<AppNotification[]> {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/notifications');
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/notifications');
 
     if (error) {
         console.error("Failed to fetch notification history:", error.message);
@@ -666,7 +666,7 @@ export async function getNotificationHistory(): Promise<AppNotification[]> {
 
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
-    const { error } = await apiClient(`/notifications/${notificationId}/read`, {
+    const { error } = await apiClient(`/api/v1/notifications/${notificationId}/read`, {
         method: 'PATCH',
         body: JSON.stringify({ timestamp: new Date().toISOString() }),
     });
@@ -677,7 +677,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
 }
 
 export async function markAllNotificationsAsRead(): Promise<void> {
-    const { error } = await apiClient('/notifications/read-all', {
+    const { error } = await apiClient('/api/v1/notifications/read-all', {
         method: 'PATCH',
     });
     if (error) {
@@ -690,13 +690,13 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    const { data, error } = await apiClient<any>('/cms/admin/sites');
+    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites');
     if (error) throw new Error(error.message);
     return data.data;
 };
 
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
-    const { data, error } = await apiClient<any>('/cms/admin/sites', {
+    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites', {
         method: 'POST',
         body: JSON.stringify(siteData),
     });
@@ -705,7 +705,7 @@ export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
 };
 
 export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
-    const { data, error } = await apiClient<any>(`/cms/admin/sites/${siteId}`, {
+    const { data, error } = await apiClient<any>(`/api/v1/cms/admin/sites/${siteId}`, {
         method: 'PUT',
         body: JSON.stringify(siteData),
     });
@@ -714,7 +714,7 @@ export const updateSite = async (siteId: string, siteData: Partial<Site>): Promi
 };
 
 export const deleteSite = async (siteId: string): Promise<void> => {
-    const { error } = await apiClient(`/cms/admin/sites/${siteId}`, {
+    const { error } = await apiClient(`/api/v1/cms/admin/sites/${siteId}`, {
         method: 'DELETE',
     });
     if (error) throw new Error(error.message);

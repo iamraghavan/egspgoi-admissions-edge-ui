@@ -15,25 +15,36 @@ import {
   UserCog,
   Bell,
   BookText,
+  Newspaper,
+  PanelTop,
+  FileOutput,
+  BadgePercent,
+  ChevronRight,
 } from 'lucide-react';
 import type { NavItem, Role } from '@/lib/types';
 import { usePathname, useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { SidebarContext } from '../ui/sidebar';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
 
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/dashboard`,
     icon: LayoutDashboard,
-    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance'],
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
   {
     title: 'Leads',
@@ -61,9 +72,16 @@ const navItems: NavItem[] = [
   },
   {
     title: 'CMS',
-    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms`,
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/sites`,
     icon: BookText,
     roles: ['Super Admin'],
+    subItems: [
+        { title: 'Sites', href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/sites` },
+        { title: 'Pages', href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/pages` },
+        { title: 'Posts', href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/posts` },
+        { title: 'Categories', href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/categories` },
+        { title: 'Ads', href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/cms/ads` },
+    ]
   },
   {
     title: 'User Management',
@@ -110,30 +128,53 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   const params = useParams();
   const { role: roleSlug, encryptedUserId } = params as { role: string; encryptedUserId: string };
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
-  const isExpanded = isManuallyToggled || isHovering;
+  const isExpanded = isManuallyToggled || isHovering || isMobile;
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
 
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
+  
+  const [openCollapsibles, setOpenCollapsibles] = useState<string[]>([]);
+
+  useEffect(() => {
+    const activeCollapsible = visibleNavItems.find(item => 
+      item.subItems?.some(sub => pathname.startsWith(sub.href(roleSlug, encryptedUserId)))
+    );
+    if (activeCollapsible && !openCollapsibles.includes(activeCollapsible.title)) {
+      setOpenCollapsibles(prev => [...prev, activeCollapsible.title]);
+    }
+  }, [pathname, roleSlug, encryptedUserId, visibleNavItems, openCollapsibles]);
+  
+  const toggleCollapsible = (title: string) => {
+    setOpenCollapsibles(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
+  }
+
 
   const renderLink = (item: NavItem) => {
     const href = item.href(roleSlug, encryptedUserId);
-    const isActive = pathname.startsWith(href);
+    const isActive = pathname === href || (item.title === 'Leads' && pathname.includes('/leads'));
+
+    const commonClasses = cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+        isActive && "bg-muted text-primary",
+        isMobile && "text-base",
+        !isExpanded && "justify-center"
+    );
+    
+    const content = (
+        <>
+            {item.icon && <item.icon className="h-4 w-4" />}
+            <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
+        </>
+    );
 
     if (!isExpanded && !isMobile) {
         return (
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link
-                            href={href}
-                            className={cn(
-                            "flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary",
-                            isActive && "text-primary bg-muted",
-                            "h-9 w-9"
-                            )}
-                        >
-                            <item.icon className="h-5 w-5" />
+                         <Link href={href} className={cn( "h-9 w-9", commonClasses)}>
+                            {content}
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -144,27 +185,83 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         )
     }
 
-    return (
-         <Link
-            key={item.title}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-muted text-primary",
-              isMobile && "text-base"
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span className={cn("truncate", (isExpanded || isMobile) ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
-          </Link>
-    )
+    return <Link key={item.title} href={href} className={commonClasses}>{content}</Link>
+  }
+
+  const renderCollapsible = (item: NavItem) => {
+      const isOpen = openCollapsibles.includes(item.title);
+      const isAnySubItemActive = item.subItems?.some(sub => pathname.startsWith(sub.href(roleSlug, encryptedUserId)));
+
+      const TriggerContent = () => (
+         <div className={cn(
+                "flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                (isAnySubItemActive || isOpen) && "text-primary"
+            )}>
+            <div className="flex items-center gap-3">
+                <item.icon className="h-4 w-4" />
+                <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
+            </div>
+            <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
+        </div>
+      );
+
+      if (isExpanded) {
+        return (
+            <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleCollapsible(item.title)}>
+                <CollapsibleTrigger asChild>
+                    <button className="w-full">
+                        <TriggerContent />
+                    </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 py-1 pl-7">
+                {item.subItems?.map(subItem => {
+                    const href = subItem.href(roleSlug, encryptedUserId);
+                    const isActive = pathname.startsWith(href);
+                    return (
+                        <Link key={subItem.title} href={href} className={cn(
+                                "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
+                                isActive ? "text-primary" : "",
+                                "pl-4 pr-3" // Adjusted padding
+                            )}>
+                                <span className="truncate">{subItem.title}</span>
+                        </Link>
+                    )
+                })}
+                </CollapsibleContent>
+            </Collapsible>
+        )
+      }
+
+      return (
+        <TooltipProvider key={item.title}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-9 w-9 justify-center", "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
+                         <item.icon className="h-4 w-4" />
+                    </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>{item.title}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+      )
+  }
+
+  const renderNavItem = (item: NavItem) => {
+    if (item.subItems && item.title === 'CMS' && userRole === 'Super Admin') {
+        return renderCollapsible(item);
+    }
+    if (item.subItems) {
+        return renderCollapsible(item);
+    }
+    return renderLink(item);
   }
 
   return (
     <nav className={cn("grid items-start gap-1 text-sm font-medium", isMobile ? "p-4" : "p-2 py-4")}>
-      {visibleNavItems.map(renderLink)}
+      {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );
 }
 
-    

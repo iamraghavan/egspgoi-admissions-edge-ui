@@ -31,7 +31,7 @@ export function getAuthHeaders() {
  * @returns A promise that resolves with the login response data.
  */
 export async function login(email: string, password: string): Promise<{ accessToken: string, user: User }> {
-    const { data, error } = await apiClient<any>('/auth/login', {
+    const { data, error } = await apiClient<any>('/api/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     }, true); // `true` marks this as a public endpoint
@@ -75,7 +75,7 @@ export async function refreshToken(): Promise<void> {
       throw new Error("No refresh token available.");
     }
     
-    const { data, error } = await apiClient<{accessToken: string}>('/auth/refresh', {
+    const { data, error } = await apiClient<{accessToken: string}>('/api/v1/auth/refresh', {
         method: 'POST',
         body: JSON.stringify({ refreshToken })
     });
@@ -118,7 +118,7 @@ export async function getProfile(): Promise<User | null> {
     
     // Always try to fetch the latest profile from the API if a token exists
     if (localStorage.getItem('accessToken')) {
-        const { data: apiResponse, error } = await apiClient<any>('/users/users/profile');
+        const { data: apiResponse, error } = await apiClient<any>('/api/v1/users/users/profile');
         if (error) {
             console.error("Failed to fetch full user profile:", error.message);
             // Return the stale profile from local storage if API fails
@@ -148,7 +148,7 @@ export async function getProfile(): Promise<User | null> {
 }
 
 export async function updateUserProfile(payload: Partial<User>): Promise<User> {
-    const { data, error } = await apiClient<any>('/users/users/profile', {
+    const { data, error } = await apiClient<any>('/api/v1/users/users/profile', {
         method: 'PATCH',
         body: JSON.stringify(payload),
     });
@@ -174,7 +174,7 @@ export async function updateUserProfile(payload: Partial<User>): Promise<User> {
 
 
 export async function updateUserSettings(payload: { preferences: Partial<UserPreferences> }): Promise<any> {
-    const result = await apiClient<{ settings: UserPreferences }>(`/users/auth/settings`, {
+    const result = await apiClient<{ settings: UserPreferences }>(`/api/v1/users/auth/settings`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     });

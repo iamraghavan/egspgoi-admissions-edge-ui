@@ -167,6 +167,7 @@ export type NavItem = {
   href: (role: string, encryptedUserId: string) => string;
   icon: React.ElementType;
   roles: Role[];
+  subItems?: Omit<NavItem, 'roles' | 'icon' | 'subItems'>[];
 };
 
 export type InventoryResource = {
