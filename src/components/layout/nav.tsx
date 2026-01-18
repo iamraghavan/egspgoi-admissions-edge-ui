@@ -162,7 +162,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     
     const content = (
         <>
-            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+            {item.icon && <item.icon className="h-6 w-6 shrink-0" />}
             <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
         </>
     );
@@ -172,7 +172,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-9 w-9 justify-center p-0")}>
+                         <Link href={href} className={cn(commonClasses, "h-10 w-10 justify-center p-0")}>
                             {content}
                         </Link>
                     </TooltipTrigger>
@@ -197,7 +197,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
                 (isAnySubItemActive || isOpen) && "text-primary"
             )}>
             <div className="flex items-center gap-3">
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-6 w-6" />
                 <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
             </div>
             <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
@@ -235,8 +235,8 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         <TooltipProvider key={item.title}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-9 w-9 justify-center p-0 flex items-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
-                         <item.icon className="h-4 w-4" />
+                    <Link href={item.href(roleSlug, encryptedUserId)} className={cn("h-10 w-10 justify-center p-0 flex items-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
+                         <item.icon className="h-6 w-6" />
                     </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -255,7 +255,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   return (
-    <nav className={cn("grid items-start gap-1 text-sm font-medium", isMobile ? "p-4" : "p-2 py-4")}>
+    <nav className={cn("grid gap-1 text-sm font-medium", isMobile ? "p-4" : "p-2 py-4", isExpanded ? "items-start" : "items-center")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );
