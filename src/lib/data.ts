@@ -696,13 +696,20 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    // Stubbing out this function to prevent session expired errors
-    // while the backend permissions are being addressed.
-    return Promise.resolve([]);
+    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/cms/admin/sites');
+    if (error) {
+        if (error.status === 401 || error.status === 403) {
+            // Silently return empty array if not authorized, page will show message
+            return [];
+        }
+        throw new Error(error.message);
+    }
+    return data?.data || [];
 };
 
+
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
-    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites', {
+    const { data, error } = await apiClient<{ data: Site }>('/api/v1/cms/admin/sites', {
         method: 'POST',
         body: JSON.stringify(siteData),
     });
@@ -711,7 +718,7 @@ export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
 };
 
 export const updateSite = async (siteId: string, siteData: Partial<Site>): Promise<Site> => {
-    const { data, error } = await apiClient<any>(`/api/v1/cms/admin/sites/${siteId}`, {
+    const { data, error } = await apiClient<{ data: Site }>(`/api/v1/cms/admin/sites/${siteId}`, {
         method: 'PUT',
         body: JSON.stringify(siteData),
     });
@@ -724,4 +731,15 @@ export const deleteSite = async (siteId: string): Promise<void> => {
         method: 'DELETE',
     });
     if (error) throw new Error(error.message);
+};
+
+export const verifySite = async (siteId: string): Promise<any> => {
+  const { data, error } = await apiClient<any>(`/api/v1/cms/admin/sites/${siteId}/verify`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
 };

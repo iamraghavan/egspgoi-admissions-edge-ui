@@ -12,6 +12,8 @@ import { siteColumns } from '@/components/cms/sites-columns';
 import { SiteFormDialog } from '@/components/cms/site-form-dialog';
 import DataTable from '@/components/leads/data-table';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { SiteVerificationDialog } from '@/components/cms/site-verification-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CmsSitesPage() {
     const [sites, setSites] = useState<Site[]>([]);
@@ -19,6 +21,7 @@ export default function CmsSitesPage() {
     const [isFormOpen, setFormOpen] = useState(false);
     const [selectedSite, setSelectedSite] = useState<Site | null>(null);
     const [siteToDelete, setSiteToDelete] = useState<Site | null>(null);
+    const [siteToVerify, setSiteToVerify] = useState<Site | null>(null);
     const { toast } = useToast();
 
     const fetchSites = useCallback(async () => {
@@ -54,6 +57,10 @@ export default function CmsSitesPage() {
     const handleDelete = (site: Site) => {
         setSiteToDelete(site);
     };
+    
+    const handleVerify = (site: Site) => {
+        setSiteToVerify(site);
+    }
 
     const confirmDelete = async () => {
         if (!siteToDelete) return;
@@ -81,8 +88,9 @@ export default function CmsSitesPage() {
                 await updateSite(selectedSite.id, siteData);
                 toast({ title: 'Site Updated', description: 'Site details saved successfully.' });
             } else {
-                await createSite(siteData);
-                toast({ title: 'Site Created', description: 'New site has been created.' });
+                const newSite = await createSite(siteData);
+                toast({ title: 'Site Created', description: 'Please verify your domain ownership.' });
+                setSiteToVerify(newSite);
             }
             fetchSites();
             return true;
@@ -104,17 +112,34 @@ export default function CmsSitesPage() {
                     Create Site
                 </Button>
             </PageHeader>
-            <DataTable 
-                columns={siteColumns} 
-                data={sites}
-                loading={loading}
-                searchKey="name"
-                searchPlaceholder="Filter by site name or domain..."
-                meta={{
-                    onEdit: handleEdit,
-                    onDelete: handleDelete,
-                }}
-            />
+            {loading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                </div>
+            ) : sites.length > 0 ? (
+                 <DataTable 
+                    columns={siteColumns} 
+                    data={sites}
+                    searchKey="name"
+                    searchPlaceholder="Filter by site name or domain..."
+                    meta={{
+                        onEdit: handleEdit,
+                        onDelete: handleDelete,
+                        onVerify: handleVerify,
+                    }}
+                />
+            ) : (
+                 <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-96">
+                    <h3 className="text-xl font-semibold">No Sites Found</h3>
+                    <p className="text-muted-foreground mt-2">Get started by creating your first site.</p>
+                    <Button onClick={handleCreate} className="mt-4">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Site
+                    </Button>
+                </div>
+            )}
+           
             <SiteFormDialog
                 isOpen={isFormOpen}
                 onOpenChange={setFormOpen}
@@ -129,6 +154,17 @@ export default function CmsSitesPage() {
                     title={`Delete Site: ${siteToDelete.name}`}
                     description="Are you sure you want to permanently delete this site and all of its associated content (pages, posts, etc)? This action is irreversible."
                     confirmText="Permanently Delete"
+                />
+            )}
+            {siteToVerify && (
+                <SiteVerificationDialog
+                    isOpen={!!siteToVerify}
+                    onOpenChange={(isOpen) => !isOpen && setSiteToVerify(null)}
+                    site={siteToVerify}
+                    onVerificationSuccess={() => {
+                        fetchSites();
+                        setSiteToVerify(null);
+                    }}
                 />
             )}
         </div>

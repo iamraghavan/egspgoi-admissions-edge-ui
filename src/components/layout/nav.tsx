@@ -156,7 +156,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
     const isActive = pathname === href || (item.title === 'Leads' && pathname.includes('/leads'));
 
     const commonClasses = cn(
-        "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
+        "flex items-center gap-3 rounded-lg text-muted-foreground transition-all hover:text-primary",
         isActive && "bg-muted text-primary"
     );
 
@@ -165,8 +165,8 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
              <TooltipProvider key={item.title}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-10 w-10 items-center justify-center")}>
-                            <item.icon className="h-6 w-6" />
+                         <Link href={href} className={cn(commonClasses, "h-10 w-10 justify-center")}>
+                            <item.icon className="h-5 w-5" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -184,7 +184,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         </>
     );
 
-    return <Link key={item.title} href={href} className={cn(commonClasses, "px-3")}>{content}</Link>
+    return <Link key={item.title} href={href} className={cn(commonClasses, "px-3 py-2")}>{content}</Link>
   }
 
   const renderCollapsible = (item: NavItem) => {
@@ -236,7 +236,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Link href={item.href(roleSlug, encryptedUserId)} className={cn("flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary", isAnySubItemActive && "bg-muted text-primary")}>
-                         <item.icon className="h-6 w-6" />
+                         <item.icon className="h-5 w-5" />
                     </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -255,7 +255,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   return (
-    <nav className={cn("grid gap-1 text-sm font-medium p-2 py-4", isMobile && "p-4")}>
+    <nav className={cn("grid gap-1 text-sm font-medium", isExpanded ? "p-2 py-4" : "p-2 items-center", isMobile && "p-4")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );

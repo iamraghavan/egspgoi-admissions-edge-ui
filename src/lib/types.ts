@@ -204,7 +204,10 @@ export type Site = {
   seo_global: SiteSeo;
   created_at: string;
   updated_at: string;
+  status: 'pending' | 'verified' | 'failed' | 'active';
+  verification_token?: string;
 };
+
 
 export type Category = {
   id: string;

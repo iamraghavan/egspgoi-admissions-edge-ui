@@ -15,20 +15,18 @@ import type { Site } from '@/lib/types';
 interface SiteFormDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
-    onSubmit: (data: Partial<Site>) => Promise<boolean>;
+    onSubmit: (data: Partial<Site>) => Promise<boolean | Site>;
     site: Site | null;
 }
 
 const formSchema = z.object({
   name: z.string().min(1, "Site name is required"),
-  domain: z.string().min(1, "Domain is required"),
-  api_key: z.string().min(1, "API Key is required"),
+  domain: z.string().min(1, "Domain is required").refine(val => /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/.test(val), {
+      message: "Please enter a valid domain name (e.g., example.com)"
+  }),
   settings: z.object({
     theme_color: z.string().optional(),
-    logo: z.string().optional(),
-  }),
-  seo_global: z.object({
-      title_suffix: z.string().optional(),
+    logo: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   }),
 });
 
@@ -45,22 +43,16 @@ export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFor
                 form.reset({
                     name: site.name || '',
                     domain: site.domain || '',
-                    api_key: site.api_key || '',
                     settings: {
-                        theme_color: site.settings?.theme_color || '',
+                        theme_color: site.settings?.theme_color || '#000000',
                         logo: site.settings?.logo || '',
-                    },
-                    seo_global: {
-                        title_suffix: site.seo_global?.title_suffix || '',
                     },
                 });
             } else {
                 form.reset({
                     name: '',
                     domain: '',
-                    api_key: `public_key_${Date.now()}`, // Generate a simple unique key
                     settings: { theme_color: '#000000', logo: '' },
-                    seo_global: { title_suffix: '' },
                 });
             }
         }
@@ -77,7 +69,7 @@ export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFor
     
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
                     <DialogTitle>{site ? 'Edit Site' : 'Create New Site'}</DialogTitle>
                     <DialogDescription>
@@ -94,27 +86,15 @@ export function SiteFormDialog({ isOpen, onOpenChange, onSubmit, site }: SiteFor
                                 <FormItem><FormLabel>Domain</FormLabel><FormControl><Input {...field} placeholder="blog.example.com" /></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
-                         <FormField control={form.control} name="api_key" render={({ field }) => (
-                            <FormItem><FormLabel>Public API Key</FormLabel><FormControl><Input {...field} readOnly={!!site} /></FormControl><FormMessage /></FormItem>
-                        )}/>
                         
                         <div>
-                            <h3 className="text-md font-medium mb-2 border-b pb-2">Settings</h3>
+                            <h3 className="text-md font-medium mb-2 border-b pb-2">Customization</h3>
                             <div className="grid md:grid-cols-2 gap-4 mt-4">
                                <FormField control={form.control} name="settings.theme_color" render={({ field }) => (
                                     <FormItem><FormLabel>Theme Color</FormLabel><FormControl><Input type="color" {...field} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                                 <FormField control={form.control} name="settings.logo" render={({ field }) => (
-                                    <FormItem><FormLabel>Logo URL</FormLabel><FormControl><Input {...field} placeholder="https://example.com/logo.png" /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                            </div>
-                        </div>
-
-                         <div>
-                            <h3 className="text-md font-medium mb-2 border-b pb-2">Global SEO</h3>
-                            <div className="grid md:grid-cols-1 gap-4 mt-4">
-                               <FormField control={form.control} name="seo_global.title_suffix" render={({ field }) => (
-                                    <FormItem><FormLabel>Title Suffix</FormLabel><FormControl><Input {...field} placeholder="| My Awesome Blog" /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>Logo URL (Optional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                         </div>

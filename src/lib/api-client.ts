@@ -9,7 +9,7 @@ type ApiResult<T> = {
     error: null;
 } | {
     data: null;
-    error: { message: string, status: number };
+    error: { message: string, status: number, [key: string]: any };
 }
 
 export async function apiClient<T>(
@@ -36,24 +36,27 @@ export async function apiClient<T>(
         }
 
         const response = await fetch(url, finalOptions);
-
-        if ((response.status === 401 || response.status === 403) && !isPublic) {
-            // The token is invalid or expired. We no longer automatically log out.
-            // The UI component that made the call will receive the error and can decide how to handle it.
-            return { data: null, error: { message: 'Session expired. Please log in again.', status: response.status }};
+        
+        if (response.status === 401 && !isPublic) {
+            // This indicates an expired or invalid token.
+            // Instead of throwing, we return a structured error.
+            // The calling function can decide how to handle it (e.g., show a toast).
+             return { data: null, error: { message: 'Your session has expired. Please log in again.', status: 401 }};
         }
+
+        const responseData = await response.json().catch(() => null);
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: `Request failed with status ${response.status}` }));
-            return { data: null, error: { message: errorData.message || `Request failed with status ${response.status}`, status: response.status } };
+             const errorMessage = responseData?.message || responseData?.error || `Request failed with status ${response.status}`;
+             const errorDetails = responseData ? { ...responseData } : {};
+             return { data: null, error: { message: errorMessage, status: response.status, ...errorDetails } };
         }
-
+        
         // Handle successful but empty responses (e.g., DELETE, PUT with no content)
         if (response.status === 204 || response.headers.get('content-length') === '0') {
-             return { data: {} as T, error: null };
+             return { data: (responseData || {}) as T, error: null };
         }
 
-        const responseData = await response.json();
         return { data: responseData, error: null };
 
     } catch (error: any) {

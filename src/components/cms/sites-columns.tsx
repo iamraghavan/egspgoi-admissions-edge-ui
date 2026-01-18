@@ -4,9 +4,47 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Site } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Edit, Trash2, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format } from 'date-fns';
+import { Badge } from "../ui/badge";
+
+const StatusBadge = ({ site, onVerifyClick }: { site: Site, onVerifyClick: (site: Site) => void }) => {
+    const status = site.status;
+
+    switch (status) {
+        case 'verified':
+        case 'active':
+            return (
+                <Badge variant="success">
+                    <CheckCircle2 className="mr-2 h-3 w-3" />
+                    Verified
+                </Badge>
+            );
+        case 'pending':
+            return (
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-auto py-0.5 px-2 border-dashed border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
+                    onClick={() => onVerifyClick(site)}
+                >
+                    <Clock className="mr-2 h-3 w-3" />
+                    Pending Verification
+                </Button>
+            );
+        case 'failed':
+             return (
+                <Badge variant="destructive">
+                    <XCircle className="mr-2 h-3 w-3" />
+                    Failed
+                </Badge>
+            );
+        default:
+            return <Badge variant="secondary">{status}</Badge>
+    }
+}
+
 
 export const siteColumns: ColumnDef<Site>[] = [
     {
@@ -27,9 +65,12 @@ export const siteColumns: ColumnDef<Site>[] = [
         )
     },
     {
-        accessorKey: "api_key",
-        header: "API Key",
-        cell: ({ row }) => <code className="text-xs">{row.original.api_key}</code>
+        accessorKey: "status",
+        header: "Verification Status",
+        cell: ({ row, table }) => {
+            const meta = table.options.meta as { onVerify: (site: Site) => void; };
+            return <StatusBadge site={row.original} onVerifyClick={meta.onVerify} />
+        }
     },
     {
         accessorKey: "created_at",
