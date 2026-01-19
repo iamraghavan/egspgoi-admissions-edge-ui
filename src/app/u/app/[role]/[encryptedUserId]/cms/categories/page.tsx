@@ -61,8 +61,10 @@ export default function CmsCategoriesPage() {
     }, [toast, selectedSiteId]);
 
     useEffect(() => {
-        fetchCategories();
-    }, [fetchCategories]);
+        if (selectedSiteId) {
+            fetchCategories();
+        }
+    }, [fetchCategories, selectedSiteId]);
 
     const handleCreate = () => {
         if (!selectedSiteId) {
@@ -101,7 +103,8 @@ export default function CmsCategoriesPage() {
                 await updateCategory(selectedCategory.id, categoryData);
                 toast({ title: 'Category Updated', description: 'Category details saved successfully.' });
             } else {
-                await createCategory(categoryData);
+                if (!siteId) throw new Error("Site ID is required to create a category.");
+                await createCategory({ ...categoryData, site_id: siteId });
                 toast({ title: 'Category Created', description: 'New category has been created.' });
             }
             fetchCategories();
@@ -130,7 +133,7 @@ export default function CmsCategoriesPage() {
                 {loadingSites ? (
                     <Skeleton className="h-10 w-full" />
                 ) : (
-                    <Select onValueChange={setSelectedSiteId} value={selectedSiteId || ''}>
+                    <Select onValueChange={setSelectedSiteId} value={selectedSiteId || ''} disabled={sites.length === 0}>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a site..." />
                         </SelectTrigger>
@@ -158,7 +161,7 @@ export default function CmsCategoriesPage() {
             ) : !loadingSites && (
                  <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-96">
                     <h3 className="text-xl font-semibold">No Site Selected</h3>
-                    <p className="text-muted-foreground mt-2">Please select a site from the dropdown to see its categories.</p>
+                    <p className="text-muted-foreground mt-2">Please select or create a site to manage categories.</p>
                 </div>
             )}
            

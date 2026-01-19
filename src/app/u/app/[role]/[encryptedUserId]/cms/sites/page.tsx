@@ -117,7 +117,7 @@ export default function CmsSitesPage() {
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-64 w-full" />
                 </div>
-            ) : sites.length > 0 ? (
+            ) : (
                  <DataTable 
                     columns={siteColumns} 
                     data={sites}
@@ -129,7 +129,9 @@ export default function CmsSitesPage() {
                         onVerify: handleVerify,
                     }}
                 />
-            ) : (
+            )}
+
+            {sites.length === 0 && !loading && (
                  <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-96">
                     <h3 className="text-xl font-semibold">No Sites Found</h3>
                     <p className="text-muted-foreground mt-2">Get started by creating your first site.</p>

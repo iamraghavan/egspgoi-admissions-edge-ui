@@ -1,4 +1,6 @@
+import { ReactNode } from 'react';
 
-export default function PlaceholderLayout() {
-  return null;
+// This file is a placeholder to prevent routing conflicts.
+export default function PlaceholderLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

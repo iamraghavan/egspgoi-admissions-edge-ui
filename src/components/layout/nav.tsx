@@ -119,12 +119,12 @@ const roleSlugMap: Record<string, Role> = {
     'ae': 'Admission Executive',
 };
 
-export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
+export default function Nav() {
   const pathname = usePathname();
   const params = useParams();
   const { role: roleSlug, encryptedUserId } = params as { role: string; encryptedUserId: string };
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
-  const isExpanded = isManuallyToggled || isHovering || isMobile;
+  const isExpanded = isManuallyToggled || isHovering;
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
 
@@ -149,19 +149,19 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
 
   const renderLink = (item: NavItem) => {
     const href = item.href(roleSlug, encryptedUserId);
-    const isActive = pathname.startsWith(href) && (href.split('/').length === pathname.split('/').length || item.title === "Dashboard");
+    const isActive = pathname.startsWith(href) && (href.split('/').length === pathname.split('/').length || (item.title === "Dashboard" && pathname.endsWith('/dashboard')));
 
     const commonClasses = cn(
-        "flex items-center rounded-lg text-muted-foreground transition-all hover:text-primary",
+        "flex items-center rounded-lg text-muted-foreground transition-colors hover:text-primary",
         isActive && "bg-muted text-primary"
     );
 
-    if (!isExpanded && !isMobile) {
+    if (!isExpanded) {
         return (
-             <TooltipProvider key={item.title}>
+             <TooltipProvider key={item.title} delayDuration={100}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-9 w-9 p-0 flex items-center justify-center")}>
+                         <Link href={href} className={cn(commonClasses, "h-9 w-9 p-0 flex items-center justify-center mx-auto")}>
                             <item.icon className="h-5 w-5" />
                         </Link>
                     </TooltipTrigger>
@@ -173,14 +173,12 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
         )
     }
 
-    const content = (
-        <>
-            {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
-            <span className="truncate">{item.title}</span>
-        </>
+    return (
+      <Link key={item.title} href={href} className={cn(commonClasses, "gap-3 px-3 py-2")}>
+        {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+        <span className="truncate">{item.title}</span>
+      </Link>
     );
-
-    return <Link key={item.title} href={href} className={cn(commonClasses, "gap-3 px-3 py-2")}>{content}</Link>
   }
 
   const renderCollapsible = (item: NavItem) => {
@@ -194,7 +192,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
             )}>
             <div className="flex items-center gap-3">
                 <item.icon className="h-5 w-5 shrink-0" />
-                <span className={cn("truncate", isExpanded ? "opacity-100" : "opacity-0 w-0")}>{item.title}</span>
+                <span className={cn("truncate", !isExpanded && "sr-only")}>{item.title}</span>
             </div>
             <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
         </div>
@@ -216,7 +214,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
                         <Link key={subItem.title} href={href} className={cn(
                                 "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
                                 isActive ? "text-primary" : "",
-                                "pl-4 pr-3" // Adjusted padding
+                                "pl-4 pr-3" 
                             )}>
                                 <span className="truncate">{subItem.title}</span>
                         </Link>
@@ -228,15 +226,15 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
       }
 
       return (
-        <TooltipProvider key={item.title}>
+        <TooltipProvider key={item.title} delayDuration={100}>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div
                       className={cn(
-                          "flex h-9 w-9 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary cursor-pointer",
+                          "flex h-9 w-9 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary cursor-pointer mx-auto",
                           isAnySubItemActive && "bg-muted text-primary"
                       )}
-                      onClick={() => toggleCollapsible(item.title)}
+                      onClick={() => isExpanded ? toggleCollapsible(item.title) : {}}
                     >
                          <item.icon className="h-5 w-5" />
                     </div>
@@ -258,8 +256,9 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   return (
-    <nav className={cn("grid gap-1 text-sm font-medium", isExpanded ? "p-2 py-4" : "flex flex-col gap-1 p-2", isMobile && "p-4")}>
+    <nav className={cn("grid gap-1 text-sm font-medium p-2 py-4")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );
 }
+

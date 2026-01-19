@@ -1,5 +1,4 @@
 
-
 import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
@@ -694,11 +693,11 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 // --- CMS DATA FUNCTIONS ---
 
 export const getSites = async (): Promise<Site[]> => {
-    const { data: responseData, error } = await apiClient<any>('/api/v1/cms/admin/sites');
+    const { data, error } = await apiClient<any>('/api/v1/cms/admin/sites');
     if (error) {
         throw new Error(error.message);
     }
-    const sites = (Array.isArray(responseData) ? responseData : responseData?.data) || [];
+    const sites = (Array.isArray(data) ? data : data?.data) || [];
     return sites.map((site: any) => ({
         ...site,
         status: site.verification?.status || 'pending',
@@ -708,11 +707,10 @@ export const getSites = async (): Promise<Site[]> => {
 
 
 export const createSite = async (siteData: Partial<Site>): Promise<Site> => {
-    const apiKey = `public_key_${Date.now()}${Math.random().toString(36).substring(2, 8)}`;
-    const payload = {
-        ...siteData,
-        api_key: apiKey,
-    };
+    const payload = { ...siteData };
+    if (!payload.api_key) {
+        payload.api_key = `pk_${Date.now()}${Math.random().toString(36).substring(2, 8)}`;
+    }
     const { data, error } = await apiClient<{ data: any }>('/api/v1/cms/admin/sites', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -766,8 +764,7 @@ export const getCategories = async (siteId: string): Promise<Category[]> => {
     if (error) {
         throw new Error(error.message);
     }
-    const categories = (Array.isArray(data) ? data : data?.data) || [];
-    return categories;
+    return (Array.isArray(data) ? data : data?.data) || [];
 };
 
 export const createCategory = async (categoryData: Partial<Category>): Promise<Category> => {

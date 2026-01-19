@@ -8,14 +8,14 @@ import { Search, Menu, Bell } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Separator } from '../ui/separator';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { globalSearch, getNotificationHistory, markAllNotificationsAsRead } from '@/lib/data';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '../ui/command';
 import { useRouter, useParams } from 'next/navigation';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { AppSidebarContent } from './app-sidebar';
+import { SidebarContext } from '../ui/sidebar';
 import { UserIcon, Megaphone, FileText } from 'lucide-react';
 import { debounce, cn } from '@/lib/utils';
 import { NotificationCenter } from '../notifications/notification-center';
@@ -46,6 +46,8 @@ export default function AppHeader() {
   
   const [isNotifOpen, setNotifOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+
+  const { setManuallyToggled } = useContext(SidebarContext);
 
   const checkUnread = useCallback(async () => {
     try {
@@ -117,17 +119,10 @@ export default function AppHeader() {
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-        <Sheet>
-            <SheetTrigger asChild>
-                <Button size="icon" variant="outline" className="sm:hidden">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Toggle Menu</span>
-                </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs p-0">
-                <AppSidebarContent isMobile={true} />
-            </SheetContent>
-        </Sheet>
+        <Button size="icon" variant="outline" className="sm:hidden" onClick={() => setManuallyToggled(true)}>
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
+        </Button>
 
 
       <div className="w-full flex-1">
@@ -200,3 +195,4 @@ export default function AppHeader() {
     </header>
   );
 }
+

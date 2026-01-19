@@ -1,7 +1,21 @@
 
-import { notFound } from 'next/navigation';
+import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
-export default function Placeholder() {
-  notFound();
-  return null;
+export default function CmsAdsPage() {
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeader title="CMS Ads" description="Manage advertisements across your sites.">
+        <Button disabled>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Create Ad
+        </Button>
+      </PageHeader>
+      <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-96">
+        <h3 className="text-xl font-semibold">Ad Management Coming Soon</h3>
+        <p className="text-muted-foreground mt-2">This section is under construction.</p>
+      </div>
+    </div>
+  );
 }

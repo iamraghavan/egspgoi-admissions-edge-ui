@@ -1,5 +1,4 @@
 
-
 import { getAuthHeaders, logout } from './auth';
 import { toast } from '@/hooks/use-toast';
 
@@ -34,12 +33,10 @@ export async function apiClient<T>(
         const response = await fetch(url, finalOptions);
         
         if (response.status === 401 && !isPublic) {
-            // Instead of logging out, just show a toast.
-            // The user can continue working with potentially stale data or choose to log out.
             toast({
                 variant: 'destructive',
                 title: 'Session Expired',
-                description: 'Your session has expired. Please log in again to ensure data is up-to-date.',
+                description: 'Your session has expired. Please log in again.',
             });
             return { data: null, error: { message: 'Your session has expired. Please log in again.', status: 401 } };
         }
