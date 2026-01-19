@@ -1,5 +1,6 @@
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category } from './types';
+
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -787,6 +788,42 @@ export const updateCategory = async (categoryId: string, categoryData: Partial<C
 
 export const deleteCategory = async (categoryId: string): Promise<void> => {
     const { error } = await apiClient(`/api/v1/cms/admin/categories/${categoryId}`, {
+        method: 'DELETE',
+    });
+    if (error) throw new Error(error.message);
+};
+
+// --- CMS PAGE FUNCTIONS ---
+
+export const getPages = async (siteId: string): Promise<Page[]> => {
+    if (!siteId) return [];
+    const { data, error } = await apiClient<any>(`/api/v1/cms/admin/pages?siteId=${siteId}`);
+    if (error) {
+        throw new Error(error.message);
+    }
+    return (Array.isArray(data) ? data : data?.data) || [];
+};
+
+export const createPage = async (pageData: Partial<Page>): Promise<Page> => {
+    const { data, error } = await apiClient<{ data: any }>('/api/v1/cms/admin/pages', {
+        method: 'POST',
+        body: JSON.stringify(pageData),
+    });
+    if (error) throw new Error(error.message);
+    return data!.data;
+};
+
+export const updatePage = async (pageId: string, pageData: Partial<Page>): Promise<Page> => {
+    const { data, error } = await apiClient<{ data: any }>(`/api/v1/cms/admin/pages/${pageId}`, {
+        method: 'PUT',
+        body: JSON.stringify(pageData),
+    });
+    if (error) throw new Error(error.message);
+    return data!.data;
+};
+
+export const deletePage = async (pageId: string): Promise<void> => {
+    const { error } = await apiClient(`/api/v1/cms/admin/pages/${pageId}`, {
         method: 'DELETE',
     });
     if (error) throw new Error(error.message);
