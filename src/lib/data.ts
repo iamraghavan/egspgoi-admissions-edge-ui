@@ -804,6 +804,14 @@ export const getPages = async (siteId: string): Promise<Page[]> => {
     return (Array.isArray(data) ? data : data?.data) || [];
 };
 
+export const getPageById = async (pageId: string): Promise<Page> => {
+    const { data, error } = await apiClient<{ data: Page }>(`/api/v1/cms/admin/pages/${pageId}`);
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data!.data;
+};
+
 export const createPage = async (pageData: Partial<Page>): Promise<Page> => {
     const { data, error } = await apiClient<{ data: any }>('/api/v1/cms/admin/pages', {
         method: 'POST',

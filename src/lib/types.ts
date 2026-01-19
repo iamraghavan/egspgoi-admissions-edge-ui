@@ -227,9 +227,11 @@ export type Page = {
     location: 'header' | 'footer' | 'none';
     status: 'published' | 'draft';
     order: number;
+    main_image?: string;
     seo: {
         meta_title?: string;
         meta_description?: string;
+        og_image?: string;
     };
 };
 

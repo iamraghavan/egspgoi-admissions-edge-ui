@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown, MoreHorizontal, Edit, Trash2, Globe } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "../ui/badge";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export const pagesColumns: ColumnDef<Page>[] = [
     {
@@ -46,7 +48,8 @@ export const pagesColumns: ColumnDef<Page>[] = [
         id: "actions",
         cell: ({ row, table }) => {
             const page = row.original;
-            const meta = table.options.meta as { onEdit: (page: Page) => void; onDelete: (page: Page) => void; };
+            const pathname = usePathname();
+            const meta = table.options.meta as { onDelete: (page: Page) => void; };
 
             return (
                 <DropdownMenu>
@@ -58,9 +61,11 @@ export const pagesColumns: ColumnDef<Page>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => meta.onEdit(page)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
+                        <DropdownMenuItem asChild>
+                           <Link href={`${pathname}/${page.id}/edit`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                            </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => meta.onDelete(page)} className="text-destructive">
