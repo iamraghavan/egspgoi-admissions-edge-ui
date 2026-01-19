@@ -1,25 +1,15 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import PageHeader from '@/components/page-header';
 import { getProfile } from '@/lib/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Role } from '@/lib/types';
-
-const AdminDashboard = dynamic(() => import('@/components/dashboard/admin-dashboard.tsx'), {
-  loading: () => <AdminDashboardSkeleton />,
-});
-
-const AdmissionDashboard = dynamic(() => import('@/components/dashboard/admission-dashboard.tsx'), {
-  loading: () => <AdminDashboardSkeleton />,
-});
-
-const ExecutiveDashboard = dynamic(() => import('@/components/dashboard/executive-dashboard.tsx'), {
-    loading: () => <AdminDashboardSkeleton />,
-});
-
+import AdminDashboard from '@/components/dashboard/admin-dashboard';
+import AdmissionDashboard from '@/components/dashboard/admission-dashboard';
+import ExecutiveDashboard from '@/components/dashboard/executive-dashboard';
 
 const roleSlugMap: Record<string, Role> = {
     'sa': 'Super Admin',
@@ -61,17 +51,10 @@ export default function DashboardPage() {
 
   const userRole = roleSlugMap[roleSlug] || 'Super Admin';
   
-  // Render loading state while fetching data
-  if (isLoading) {
-    return (
-        <div className="flex flex-col gap-6">
-            <Skeleton className="h-10 w-64" />
-            <AdminDashboardSkeleton />
-        </div>
-    )
-  }
-
   const renderDashboardByRole = () => {
+      if (isLoading) {
+          return <AdminDashboardSkeleton />;
+      }
       switch (userRole) {
           case 'Admission Executive':
               return <ExecutiveDashboard />;
@@ -88,7 +71,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={`Welcome Back, ${userName}!`} description="Here's a snapshot of your admissions activity." />
+      <PageHeader title={isLoading ? `Welcome Back...` : `Welcome Back, ${userName}!`} description="Here's a snapshot of your admissions activity." />
       
       {renderDashboardByRole()}
     </div>
