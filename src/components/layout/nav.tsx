@@ -258,7 +258,7 @@ export default function Nav({ isMobile = false }: { isMobile?: boolean }) {
   }
 
   return (
-    <nav className={cn("grid gap-1 text-sm font-medium", isExpanded ? "p-2 py-4" : "flex flex-col items-center gap-1 p-2", isMobile && "p-4")}>
+    <nav className={cn("grid gap-1 text-sm font-medium", isExpanded ? "p-2 py-4" : "flex flex-col gap-1 p-2", isMobile && "p-4")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );

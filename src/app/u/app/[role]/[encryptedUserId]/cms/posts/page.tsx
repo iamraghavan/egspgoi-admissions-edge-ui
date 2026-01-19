@@ -1,4 +1,7 @@
-// This file is a placeholder to prevent routing conflicts.
+
+import { notFound } from 'next/navigation';
+
 export default function Placeholder() {
+  notFound();
   return null;
 }

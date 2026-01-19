@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -164,9 +165,9 @@ export default function CmsCategoriesPage() {
             <CategoryFormDialog
                 isOpen={isFormOpen}
                 onOpenChange={setFormOpen}
-                onSubmit={handleFormSubmit}
                 category={selectedCategory}
                 siteId={selectedSiteId}
+                onSubmit={handleFormSubmit}
             />
             {categoryToDelete && (
                 <ConfirmationDialog
