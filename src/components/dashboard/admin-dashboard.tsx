@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,12 +20,7 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import dynamic from 'next/dynamic';
-
-const LeadsChart = dynamic(() => import('@/components/dashboard/leads-chart'), {
-  ssr: false,
-  loading: () => <Skeleton className="h-[300px]" />,
-});
+import LeadsChart from '@/components/dashboard/leads-chart';
 
 export default function AdminDashboard() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);

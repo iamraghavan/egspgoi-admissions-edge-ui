@@ -1,4 +1,3 @@
-// This file is a placeholder to prevent routing conflicts.
-export default function Placeholder() {
-  return null;
-}
+// This file has been modified to disable a conflicting route.
+// It should not export a default component.
+export {};
