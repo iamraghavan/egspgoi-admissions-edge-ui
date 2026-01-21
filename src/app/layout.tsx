@@ -57,10 +57,10 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.1.1/dist/trix.css" />
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css" />
       </Head>
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-      <Script src="https://unpkg.com/trix@2.1.1/dist/trix.umd.min.js" strategy="beforeInteractive" />
+      <Script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js" strategy="beforeInteractive" />
       <body className={cn("font-sans antialiased", "min-h-screen bg-background font-sans")} suppressHydrationWarning>
         <FirebaseClientProvider>
           {children}
