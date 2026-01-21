@@ -4,7 +4,6 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter, Space_Grotesk } from 'next/font/google';
-import Head from 'next/head';
 import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase';
 
@@ -34,6 +33,17 @@ export const metadata: Metadata = {
       follow: false,
     },
   },
+  appleWebApp: {
+    title: "Admission CRM",
+  },
+  icons: {
+    icon: [
+        { url: '/favicon.ico', sizes: 'any' },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-icon.png',
+  },
+  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
@@ -51,17 +61,12 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <Head>
-        <meta name="apple-mobile-web-app-title" content="Admission CRM" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="manifest" href="/manifest.json" />
+      <head>
         <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css" />
-      </Head>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-      <Script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js" strategy="beforeInteractive" />
+      </head>
       <body className={cn("font-sans antialiased", "min-h-screen bg-background font-sans")} suppressHydrationWarning>
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+        <Script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js" strategy="beforeInteractive" />
         <FirebaseClientProvider>
           {children}
         </FirebaseClientProvider>
