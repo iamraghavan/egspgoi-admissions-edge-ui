@@ -72,4 +72,30 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Trix Editor Styles */
+  .trix-content {
+      @apply prose dark:prose-invert max-w-none;
+      @apply bg-background rounded-b-md p-4 min-h-[350px] focus:outline-none;
+  }
+
+  trix-toolbar {
+      @apply bg-muted/50 rounded-t-md p-2 border-b border-input sticky top-0 z-10;
+  }
+
+  trix-toolbar .trix-button-group {
+      @apply bg-transparent border-muted mb-0;
+  }
+
+  trix-toolbar .trix-button {
+      @apply bg-background rounded-sm;
+  }
+
+  trix-toolbar .trix-button:not(:first-child) {
+      @apply border-l border-muted;
+  }
+
+  trix-toolbar .trix-button.trix-active {
+      @apply bg-accent;
+  }
 }

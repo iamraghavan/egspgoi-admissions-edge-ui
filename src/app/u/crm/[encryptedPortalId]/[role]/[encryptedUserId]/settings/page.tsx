@@ -1,3 +1,7 @@
 // This file has been modified to disable a conflicting route.
-// It should not export a default component.
-export {};
+import { notFound } from 'next/navigation';
+
+export default function ConflictingPage() {
+  notFound();
+  return null;
+}
