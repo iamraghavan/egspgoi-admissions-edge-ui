@@ -1,4 +1,3 @@
-
 'use client';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -7,6 +6,10 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
+import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { TRANSFORMERS } from '@lexical/markdown';
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { TableCellNode, TableNode, TableRowNode } from '@lexical/table';
 import { ListItemNode, ListNode } from '@lexical/list';
@@ -19,6 +22,9 @@ import { $generateHtmlFromNodes } from '@lexical/html';
 import { useEffect } from 'react';
 import { ToolbarPlugin } from './toolbar-plugin';
 import { editorTheme } from './theme';
+import ImagesPlugin from './plugins/ImagesPlugin';
+import { ImageNode } from './nodes/ImageNode';
+
 
 interface LexicalEditorProps {
   initialHTML?: string;
@@ -37,6 +43,7 @@ const editorNodes = [
   TableRowNode,
   AutoLinkNode,
   LinkNode,
+  ImageNode, // Added ImageNode
 ];
 
 function InitialStatePlugin({ initialHTML }: { initialHTML?: string }) {
@@ -93,6 +100,10 @@ export default function LexicalEditor({ initialHTML, onChange }: LexicalEditorPr
         </div>
         <HistoryPlugin />
         <AutoFocusPlugin />
+        <ListPlugin />
+        <LinkPlugin />
+        <ImagesPlugin />
+        <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
         <OnChangePlugin onChange={handleOnChange} />
         {initialHTML && <InitialStatePlugin initialHTML={initialHTML} />}
       </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -15,6 +14,8 @@ import {
   $isRangeSelection,
   $createParagraphNode,
   $isRootOrShadowRoot,
+  ElementNode,
+  $isElementNode,
 } from 'lexical';
 import { $getNearestNodeOfType, mergeRegister } from '@lexical/utils';
 import {
@@ -29,13 +30,32 @@ import {
   $createQuoteNode,
   $isHeadingNode,
 } from '@lexical/rich-text';
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { $findMatchingParent } from '@lexical/utils';
 import {
-  Undo, Redo, Bold, Italic, Underline, Code, List, ListOrdered, Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify
+  Undo, Redo, Bold, Italic, Underline, Code, List, ListOrdered, Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Link as LinkIcon, Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { InsertImageDialog } from './plugins/InsertImageDialog';
 
 const LowPriority = 1;
+
+function getSelectedNode(selection: any) {
+  const anchor = selection.anchor;
+  const focus = selection.focus;
+  const anchorNode = selection.anchor.getNode();
+  const focusNode = selection.focus.getNode();
+  if (anchorNode === focusNode) {
+    return anchorNode;
+  }
+  const isBackward = selection.isBackward();
+  if (isBackward) {
+    return $isRangeSelection(selection) ? anchorNode : focusNode;
+  } else {
+    return $isRangeSelection(selection) ? focusNode : anchorNode;
+  }
+}
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
@@ -45,7 +65,9 @@ export function ToolbarPlugin() {
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [isCode, setIsCode] = useState(false);
+  const [isLink, setIsLink] = useState(false);
   const [blockType, setBlockType] = useState('paragraph');
+  const [isImageDialogOpen, setImageDialogOpen] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -55,33 +77,33 @@ export function ToolbarPlugin() {
       setIsItalic(selection.hasFormat('italic'));
       setIsUnderline(selection.hasFormat('underline'));
       setIsCode(selection.hasFormat('code'));
+
+      const node = getSelectedNode(selection);
+      const parent = node.getParent();
+      setIsLink($isLinkNode(parent) || $isLinkNode(node));
       
       // Update block format
       const anchorNode = selection.anchor.getNode();
-      let element =
+      const element =
         anchorNode.getKey() === 'root'
           ? anchorNode
-          : $getNearestNodeOfType(anchorNode, $isRootOrShadowRoot)
-          ? anchorNode
-          : anchorNode.getTopLevelElementOrThrow();
+          : $findMatchingParent(anchorNode, (e: ElementNode) => {
+              const parent = e.getParent();
+              return parent !== null && $isRootOrShadowRoot(parent);
+            });
 
-      if(element){
-          const elementKey = element.getKey();
-          const elementDOM = editor.getElementByKey(elementKey);
-
-          if (elementDOM !== null) {
-              if ($isListNode(element)) {
-                  const parentList = $getNearestNodeOfType(anchorNode, ListNode);
-                  const type = parentList ? parentList.getTag() : element.getTag();
-                  setBlockType(type);
-              } else {
-                  const type = $isHeadingNode(element) ? element.getTag() : element.getType();
-                  setBlockType(type);
-              }
-          }
+      if (element) {
+        if ($isListNode(element)) {
+          const parentList = $getNearestNodeOfType(anchorNode, ListNode);
+          const type = parentList ? parentList.getTag() : element.getTag();
+          setBlockType(type);
+        } else {
+          const type = $isHeadingNode(element) ? element.getTag() : element.getType();
+          setBlockType(type);
+        }
       }
     }
-  }, [editor]);
+  }, []);
 
   useEffect(() => {
     return mergeRegister(
@@ -117,6 +139,17 @@ export function ToolbarPlugin() {
     );
   }, [editor, updateToolbar]);
   
+    const insertLink = useCallback(() => {
+        if (!isLink) {
+            const url = prompt("Enter URL");
+            if (url) {
+                editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+            }
+        } else {
+            editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+        }
+    }, [editor, isLink]);
+
   const formatBulletList = () => {
     if (blockType !== 'ul') {
       editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
@@ -138,30 +171,24 @@ export function ToolbarPlugin() {
       editor.update(() => {
         const selection = $getSelection();
         if ($isRangeSelection(selection)) {
-          selection.getNodes().forEach(node => {
-            const parent = node.getParent();
-            if (parent) {
-              const quote = $createQuoteNode();
-              parent.replace(quote);
-              quote.append(node);
-            }
-          });
+          const quoteNode = $createQuoteNode();
+          selection.wrapNodes(quoteNode);
         }
       });
     } else {
-      editor.update(() => {
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
-           $getSelection().getNodes().forEach(node => {
-                const parent = node.getParent();
-                if(parent && parent.getType() === 'quote'){
-                    const p = $createParagraphNode();
-                    parent.replace(p);
-                    p.append(node);
-                }
-           });
-        }
-      })
+        editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+                const nodes = selection.getNodes();
+                nodes.forEach((node) => {
+                    const parent = node.getParent();
+                    if ($isElementNode(parent) && parent.getType() === 'quote') {
+                        const children = parent.getChildren();
+                        parent.replace(...children);
+                    }
+                });
+            }
+        });
     }
   };
 
@@ -187,7 +214,10 @@ export function ToolbarPlugin() {
       <Button variant={isCode ? 'secondary' : 'ghost'} size="icon" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}>
         <Code className="h-4 w-4" />
       </Button>
-       <Separator orientation="vertical" className="h-6 mx-1" />
+      <Button variant={isLink ? 'secondary' : 'ghost'} size="icon" onClick={insertLink}>
+        <LinkIcon className="h-4 w-4" />
+      </Button>
+      <Separator orientation="vertical" className="h-6 mx-1" />
        <Button variant={blockType === 'ul' ? 'secondary' : 'ghost'} size="icon" onClick={formatBulletList}>
         <List className="h-4 w-4" />
       </Button>
@@ -196,6 +226,9 @@ export function ToolbarPlugin() {
       </Button>
        <Button variant={blockType === 'quote' ? 'secondary' : 'ghost'} size="icon" onClick={formatQuote}>
         <Quote className="h-4 w-4" />
+      </Button>
+       <Button variant={'ghost'} size="icon" onClick={() => setImageDialogOpen(true)}>
+        <ImageIcon className="h-4 w-4" />
       </Button>
       <Separator orientation="vertical" className="h-6 mx-1" />
       <Button variant="ghost" size="icon" onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left')}>
@@ -210,6 +243,7 @@ export function ToolbarPlugin() {
        <Button variant="ghost" size="icon" onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify')}>
         <AlignJustify className="h-4 w-4" />
       </Button>
+       <InsertImageDialog isOpen={isImageDialogOpen} onOpenChange={setImageDialogOpen} />
     </div>
   );
 }
