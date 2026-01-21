@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
@@ -44,22 +45,22 @@ export default function EditCmsPage() {
 
     const handleUpdatePage = async (pageData: Partial<Page>) => {
         setSubmitting(true);
-        try {
-            await updatePage(params.pageId, pageData);
-            toast({
-                title: 'Page Updated',
-                description: `The page "${pageData.title}" has been successfully updated.`,
-            });
-            router.push(backUrl);
-        } catch (error: any) {
+        const { data, error } = await updatePage(params.pageId, pageData);
+
+        if (error) {
             toast({
                 variant: 'destructive',
                 title: 'Failed to update page',
                 description: error.message,
             });
-        } finally {
-            setSubmitting(false);
+        } else {
+             toast({
+                title: 'Page Updated',
+                description: `The page "${data?.title}" has been successfully updated.`,
+            });
+            router.push(backUrl);
         }
+        setSubmitting(false);
     };
 
     if (loading) {

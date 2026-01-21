@@ -10,10 +10,6 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['var(--font-inter)', 'sans-serif'],
-        heading: ['var(--font-space-grotesk)', 'sans-serif'],
-      },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(to right, #af005e, #00176e)',
       },

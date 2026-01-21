@@ -3,21 +3,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
-import { Inter, Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-});
 
 export const metadata: Metadata = {
   title: {
@@ -62,8 +49,8 @@ export default function RootLayout({
 }>) {
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className={cn("font-sans antialiased", "min-h-screen bg-background font-sans")} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-sans antialiased")} suppressHydrationWarning>
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
         <FirebaseClientProvider>
           {children}

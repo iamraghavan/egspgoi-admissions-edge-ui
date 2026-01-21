@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -73,15 +74,15 @@ export default function CmsPagesPage() {
 
     const confirmDelete = async () => {
         if (!pageToDelete) return;
-        try {
-            await deletePage(pageToDelete.id);
+        const { error } = await deletePage(pageToDelete.id);
+
+        if (error) {
+            toast({ variant: 'destructive', title: 'Delete Failed', description: error.message });
+        } else {
             toast({ title: 'Page Deleted', description: `${pageToDelete.title} has been successfully deleted.` });
             fetchPages();
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Delete Failed', description: error.message });
-        } finally {
-            setPageToDelete(null);
         }
+        setPageToDelete(null);
     };
 
     return (

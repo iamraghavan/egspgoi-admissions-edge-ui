@@ -821,18 +821,18 @@ export const createPage = async (pageData: Partial<Page>): Promise<Page> => {
     return data!.data;
 };
 
-export const updatePage = async (pageId: string, pageData: Partial<Page>): Promise<Page> => {
+export const updatePage = async (pageId: string, pageData: Partial<Page>): Promise<{data: Page | null, error: any}> => {
     const { data, error } = await apiClient<{ data: any }>(`/api/v1/cms/admin/pages/${pageId}`, {
         method: 'PUT',
         body: JSON.stringify(pageData),
     });
-    if (error) throw new Error(error.message);
-    return data!.data;
+    if (error) return { data: null, error };
+    return { data: data?.data || null, error: null };
 };
 
-export const deletePage = async (pageId: string): Promise<void> => {
+export const deletePage = async (pageId: string): Promise<{error: any}> => {
     const { error } = await apiClient(`/api/v1/cms/admin/pages/${pageId}`, {
         method: 'DELETE',
     });
-    if (error) throw new Error(error.message);
+    return { error };
 };
