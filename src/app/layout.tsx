@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     default: 'Admissions Edge',
   },
   description: 'Secure CRM for admissions management.',
+  manifest: '/manifest.json',
   robots: {
     index: false,
     follow: false,
@@ -35,6 +36,8 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     title: "Admission CRM",
+    capable: true,
+    statusBarStyle: 'default',
   },
   icons: {
     icon: [
@@ -43,7 +46,6 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
-  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
@@ -61,12 +63,8 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <head>
-        <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css" />
-      </head>
       <body className={cn("font-sans antialiased", "min-h-screen bg-background font-sans")} suppressHydrationWarning>
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-        <Script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js" strategy="beforeInteractive" />
         <FirebaseClientProvider>
           {children}
         </FirebaseClientProvider>

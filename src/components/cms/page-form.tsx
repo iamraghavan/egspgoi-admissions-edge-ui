@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +14,6 @@ import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import type { Page } from '@/lib/types';
 import { slugify } from '@/lib/utils';
-import TrixEditor from './trix-editor';
 
 interface PageFormProps {
     initialData?: Page;
@@ -93,8 +92,15 @@ export default function PageForm({ initialData, onSubmit, isSubmitting }: PageFo
                                     <FormItem>
                                         <FormLabel>Content</FormLabel>
                                         <FormControl>
-                                            <TrixEditor value={field.value} onChange={field.onChange} />
+                                            <Textarea
+                                                placeholder="Enter your page content here. Markdown is supported."
+                                                className="min-h-[400px] resize-y"
+                                                {...field}
+                                            />
                                         </FormControl>
+                                        <FormDescription>
+                                            You can use Markdown for rich text formatting.
+                                        </FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}/>
