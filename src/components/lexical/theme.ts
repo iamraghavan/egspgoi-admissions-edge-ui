@@ -30,6 +30,7 @@ export const editorTheme: EditorThemeClasses = {
     underlineStrikethrough: 'underline line-through',
   },
   link: 'text-primary underline',
+  image: 'editor-image',
   code: 'bg-muted text-sm font-mono p-4 block rounded-md my-2 overflow-x-auto',
   codeHighlight: {
     'atrule': 'text-purple-500',

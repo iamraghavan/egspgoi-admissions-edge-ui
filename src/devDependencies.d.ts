@@ -1,5 +1,2 @@
 
-declare module 'react-date-range';
-declare module 'lodash';
-
-    
+// This file is intentionally left blank.

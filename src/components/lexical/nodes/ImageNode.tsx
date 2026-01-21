@@ -102,6 +102,16 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     };
   }
 
+  createDOM(config: EditorConfig): HTMLElement {
+    const span = document.createElement('span');
+    const theme = config.theme;
+    const className = theme.image;
+    if (className !== undefined) {
+      span.className = className;
+    }
+    return span;
+  }
+
   constructor(
     src: string,
     altText: string,

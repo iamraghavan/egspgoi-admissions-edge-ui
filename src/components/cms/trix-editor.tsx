@@ -1,5 +1,2 @@
-// This file has been modified to disable a conflicting route.
-import { notFound } from 'next/navigation';
-export default function ConflictingPage() {
-  notFound();
-}
+
+// This file is intentionally left blank as it is no longer used.
