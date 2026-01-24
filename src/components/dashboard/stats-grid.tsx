@@ -1,23 +1,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Megaphone, Phone, Percent } from 'lucide-react';
-import { getDashboardStats } from '@/lib/data';
+import { Users, CircleDollarSign, Landmark } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { logout } from '@/lib/auth';
+import { formatCurrency } from '@/lib/formatters';
+import type { AdminDashboardKpis } from '@/lib/types';
 
-interface DashboardStats {
-    newLeads: number;
-    activeCampaigns: number;
-    callsToday: number;
-    conversionRate: number;
-}
-
-const StatCard = ({ title, value, icon: Icon, percentage, loading }: { title: string, value?: number | string, icon: React.ElementType, percentage?: string, loading: boolean }) => (
+const StatCard = ({ title, value, icon: Icon, loading, isCurrency = false }: { title: string, value?: number | string, icon: React.ElementType, loading: boolean, isCurrency?: boolean }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -25,75 +15,49 @@ const StatCard = ({ title, value, icon: Icon, percentage, loading }: { title: st
         </CardHeader>
         <CardContent>
             {loading ? (
-                <>
-                    <Skeleton className="h-8 w-20 mb-1" />
-                    <Skeleton className="h-4 w-28" />
-                </>
+                <Skeleton className="h-8 w-20" />
             ) : (
-                <>
-                    <div className="text-2xl font-bold">{value}</div>
-                    {percentage && <p className="text-xs text-muted-foreground">{percentage}</p>}
-                </>
+                <div className="text-2xl font-bold">
+                    {(typeof value === 'number' && isCurrency) ? formatCurrency(value) : value ?? '0'}
+                </div>
             )}
         </CardContent>
     </Card>
 );
 
+interface StatsGridProps {
+    kpis: AdminDashboardKpis | null;
+    loading: boolean;
+}
 
-export default function StatsGrid() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchStats = async () => {
-        try {
-            if (isMounted) setLoading(true);
-            const fetchedStats = await getDashboardStats();
-            if (isMounted) setStats(fetchedStats);
-        } catch (error: any) {
-            console.error("Failed to fetch dashboard stats", error);
-            // This component won't handle session errors directly anymore
-        } finally {
-            if (isMounted) setLoading(false);
-        }
-    };
-    fetchStats();
-
-    return () => {
-        isMounted = false;
-    };
-  }, []);
-
+export default function StatsGrid({ kpis, loading }: StatsGridProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <StatCard
-            title="New Leads"
-            value={stats?.newLeads}
+            title={kpis?.total_leads?.label || "Total Leads"}
+            value={kpis?.total_leads?.value}
             icon={Users}
-            percentage="+10.2% from last month"
             loading={loading}
         />
         <StatCard
-            title="Active Campaigns"
-            value={stats?.activeCampaigns}
-            icon={Megaphone}
-            percentage="+2 since last week"
+            title={kpis?.ad_spend?.label || "Ad Spend"}
+            value={kpis?.ad_spend?.value}
+            icon={CircleDollarSign}
+            loading={loading}
+            isCurrency
+        />
+        <StatCard
+            title={kpis?.active_users?.label || "Active Users"}
+            value={kpis?.active_users?.value}
+            icon={Users}
             loading={loading}
         />
         <StatCard
-            title="Calls Today"
-            value={stats?.callsToday}
-            icon={Phone}
-            percentage="+5% from yesterday"
+            title={kpis?.revenue?.label || "Total Revenue"}
+            value={kpis?.revenue?.value}
+            icon={Landmark}
             loading={loading}
-        />
-        <StatCard
-            title="Conversion Rate"
-            value={stats ? `${stats.conversionRate}%` : undefined}
-            icon={Percent}
-            percentage="+1.5% from last month"
-            loading={loading}
+            isCurrency
         />
     </div>
   );

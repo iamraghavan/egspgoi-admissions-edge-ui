@@ -266,3 +266,47 @@ export type Ad = {
     code_block?: string;
     status: 'active' | 'inactive';
 };
+
+// --- Analytics Types ---
+
+export interface AdminDashboardKpi {
+    value: number;
+    label: string;
+}
+
+export interface AdminDashboardKpis {
+    total_leads: AdminDashboardKpi;
+    ad_spend: AdminDashboardKpi;
+    active_users: AdminDashboardKpi;
+    total_posts: AdminDashboardKpi;
+    active_leads: AdminDashboardKpi;
+    revenue: AdminDashboardKpi;
+}
+
+export interface AdminDashboardChartPoint {
+    date: string;
+    value: number;
+}
+
+export interface AdminDashboardCharts {
+    leads_trend: AdminDashboardChartPoint[];
+    revenue_trend: AdminDashboardChartPoint[];
+    spend_trend: AdminDashboardChartPoint[];
+}
+
+export interface AdminDashboardRecentActivity {
+    type: string;
+    message: string;
+    time: string;
+}
+
+export interface AdminDashboardData {
+    meta: {
+        startDate: string;
+        endDate: string;
+    };
+    kpi: AdminDashboardKpis;
+    funnel: Record<string, number>;
+    charts: AdminDashboardCharts;
+    recentActivity: AdminDashboardRecentActivity[];
+}

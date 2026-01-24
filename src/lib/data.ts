@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page, AdminDashboardData } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -487,18 +487,18 @@ export const deleteUser = async (userId: string, type: 'soft' | 'hard'): Promise
 
 export const getCurrentUserRole = async (): Promise<Role> => Promise.resolve('Admission Manager');
 
-export const getDashboardStats = async (range?: string | number, startDate?: string, endDate?: string) => {
+export const getDashboardStats = async (range?: string | number, startDate?: string, endDate?: string): Promise<AdminDashboardData> => {
     const params = new URLSearchParams();
     if (range) params.append('range', String(range));
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const { data, error } = await apiClient<any>(`/api/v1/analytics/admin?${params.toString()}`);
+    const { data, error } = await apiClient<AdminDashboardData>(`/api/v1/analytics/admin?${params.toString()}`);
     if (error) {
         console.error("Failed to fetch dashboard stats", error.message);
         throw new Error(error.message || 'Failed to fetch dashboard stats');
     }
-    return data;
+    return data!;
 };
 
 export const getExecutiveStats = async (range?: string | number, startDate?: string, endDate?: string) => {
@@ -515,18 +515,6 @@ export const getExecutiveStats = async (range?: string | number, startDate?: str
     return data;
 };
 
-
-export const getLeadsOverTime = async () => {
-    const data = [
-        { date: "Jan", leads: Math.floor(Math.random() * 20 + 80) },
-        { date: "Feb", leads: Math.floor(Math.random() * 20 + 90) },
-        { date: "Mar", leads: Math.floor(Math.random() * 20 + 100) },
-        { date: "Apr", leads: Math.floor(Math.random() * 20 + 110) },
-        { date: "May", leads: Math.floor(Math.random() * 20 + 100) },
-        { date: "Jun", leads: Math.floor(Math.random() * 20 + 120) },
-    ];
-    return Promise.resolve(data);
-}
 
 export const getInventoryResources = async (): Promise<InventoryResource[]> => {
     const inventoryResources: InventoryResource[] = [

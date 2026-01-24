@@ -1,11 +1,12 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import StatsGrid from '@/components/dashboard/stats-grid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getLeads } from '@/lib/data';
-import type { Lead } from '@/lib/types';
+import { getDashboardStats, getLeads } from '@/lib/data';
+import type { Lead, AdminDashboardData } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -24,44 +25,47 @@ import LeadsChart from '@/components/dashboard/leads-chart';
 
 export default function AdminDashboard() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const params = useParams();
   const { encryptedUserId, role } = params as { encryptedUserId: string; role: string };
   const { toast } = useToast();
 
-
   useEffect(() => {
-    const fetchRecentLeads = async () => {
+    const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const { leads: allLeads, error } = await getLeads();
-        if (error) {
-          toast({
-              variant: "destructive",
-              title: "Failed to fetch leads",
-              description: error.message || "An unexpected error occurred.",
-          });
+        const [statsData, leadsResponse] = await Promise.all([
+            getDashboardStats(),
+            getLeads()
+        ]);
+        
+        if (leadsResponse.error) {
+          toast({ variant: "destructive", title: "Failed to fetch leads", description: leadsResponse.error.message || "An unexpected error occurred." });
         } else {
-          setRecentLeads(allLeads.slice(0, 5));
+          setRecentLeads(leadsResponse.leads.slice(0, 5));
         }
+        
+        setDashboardData(statsData);
+
       } catch (err: any) {
          toast({
               variant: "destructive",
-              title: "Failed to fetch leads",
+              title: "Failed to fetch dashboard data",
               description: err.message || "An unexpected error occurred.",
           });
       } finally {
         setLoading(false);
       }
     };
-    fetchRecentLeads();
+    fetchDashboardData();
   }, [toast]);
 
   return (
     <>
-      <StatsGrid />
+      <StatsGrid kpis={dashboardData?.kpi ?? null} loading={loading} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LeadsChart />
+        <LeadsChart data={dashboardData?.charts?.leads_trend || []} loading={loading} />
         <Card>
             <CardHeader className="flex flex-row items-center">
                 <div className="grid gap-2">

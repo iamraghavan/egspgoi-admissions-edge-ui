@@ -1,27 +1,28 @@
+
 "use client";
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartTooltipContent, ChartContainer } from '@/components/ui/chart';
-import { useEffect, useState } from 'react';
-import { getLeadsOverTime } from '@/lib/data';
+import { Skeleton } from '../ui/skeleton';
+import type { AdminDashboardChartPoint } from '@/lib/types';
 
-type ChartData = {
-  date: string;
-  leads: number;
-}[];
+interface LeadsChartProps {
+    data: AdminDashboardChartPoint[];
+    loading: boolean;
+}
 
-export default function LeadsChart() {
-    const [chartData, setChartData] = useState<ChartData>([]);
-
-    useEffect(() => {
-        getLeadsOverTime().then(setChartData);
-    }, []);
-
-    if (chartData.length === 0) {
+export default function LeadsChart({ data, loading }: LeadsChartProps) {
+    if (loading) {
         return (
-            <Card className="h-[450px] flex items-center justify-center">
-                <p>Loading chart data...</p>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Leads Overview</CardTitle>
+                    <CardDescription>Leads trend over the selected period.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-[300px]" />
+                </CardContent>
             </Card>
         );
     }
@@ -30,7 +31,7 @@ export default function LeadsChart() {
     <Card>
       <CardHeader>
         <CardTitle>Leads Overview</CardTitle>
-        <CardDescription>Monthly leads generated in the first half of the year.</CardDescription>
+        <CardDescription>Leads trend over the selected period.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
@@ -41,13 +42,13 @@ export default function LeadsChart() {
             },
           }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+              <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                   <XAxis
                       dataKey="date"
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
-                      tickFormatter={(value) => value.slice(0, 3)}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis
                       tickLine={false}
@@ -59,7 +60,8 @@ export default function LeadsChart() {
                       content={<ChartTooltipContent indicator='dot' />}
                   />
                   <Bar
-                      dataKey="leads"
+                      dataKey="value"
+                      name="Leads"
                       radius={[4, 4, 0, 0]}
                       fill="hsl(var(--primary))"
                   />
