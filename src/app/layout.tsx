@@ -1,59 +1,42 @@
-
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
-import { cn } from '@/lib/utils';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase';
 
+
 export const metadata: Metadata = {
-  title: {
-    template: '%s | Admissions Edge',
-    default: 'Admissions Edge',
-  },
+  title: 'Login',
   description: 'Secure CRM for admissions management.',
-  manifest: '/manifest.json',
-  robots: {
-    index: false,
-    follow: false,
-    googleBot: {
-      index: false,
-      follow: false,
-    },
-  },
+   manifest: "/manifest.json",
+  robots: "noindex, nofollow",
+  googlebot: "noindex, nofollow",
   appleWebApp: {
-    title: "Admission CRM",
     capable: true,
-    statusBarStyle: 'default',
+    title: "Admission CRM",
+    statusBarStyle: "default",
   },
   icons: {
     icon: [
-        { url: '/favicon.ico', sizes: 'any' },
-        { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "48x48" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: '/apple-icon.png',
-  },
+    apple: "/apple-icon.png",
+  }
 };
-
-export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
-}
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased")} suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
         <FirebaseClientProvider>
-          {children}
+            {children}
         </FirebaseClientProvider>
         <Toaster />
       </body>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +16,7 @@ import { slugify } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '../ui/skeleton';
 
-const LexicalEditor = dynamic(() => import('@/components/lexical/editor'), {
+const LexicalEditor = dynamic(() => import('../lexical/editor'), {
     ssr: false,
     loading: () => <Skeleton className="h-[400px] w-full rounded-lg border" />,
 });
