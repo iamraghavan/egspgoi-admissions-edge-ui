@@ -114,17 +114,19 @@ export type Asset = {
 };
 
 
-export type BudgetRequestStatus = "Pending" | "Approved" | "Rejected";
+export type BudgetRequestStatus = "pending" | "approved" | "rejected";
 
 export type BudgetRequest = {
   id: string;
-  campaignId: string;
+  campaign_id: string;
+  campaign_name?: string;
   amount: number;
   status: BudgetRequestStatus;
-  submittedBy: string; // User ID
-  decisionBy?: string; // User ID
-  submittedAt: string; // ISO 8601 date string
-  decisionAt?: string; // ISO 8601 date string
+  submitted_by: string; // User ID
+  decision_by?: string; // User ID
+  submitted_at: string; // ISO 8601 date string
+  decision_at?: string; // ISO 8601 date string
+  submitted_by_user?: Partial<User>;
 };
 
 export type Call = {
@@ -145,21 +147,22 @@ export type LiveCall = {
 
 export type PaymentRecord = {
     id: string;
-    leadId: string;
-    leadName?: string;
-    amount: number;
     date: string; // ISO 8601
-    method: 'Credit Card' | 'Bank Transfer' | 'Other';
-    status: 'Completed' | 'Pending' | 'Failed';
+    amount: number;
+    transfer_by: string;
+    payment_method: string;
+    transaction_id: string;
+    purpose: string;
 };
 
 export type AdSpend = {
     id: string;
-    campaignId: string;
-    campaignName?: string;
-    platform: 'Google' | 'Facebook' | 'LinkedIn';
-    amount: number;
     date: string; // ISO 8601
+    platform: string;
+    budget_allocated: number;
+    actual_spend: number;
+    campaign_id: string;
+    campaign_name?: string;
 };
 
 export type NavItem = {

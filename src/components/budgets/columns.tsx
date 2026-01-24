@@ -2,39 +2,24 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { BudgetRequest, User, Campaign } from "@/lib/types"
+import { BudgetRequest } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown, CheckCircle, XCircle } from "lucide-react"
-import { useEffect, useState } from "react"
-import { getCampaignById, getUserById } from "@/lib/data"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-const DataCell = ({ id, fetcher, nameKey }: { id: string; fetcher: (id: string) => Promise<any>; nameKey: string }) => {
-    const [data, setData] = useState<any>(null);
-    
-    useEffect(() => {
-        if (id) {
-            fetcher(id).then(setData);
-        }
-    }, [id, fetcher, nameKey]);
-
-    if (!data) return <div className="h-6 w-24 animate-pulse bg-muted rounded-md" />;
-
-    return <span>{data[nameKey]}</span>
-}
+import { formatCurrency } from "@/lib/formatters"
+import { format } from "date-fns"
 
 
 export const budgetColumns: ColumnDef<BudgetRequest>[] = [
   {
-    accessorKey: "campaignId",
+    accessorKey: "campaign_name",
     header: "Campaign",
-    cell: ({ row }) => <DataCell id={row.original.campaignId} fetcher={getCampaignById} nameKey="name" />,
   },
   {
     accessorKey: "amount",
@@ -51,12 +36,7 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
     },
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("amount"))
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
- 
-      return <div className="font-medium">{formatted}</div>
+      return <div className="font-medium">{formatCurrency(amount)}</div>
     },
   },
   {
@@ -65,8 +45,8 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
     cell: ({ row }) => (
       <Badge 
         variant={
-            row.getValue("status") === "Approved" ? "default" 
-            : row.getValue("status") === "Rejected" ? "destructive" 
+            row.getValue("status") === "approved" ? "success" 
+            : row.getValue("status") === "rejected" ? "destructive" 
             : "secondary"
         } 
         className="capitalize"
@@ -76,31 +56,41 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
     ),
   },
   {
-    accessorKey: "submittedBy",
+    accessorKey: "submitted_by",
     header: "Submitted By",
-    cell: ({ row }) => <DataCell id={row.original.submittedBy} fetcher={getUserById} nameKey="name" />,
+    cell: ({ row }) => {
+        const submittedBy = row.original.submitted_by_user;
+        return <span>{submittedBy?.name || '...'}</span>;
+    },
   },
   {
-    accessorKey: "submittedAt",
+    accessorKey: "submitted_at",
     header: "Submitted At",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("submittedAt"))
-      return <div>{date.toLocaleDateString()}</div>
+      const submittedAt = row.getValue("submitted_at") as string | undefined;
+      if (!submittedAt) return null;
+      try {
+        const date = new Date(submittedAt);
+        return <div>{format(date, "PPP")}</div>
+      } catch {
+        return <div>Invalid Date</div>
+      }
     },
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const request = row.original
+      const meta = table.options.meta as any;
 
-      if (request.status !== "Pending") return null;
+      if (request.status !== "pending") return null;
 
       return (
         <TooltipProvider>
             <div className="flex items-center gap-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700">
+                        <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => meta.onApprove(request.id)}>
                             <CheckCircle className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -110,7 +100,7 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
                 </Tooltip>
                  <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => meta.onReject(request.id)}>
                             <XCircle className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>

@@ -28,12 +28,8 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
     },
   },
   {
-    accessorKey: "campaignId",
+    accessorKey: "campaign_name",
     header: "Campaign",
-    cell: ({ row }) => {
-        const adSpend = row.original as AdSpend;
-        return <span>{adSpend.campaignName || 'N/A'}</span>
-    },
   },
   {
     accessorKey: "platform",
@@ -43,7 +39,15 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
     ),
   },
   {
-    accessorKey: "amount",
+    accessorKey: "budget_allocated",
+    header: "Budget Allocated",
+     cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("budget_allocated"))
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>
+    },
+  },
+  {
+    accessorKey: "actual_spend",
     header: ({ column }) => {
       return (
         <Button
@@ -51,13 +55,13 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-right w-full justify-end"
         >
-          Amount
+          Actual Spend
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
+      const amount = parseFloat(row.getValue("actual_spend"))
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>
     },
   },

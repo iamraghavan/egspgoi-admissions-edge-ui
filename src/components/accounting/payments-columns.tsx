@@ -3,10 +3,10 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { PaymentRecord } from "@/lib/types"
-import { Badge } from "../ui/badge"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "../ui/button"
 import { formatCurrency } from "@/lib/formatters"
+import { format } from "date-fns"
 
 export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
     {
@@ -24,16 +24,12 @@ export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
         },
         cell: ({ row }) => {
           const date = new Date(row.getValue("date"))
-          return <div>{date.toLocaleDateString()}</div>
+          return <div>{format(date, "PPP")}</div>
         },
     },
     {
-        accessorKey: "leadId",
-        header: "Lead",
-        cell: ({ row }) => {
-            const payment = row.original as PaymentRecord;
-            return <span>{payment.leadName || 'N/A'}</span>
-        }
+        accessorKey: "purpose",
+        header: "Purpose",
     },
     {
         accessorKey: "amount",
@@ -55,14 +51,15 @@ export const paymentsColumns: ColumnDef<PaymentRecord>[] = [
         },
     },
     {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="capitalize">{row.getValue("status")}</Badge>
-        ),
+        accessorKey: "payment_method",
+        header: "Method",
+    },
+     {
+        accessorKey: "transaction_id",
+        header: "Transaction ID",
     },
     {
-        accessorKey: "method",
-        header: "Method",
+        accessorKey: "transfer_by",
+        header: "Transferred By",
     },
 ]
