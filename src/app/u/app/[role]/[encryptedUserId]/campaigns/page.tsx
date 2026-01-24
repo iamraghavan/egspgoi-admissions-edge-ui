@@ -30,22 +30,15 @@ export default function CampaignsPage() {
     }, [router]);
 
     const fetchCampaigns = useCallback(async () => {
-        let isMounted = true;
+        setLoading(true);
         try {
-            if(isMounted) setLoading(true);
             const fetchedCampaigns = await getCampaigns();
-            if(isMounted) setCampaigns(fetchedCampaigns);
+            setCampaigns(fetchedCampaigns);
         } catch (error: any) {
-            if (isMounted) {
-                toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
-            }
+            toast({ variant: "destructive", title: "Failed to fetch campaigns", description: error.message || "An unexpected error occurred." });
         } finally {
-            if(isMounted) setLoading(false);
+            setLoading(false);
         }
-
-        return () => {
-            isMounted = false;
-        };
     }, [toast]);
 
     useEffect(() => {

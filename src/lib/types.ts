@@ -168,7 +168,6 @@ export type AdSpend = {
     actual_spend: number;
     campaign_id: string;
     campaign_name?: string;
-    amount?: number;
 };
 
 export type NavItem = {

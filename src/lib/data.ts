@@ -295,12 +295,9 @@ export const getLeadById = async (id: string): Promise<{data: Lead | null, error
 export const getLeadStatuses = async (): Promise<LeadStatus[]> => Promise.resolve(["New", "Contacted", "Interested", "Enrolled", "Failed"]);
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
-    const { data, error } = await apiClient<{ success: boolean; data: any[] }>('/api/v1/campaigns');
-    if(error) {
-        throw new Error(error.message);
-    }
-    const campaignData = data?.data || [];
-    return campaignData.map((c: any) => ({
+    const { data, error } = await apiClient<any>('/api/v1/campaigns');
+    if (error) throw new Error(error.message);
+    return (data?.data || []).map((c: any) => ({
         ...c,
         budget: c.settings?.budget_daily || 0,
         created_at: parseCustomDate(c.created_at),
@@ -310,72 +307,51 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
 
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`);
-    if(error) {
-        if (error.status === 401 || error.status === 403 || error.status === 404) {
-            return null;
-        }
+    if (error) {
+        if (error.status === 404) return null;
         throw new Error(error.message);
-    };
-    if (!data || !data.data) {
-        return null;
     }
+    if (!data?.data) return null;
     const campaign = data.data;
-    return { 
+    return {
         ...campaign,
         budget: campaign.settings?.budget_daily || 0,
         created_at: parseCustomDate(campaign.created_at),
         updated_at: parseCustomDate(campaign.updated_at),
         assets: (campaign.assets || []).map((asset: any) => ({
             ...asset,
-            created_at: parseCustomDate(asset.created_at)
+            created_at: parseCustomDate(asset.created_at),
         })),
     };
 };
 
 export const createCampaign = async (campaignData: Partial<Campaign>): Promise<Campaign> => {
-     const { data, error } = await apiClient<any>('/api/v1/campaigns', {
+    const { data, error } = await apiClient<any>('/api/v1/campaigns', {
         method: 'POST',
         body: JSON.stringify(campaignData),
     });
-    if(error) throw new Error(error.message);
-    const campaign = data.data;
+    if (error) throw new Error(error.message);
     return {
-        ...campaign,
-        budget: campaign.settings?.budget_daily || 0,
-    }
+        ...data.data,
+        budget: data.data.settings?.budget_daily || 0,
+    };
 };
-
-export const updateCampaign = async (id: string, campaignData: Partial<Campaign>): Promise<Campaign> => {
-    const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(campaignData),
-    });
-    if(error) throw new Error(error.message);
-    const campaign = data.data;
-    return {
-        ...campaign,
-        budget: campaign.settings?.budget_daily || 0,
-    }
-}
 
 export const updateCampaignStatus = async (id: string, status: CampaignStatus): Promise<Campaign> => {
     const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
     });
-    if(error) throw new Error(error.message);
-    const campaign = data.data;
+    if (error) throw new Error(error.message);
     return {
-        ...campaign,
-        budget: campaign.settings?.budget_daily || 0,
-    }
+        ...data.data,
+        budget: data.data.settings?.budget_daily || 0,
+    };
 };
 
 export const deleteCampaign = async (id: string): Promise<void> => {
-    const { error } = await apiClient<any>(`/api/v1/campaigns/${id}`, {
-        method: 'DELETE',
-    });
-    if(error) throw new Error(error.message);
+    const { error } = await apiClient(`/api/v1/campaigns/${id}`, { method: 'DELETE' });
+    if (error) throw new Error(error.message);
 };
 
 export const uploadAsset = async (assetData: { campaign_id: string; name: string; file: File }): Promise<Asset> => {
@@ -383,83 +359,96 @@ export const uploadAsset = async (assetData: { campaign_id: string; name: string
     formData.append('campaign_id', assetData.campaign_id);
     formData.append('name', assetData.name);
     formData.append('file', assetData.file);
-
     const { data, error } = await apiClient<any>('/api/v1/assets', {
         method: 'POST',
         body: formData,
     });
-    if(error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
     return data.data;
 };
 
-export const getCalls = async (): Promise<Call[]> => {
-    const calls: Call[] = [
-        { id: 'call-1', leadId: 'lead-2', agentId: 'user-2', duration: 320, timestamp: subHours(new Date(), 26).toISOString(), recordingUrl: '#' },
-        { id: 'call-2', leadId: 'lead-3', agentId: 'user-2', duration: 450, timestamp: subHours(new Date(), 49).toISOString(), recordingUrl: '#' },
-    ];
-    return Promise.resolve(calls);
-}
-
-export const getLiveCalls = async (): Promise<any[]> => {
-    const { data, error } = await apiClient<any>(`/api/v1/smartflo/live-calls`);
-    if(error) {
-        throw new Error(error.message || 'Failed to fetch live calls');
-    };
-    return data?.data || [];
-}
-
 export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
-     const budgetRequests: BudgetRequest[] = [
-        { id: 'br-1', campaign_id: 'camp-1', amount: 10000, status: 'approved', submitted_by: 'user-3', decision_by: 'user-4', submitted_at: subDays(new Date(), 10).toISOString(), decision_at: subDays(new Date(), 9).toISOString() },
-        { id: 'br-2', campaign_id: 'camp-2', amount: 20000, status: 'pending', submitted_by: 'user-3', submitted_at: subDays(new Date(), 2).toISOString() },
-    ];
-    return Promise.resolve(budgetRequests);
-}
+    const { data, error } = await apiClient<any>('/api/v1/budgets');
+    if (error) throw new Error(error.message);
 
-export const addPaymentRecord = async (paymentData: Partial<PaymentRecord>): Promise<PaymentRecord> => {
-  const { data, error } = await apiClient<any>('/api/v1/accounting/payments', {
-    method: 'POST',
-    body: JSON.stringify(paymentData),
-  });
-  if (error) throw new Error(error.message);
-  return data.data;
+    const requests = await Promise.all(
+        (data?.data || []).map(async (req: any) => {
+            const [user, campaign] = await Promise.all([
+                getUserById(req.submitted_by),
+                getCampaignById(req.campaign_id),
+            ]);
+            return {
+                ...req,
+                submitted_by_user: user ? { id: user.id, name: user.name } : { name: 'Unknown' },
+                campaign_name: campaign?.name || 'Unknown Campaign',
+                submitted_at: parseCustomDate(req.submitted_at),
+                decision_at: req.decision_at ? parseCustomDate(req.decision_at) : undefined,
+            };
+        })
+    );
+    return requests;
 };
 
-export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
-    const paymentRecords: PaymentRecord[] = [
-        { id: 'pay-1', leadId: 'lead-5', leadName: 'Suresh Kumar', amount: 1500, date: subDays(new Date(), 5).toISOString(), method: 'Credit Card', status: 'Completed' },
-        { id: 'pay-2', leadId: 'lead-3', leadName: 'Priya Sharma', amount: 250, date: subDays(new Date(), 3).toISOString(), method: 'Bank Transfer', status: 'Completed' },
-    ];
-    return Promise.resolve(paymentRecords);
-}
-
-export const addAdSpend = async (adSpendData: Partial<AdSpend>): Promise<AdSpend> => {
-  const { data, error } = await apiClient<any>('/api/v1/accounting/ad-spends', {
-    method: 'POST',
-    body: JSON.stringify(adSpendData),
-  });
-  if (error) throw new Error(error.message);
-  return data.data;
+export const requestBudget = async (campaignId: string, amount: number): Promise<BudgetRequest> => {
+    const { data, error } = await apiClient<any>('/api/v1/budgets', {
+        method: 'POST',
+        body: JSON.stringify({ campaign_id: campaignId, amount }),
+    });
+    if (error) throw new Error(error.message);
+    return data.data;
 };
 
-export const getAdSpends = async (): Promise<AdSpend[]> => {
-     const adSpends: AdSpend[] = [
-        { id: 'ad-1', campaignId: 'camp-1', campaignName: 'Fall Admissions 2024', platform: 'Google', amount: 500, date: subDays(new Date(), 1).toISOString() },
-        { id: 'ad-2', campaignId: 'camp-1', campaignName: 'Fall Admissions 2024', platform: 'Facebook', amount: 350, date: subDays(new Date(), 1).toISOString() },
-    ];
-    return Promise.resolve(adSpends);
-}
-
-export const updateBudgetStatus = async (budgetId: string, status: 'approved' | 'rejected'): Promise<any> => {
+export const updateBudgetStatus = async (budgetId: string, status: 'approved' | 'rejected'): Promise<BudgetRequest> => {
     const { data, error } = await apiClient<any>(`/api/v1/budgets/${budgetId}/approve`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
     });
+    if (error) throw new Error(error.message);
+    return data.data;
+};
 
-    if (error) {
-        throw new Error(error.message);
-    }
-    return data;
+export const addPaymentRecord = async (paymentData: Partial<PaymentRecord>): Promise<PaymentRecord> => {
+    const { data, error } = await apiClient<any>('/api/v1/accounting/payments', {
+        method: 'POST',
+        body: JSON.stringify(paymentData),
+    });
+    if (error) throw new Error(error.message);
+    return data.data;
+};
+
+export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
+    const { data, error } = await apiClient<any>('/api/v1/accounting/payments');
+    if (error) throw new Error(error.message);
+    return (data?.data || []).map((p: any) => ({
+        ...p,
+        date: parseCustomDate(p.date)
+    }));
+};
+
+export const addAdSpend = async (adSpendData: Partial<AdSpend>): Promise<AdSpend> => {
+    const { data, error } = await apiClient<any>('/api/v1/accounting/ad-spends', {
+        method: 'POST',
+        body: JSON.stringify(adSpendData),
+    });
+    if (error) throw new Error(error.message);
+    return data.data;
+};
+
+export const getAdSpends = async (): Promise<AdSpend[]> => {
+    const { data, error } = await apiClient<any>('/api/v1/accounting/ad-spends');
+    if (error) throw new Error(error.message);
+
+    const spends = await Promise.all(
+        (data?.data || []).map(async (spend: any) => {
+            const campaign = await getCampaignById(spend.campaign_id);
+            return {
+                ...spend,
+                date: parseCustomDate(spend.date),
+                campaign_name: campaign?.name || 'Unknown',
+            };
+        })
+    );
+    return spends;
 };
 
 export const getUserById = async (id: string): Promise<User | null> => {

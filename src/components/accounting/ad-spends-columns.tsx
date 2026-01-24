@@ -1,3 +1,4 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -23,7 +24,9 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
       )
     },
     cell: ({ row }) => {
-      const date = new Date(row.getValue("date"))
+      const dateString = row.getValue("date") as string;
+      if (!dateString) return null;
+      const date = new Date(dateString)
       return <div>{format(date, "PPP")}</div>
     },
   },
