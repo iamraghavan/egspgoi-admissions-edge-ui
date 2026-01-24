@@ -100,6 +100,8 @@ export type Campaign = {
       budget_daily: number;
   };
   assets?: Asset[];
+  created_at: string;
+  updated_at: string;
 };
 
 export type Asset = {
@@ -153,6 +155,9 @@ export type PaymentRecord = {
     payment_method: string;
     transaction_id: string;
     purpose: string;
+    leadId?: string;
+    leadName?: string;
+    status?: 'Completed' | 'Pending' | 'Failed';
 };
 
 export type AdSpend = {
@@ -163,6 +168,7 @@ export type AdSpend = {
     actual_spend: number;
     campaign_id: string;
     campaign_name?: string;
+    amount?: number;
 };
 
 export type NavItem = {

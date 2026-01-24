@@ -299,10 +299,13 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
     if(error) {
         throw new Error(error.message);
     }
-    return data!.data.map((c: any) => ({
+    const campaignData = data?.data || [];
+    return campaignData.map((c: any) => ({
         ...c,
         budget: c.settings?.budget_daily || 0,
-    })) as Campaign[];
+        created_at: parseCustomDate(c.created_at),
+        updated_at: parseCustomDate(c.updated_at),
+    }));
 };
 
 export const getCampaignById = async (id: string): Promise<Campaign | null> => {
@@ -320,7 +323,12 @@ export const getCampaignById = async (id: string): Promise<Campaign | null> => {
     return { 
         ...campaign,
         budget: campaign.settings?.budget_daily || 0,
-        assets: campaign.assets || [],
+        created_at: parseCustomDate(campaign.created_at),
+        updated_at: parseCustomDate(campaign.updated_at),
+        assets: (campaign.assets || []).map((asset: any) => ({
+            ...asset,
+            created_at: parseCustomDate(asset.created_at)
+        })),
     };
 };
 
@@ -402,11 +410,20 @@ export const getLiveCalls = async (): Promise<any[]> => {
 
 export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
      const budgetRequests: BudgetRequest[] = [
-        { id: 'br-1', campaignId: 'camp-1', amount: 10000, status: 'Approved', submittedBy: 'user-3', decisionBy: 'user-4', submittedAt: subDays(new Date(), 10).toISOString(), decisionAt: subDays(new Date(), 9).toISOString() },
-        { id: 'br-2', campaignId: 'camp-2', amount: 20000, status: 'Pending', submittedBy: 'user-3', submittedAt: subDays(new Date(), 2).toISOString() },
+        { id: 'br-1', campaign_id: 'camp-1', amount: 10000, status: 'approved', submitted_by: 'user-3', decision_by: 'user-4', submitted_at: subDays(new Date(), 10).toISOString(), decision_at: subDays(new Date(), 9).toISOString() },
+        { id: 'br-2', campaign_id: 'camp-2', amount: 20000, status: 'pending', submitted_by: 'user-3', submitted_at: subDays(new Date(), 2).toISOString() },
     ];
     return Promise.resolve(budgetRequests);
 }
+
+export const addPaymentRecord = async (paymentData: Partial<PaymentRecord>): Promise<PaymentRecord> => {
+  const { data, error } = await apiClient<any>('/api/v1/accounting/payments', {
+    method: 'POST',
+    body: JSON.stringify(paymentData),
+  });
+  if (error) throw new Error(error.message);
+  return data.data;
+};
 
 export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
     const paymentRecords: PaymentRecord[] = [
@@ -416,6 +433,15 @@ export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
     return Promise.resolve(paymentRecords);
 }
 
+export const addAdSpend = async (adSpendData: Partial<AdSpend>): Promise<AdSpend> => {
+  const { data, error } = await apiClient<any>('/api/v1/accounting/ad-spends', {
+    method: 'POST',
+    body: JSON.stringify(adSpendData),
+  });
+  if (error) throw new Error(error.message);
+  return data.data;
+};
+
 export const getAdSpends = async (): Promise<AdSpend[]> => {
      const adSpends: AdSpend[] = [
         { id: 'ad-1', campaignId: 'camp-1', campaignName: 'Fall Admissions 2024', platform: 'Google', amount: 500, date: subDays(new Date(), 1).toISOString() },
@@ -423,6 +449,18 @@ export const getAdSpends = async (): Promise<AdSpend[]> => {
     ];
     return Promise.resolve(adSpends);
 }
+
+export const updateBudgetStatus = async (budgetId: string, status: 'approved' | 'rejected'): Promise<any> => {
+    const { data, error } = await apiClient<any>(`/api/v1/budgets/${budgetId}/approve`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data;
+};
 
 export const getUserById = async (id: string): Promise<User | null> => {
     if (!id) return null;
