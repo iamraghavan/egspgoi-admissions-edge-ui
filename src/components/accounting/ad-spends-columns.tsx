@@ -1,4 +1,3 @@
-
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -7,6 +6,7 @@ import { Badge } from "../ui/badge"
 import { ArrowUpDown } from "lucide-react"
 import { Button } from "../ui/button"
 import { formatCurrency } from "@/lib/formatters"
+import { format } from 'date-fns'
 
 export const adSpendsColumns: ColumnDef<AdSpend>[] = [
   {
@@ -24,7 +24,7 @@ export const adSpendsColumns: ColumnDef<AdSpend>[] = [
     },
     cell: ({ row }) => {
       const date = new Date(row.getValue("date"))
-      return <div>{date.toLocaleDateString()}</div>
+      return <div>{format(date, "PPP")}</div>
     },
   },
   {

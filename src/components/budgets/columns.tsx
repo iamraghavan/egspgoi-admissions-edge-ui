@@ -42,25 +42,23 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <Badge 
-        variant={
-            row.getValue("status") === "approved" ? "success" 
-            : row.getValue("status") === "rejected" ? "destructive" 
-            : "secondary"
-        } 
-        className="capitalize"
-    >
-        {row.getValue("status")}
+    cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        const variant = status === 'approved' ? 'success'
+                      : status === 'rejected' ? 'destructive'
+                      : 'secondary';
+      return (
+      <Badge variant={variant} className="capitalize">
+        {status}
     </Badge>
-    ),
+    )},
   },
   {
-    accessorKey: "submitted_by",
+    accessorKey: "submitted_by_user",
     header: "Submitted By",
     cell: ({ row }) => {
-        const submittedBy = row.original.submitted_by_user;
-        return <span>{submittedBy?.name || '...'}</span>;
+        const submittedByUser = row.original.submitted_by_user;
+        return <span>{submittedByUser?.name || '...'}</span>;
     },
   },
   {
@@ -83,7 +81,7 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
       const request = row.original
       const meta = table.options.meta as any;
 
-      if (request.status !== "pending") return null;
+      if (request.status !== "pending" || !meta?.onApprove) return null;
 
       return (
         <TooltipProvider>

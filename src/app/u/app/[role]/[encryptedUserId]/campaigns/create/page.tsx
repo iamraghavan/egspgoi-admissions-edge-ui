@@ -1,4 +1,3 @@
-
 'use client';
 
 import 'react-day-picker/dist/style.css';
@@ -62,9 +61,6 @@ export default function CreateCampaignPage() {
             target_audience: {
                 age: formData.get('target_audience_age') as string,
                 location: formData.get('target_audience_location') as string,
-            },
-            settings: {
-                budget_daily: Number(formData.get('budget')),
             }
         };
 
@@ -99,38 +95,7 @@ export default function CreateCampaignPage() {
                                     <Label htmlFor="name">Campaign Name</Label>
                                     <Input id="name" name="name" placeholder="e.g., Summer Admissions 2026" required />
                                 </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="budget">Daily Budget (INR)</Label>
-                                    <Input id="budget" name="budget" type="number" placeholder="e.g., 5000" required />
-                                </div>
-                            </div>
-                             <div className="grid md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="type">Campaign Type</Label>
-                                    <Select name="type" required>
-                                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Social Media">Social Media</SelectItem>
-                                            <SelectItem value="Search Engine">Search Engine</SelectItem>
-                                            <SelectItem value="Email">Email Marketing</SelectItem>
-                                            <SelectItem value="Offline">Offline Event</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="platform">Platform</Label>
-                                     <Select name="platform" required>
-                                        <SelectTrigger><SelectValue placeholder="Select a platform" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Facebook">Facebook</SelectItem>
-                                            <SelectItem value="Google">Google</SelectItem>
-                                            <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                                            <SelectItem value="Instagram">Instagram</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                 <div className="space-y-2">
                                     <Label>Date Range</Label>
                                      <Popover>
                                         <PopoverTrigger asChild>
@@ -168,6 +133,33 @@ export default function CreateCampaignPage() {
                                         />
                                         </PopoverContent>
                                     </Popover>
+                                </div>
+                            </div>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="type">Campaign Type</Label>
+                                    <Select name="type" required>
+                                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Social Media">Social Media</SelectItem>
+                                            <SelectItem value="Search Engine">Search Engine</SelectItem>
+                                            <SelectItem value="Email">Email Marketing</SelectItem>
+                                            <SelectItem value="Offline">Offline Event</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="platform">Platform</Label>
+                                     <Select name="platform" required>
+                                        <SelectTrigger><SelectValue placeholder="Select a platform" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Facebook">Facebook</SelectItem>
+                                            <SelectItem value="Google">Google</SelectItem>
+                                            <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                                            <SelectItem value="Instagram">Instagram</SelectItem>
+                                            <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                             
