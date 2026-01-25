@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Nav from './nav';
@@ -19,13 +17,13 @@ export default function AppSidebar() {
   return (
     <aside 
         className={cn(
-            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r border-black/20 bg-[#57002f] text-gray-300 transition-all duration-300 ease-in-out sm:flex",
+            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col bg-[#57002f] text-gray-300 transition-all duration-300 ease-in-out sm:flex",
             isExpanded ? "w-56" : "w-20"
         )}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
     >
-       <div className={cn("flex h-16 items-center border-b border-black/20 px-4", !isExpanded && "justify-center")}>
+       <div className={cn("flex h-16 items-center px-4", !isExpanded && "justify-center")}>
             <Link href="/" className={cn("flex items-center gap-2 font-semibold text-white", !isExpanded ? "w-full justify-center" : "")}>
               <AppLogo className="h-8 w-8 shrink-0" />
               <span className={cn("truncate", !isExpanded && "sr-only")}>Admissions Edge</span>
@@ -42,7 +40,7 @@ export default function AppSidebar() {
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <Nav />
           </div>
-          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-2 border-t border-black/20">
+          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-2">
              <Button
                 variant="ghost"
                 size="icon"
