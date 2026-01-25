@@ -1,6 +1,6 @@
 
 
-"use client"
+'use client'
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ import { Skeleton } from "../ui/skeleton"
 import { useRouter, useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Link from 'next/link'
-import { MoreHorizontal } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 interface UserProfile {
   id: string;
@@ -75,7 +75,6 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
-            {/* Dropdown content is the same for both states */}
             {user ? (
             <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
@@ -112,32 +111,26 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full flex justify-between items-center h-auto p-2 hover:bg-white/10">
-            <div className="flex items-center gap-2 truncate">
-                <Avatar className="h-9 w-9">
-                    {user ? (
-                        <AvatarFallback className="bg-white/20">
-                        {user.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    ) : (
-                        <Skeleton className="h-9 w-9 rounded-full" />
-                    )}
-                </Avatar>
+        <Button variant="ghost" className="flex items-center gap-2 h-auto p-1.5 rounded-md hover:bg-black/10">
+            <Avatar className="h-8 w-8">
                 {user ? (
-                    <div className="flex flex-col items-start truncate">
-                        <p className="text-sm font-medium leading-none text-white truncate">{user.name}</p>
-                        <p className="text-xs leading-none text-gray-400 truncate">
-                            {user.email}
-                        </p>
-                    </div>
+                    <AvatarFallback className="bg-white/20 text-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                 ) : (
-                     <div className="space-y-1">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-32" />
-                    </div>
+                    <Skeleton className="h-8 w-8 rounded-full" />
                 )}
-            </div>
-            <MoreHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
+            </Avatar>
+            {user ? (
+                <div className={cn("flex-col items-start truncate", isCollapsed && "hidden")}>
+                    <p className="text-sm font-medium leading-none text-white truncate">{user.name}</p>
+                </div>
+            ) : (
+                 <div className={cn("space-y-1", isCollapsed && "hidden")}>
+                    <Skeleton className="h-4 w-24" />
+                </div>
+            )}
+            <ChevronDown className={cn("h-4 w-4 text-white/70 shrink-0", isCollapsed && "hidden")} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

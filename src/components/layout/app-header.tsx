@@ -2,7 +2,8 @@
 
 import { UserNav } from './user-nav';
 import { Button } from '../ui/button';
-import { Search, Menu, Bell } from 'lucide-react';
+import { Search, Menu, Bell, Settings, HelpCircle, Plus } from 'lucide-react';
+import { Dialpad } from '../icons';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Separator } from '../ui/separator';
@@ -18,6 +19,12 @@ import { UserIcon, Megaphone, FileText } from 'lucide-react';
 import { debounce, cn } from '@/lib/utils';
 import { NotificationCenter } from '../notifications/notification-center';
 import type { AppNotification } from '@/lib/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 const getIconForType = (type: string) => {
@@ -116,25 +123,25 @@ export default function AppHeader() {
 
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b border-transparent bg-[#57002f] px-4 sm:px-6">
+    <header className="flex h-16 items-center gap-4 border-b-0 bg-[#57002f] px-4 sm:px-6 text-white">
         <Button size="icon" variant="ghost" className="sm:hidden text-white hover:bg-white/10" onClick={() => setManuallyToggled(true)}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
         </Button>
 
-
-      <div className="w-full flex-1">
+      {/* Search Bar */}
+      <div className="flex items-center gap-2">
         <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
           <PopoverTrigger asChild>
             <form className="w-full">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/70" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
                 <Input
                   type="search"
-                  placeholder="Search leads, campaigns..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full appearance-none rounded-md border-black/20 bg-black/10 pl-8 text-white shadow-none placeholder:text-white/60 md:w-2/3 lg:w-1/3"
+                  className="h-9 w-full appearance-none rounded-full border-none bg-black/20 pl-9 text-white shadow-none placeholder:text-white/70 md:w-64"
                 />
               </div>
             </form>
@@ -172,14 +179,39 @@ export default function AppHeader() {
             </Command>
           </PopoverContent>
         </Popover>
+         <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full text-white/80 hover:bg-black/10 hover:text-white">
+                        <Plus className="h-5 w-5" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-black/80 text-white border-none">
+                    <p>Quick Create</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
       </div>
 
-        <div className="flex items-center gap-2">
+      <div className="flex-grow" />
+
+        <div className="flex items-center gap-1">
+           <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" size="icon" className="text-white/80 hover:bg-black/10 hover:text-white">
+                            <Dialpad className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-black/80 text-white border-none"><p>Dialpad</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            
            <Popover open={isNotifOpen} onOpenChange={handleNotifOpenChange}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative text-white hover:bg-black/10 hover:text-white">
+                <Button variant="ghost" size="icon" className="relative text-white/80 hover:bg-black/10 hover:text-white">
                     <Bell className="h-5 w-5" />
-                    {hasUnread && <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />}
+                    {hasUnread && <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-blue-400" />}
                     <span className="sr-only">Notifications</span>
                 </Button>
             </PopoverTrigger>
@@ -187,7 +219,30 @@ export default function AppHeader() {
                 <NotificationCenter onOpenChange={setNotifOpen} />
             </PopoverContent>
           </Popover>
-          <Separator orientation='vertical' className='h-8 mx-2 bg-transparent' />
+
+          <Separator orientation="vertical" className="h-6 mx-1 bg-white/20" />
+          
+            <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" size="icon" className="text-white/80 hover:bg-black/10 hover:text-white">
+                            <Settings className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-black/80 text-white border-none"><p>Settings</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" size="icon" className="text-white/80 hover:bg-black/10 hover:text-white">
+                            <HelpCircle className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-black/80 text-white border-none"><p>Help</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
           <UserNav />
         </div>
     </header>
