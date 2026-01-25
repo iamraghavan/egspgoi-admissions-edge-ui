@@ -1,4 +1,3 @@
-
 'use client';
 import 'react-date-range/dist/styles.css'; 
 import 'react-date-range/dist/theme/default.css'; 
@@ -18,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { DateRangePicker } from 'react-date-range';
 import { Filter, User as UserIcon, Calendar as CalendarIcon, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -161,6 +160,12 @@ export default function LeadsPage() {
         return newSet;
     });
   }
+
+  const handleDateChange = (ranges: any) => {
+    const { selection } = ranges;
+    const newRange = { from: selection.startDate, to: selection.endDate };
+    setDateRange(newRange);
+  }
   
   return (
     <div className="flex flex-col gap-4">
@@ -188,16 +193,42 @@ export default function LeadsPage() {
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm"><CalendarIcon className="mr-2 h-4 w-4" /> Create Date</Button>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        size="sm"
+                        className={cn(
+                        "w-[260px] justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                        dateRange.to ? (
+                            <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                            </>
+                        ) : (
+                            format(dateRange.from, "LLL dd, y")
+                        )
+                        ) : (
+                        <span>Pick a date</span>
+                        )}
+                    </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={2}
+                    <DateRangePicker
+                        onChange={handleDateChange}
+                        showSelectionPreview={true}
+                        moveRangeOnFirstSelection={false}
+                        months={2}
+                        ranges={[{
+                            startDate: dateRange?.from,
+                            endDate: dateRange?.to,
+                            key: 'selection'
+                        }]}
+                        direction="horizontal"
                     />
                 </PopoverContent>
             </Popover>
