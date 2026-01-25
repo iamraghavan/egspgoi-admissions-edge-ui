@@ -6,7 +6,7 @@ import type { User } from '@/lib/types';
 
 export function ThemeInitializer() {
   useEffect(() => {
-    let theme = 'system';
+    let theme = 'light';
     try {
       const storedProfile = localStorage.getItem('userProfile');
       if (storedProfile) {
@@ -16,13 +16,13 @@ export function ThemeInitializer() {
         }
       }
     } catch (error) {
-      console.error("Failed to apply theme from localStorage, defaulting to system.", error);
+      console.error("Failed to apply theme from localStorage, defaulting to light.", error);
     }
     
-    if (theme === 'light') {
-        document.documentElement.classList.remove('dark');
-    } else if (theme === 'dark') {
+    if (theme === 'dark') {
         document.documentElement.classList.add('dark');
+    } else if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
     } else { // 'system'
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.classList.add('dark');

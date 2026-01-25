@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,7 +48,7 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
       currency: user.preferences?.currency || 'INR',
       language: user.preferences?.language || 'en',
       timezone: user.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-      theme: user.preferences?.theme || 'system',
+      theme: user.preferences?.theme || 'light',
       date_format: user.preferences?.date_format || 'DD/MM/YYYY',
     },
   });
@@ -64,10 +63,10 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
       });
       onUpdate(updatedUser);
       // Apply theme immediately
-      if (values.theme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else if (values.theme === 'dark') {
-          document.documentElement.classList.add('dark');
+      if (values.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (values.theme === 'light') {
+          document.documentElement.classList.remove('dark');
       } else { // 'system'
           if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
               document.documentElement.classList.add('dark');
