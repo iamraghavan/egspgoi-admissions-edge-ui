@@ -48,7 +48,7 @@ export function DataTableToolbar<TData>({
         )}
         {!hideFilters && (
           <div className="flex items-center gap-2">
-            {table.getColumn("status") && (
+            {table.getColumn("status") && searchKey && (
               <DataTableFacetedFilter
                 column={table.getColumn("status")}
                 title="Status"
