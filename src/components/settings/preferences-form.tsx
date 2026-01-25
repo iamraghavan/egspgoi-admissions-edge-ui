@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,17 +63,10 @@ export function PreferencesForm({ user, onUpdate }: PreferencesFormProps) {
       });
       onUpdate(updatedUser);
       // Apply theme immediately
-      if (values.theme === 'dark') {
+      if (values.theme === 'dark' || (values.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
-      } else if (values.theme === 'light') {
-        document.documentElement.classList.remove('dark');
       } else {
-        // Handle system preference
-         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        document.documentElement.classList.remove('dark');
       }
     } catch (error: any) {
       toast({

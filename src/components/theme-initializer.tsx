@@ -5,32 +5,25 @@ import type { User } from '@/lib/types';
 
 export function ThemeInitializer() {
   useEffect(() => {
+    let theme = 'system';
     try {
       const storedProfile = localStorage.getItem('userProfile');
-      let theme = 'system';
       if (storedProfile) {
         const profile: User = JSON.parse(storedProfile);
-        theme = profile.preferences?.theme || 'system';
-      }
-
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else if (theme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+        if (profile.preferences?.theme) {
+          theme = profile.preferences.theme;
         }
       }
     } catch (error) {
-      console.error("Failed to apply theme from localStorage", error);
-      // Fallback to system theme on error
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      }
+      console.error("Failed to apply theme from localStorage, defaulting to system.", error);
     }
+    
+    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
   }, []);
 
   return null;
