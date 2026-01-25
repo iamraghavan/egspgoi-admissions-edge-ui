@@ -5,8 +5,8 @@ import 'react-date-range/dist/theme/default.css';
 import { leadColumns } from '@/components/leads/columns';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
-import type { Lead, Role } from '@/lib/types';
-import { getLeads } from '@/lib/data';
+import type { Lead, Role, LeadStatus, User } from '@/lib/types';
+import { getLeads, getUsers } from '@/lib/data';
 import type { DateRange } from 'react-day-picker';
 import { Breadcrumbs, BreadcrumbItem } from '@/components/ui/breadcrumbs';
 import PageHeader from '@/components/page-header';
@@ -15,6 +15,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Filter, User as UserIcon, Calendar as CalendarIcon, MoreHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
 
 const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
   ssr: false,
@@ -29,7 +37,6 @@ const LeadsDataTable = dynamic(() => import('@/components/leads/data-table'), {
     </div>,
 });
 
-
 const roleSlugMap: Record<string, Role> = {
     'sa': 'Super Admin',
     'mm': 'Marketing Manager',
@@ -38,6 +45,7 @@ const roleSlugMap: Record<string, Role> = {
     'ae': 'Admission Executive',
 };
 
+const leadStatuses: LeadStatus[] = ["New", "Contacted", "Interested", "Enrolled", "Failed"];
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -48,90 +56,112 @@ export default function LeadsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [agents, setAgents] = useState<User[]>([]);
+  const [statusFilter, setStatusFilter] = useState<Set<LeadStatus>>(new Set());
+  const [ownerFilter, setOwnerFilter] = useState<Set<string>>(new Set());
   
   const userRole = roleSlugMap[params.role] || 'Admission Executive';
   const isAdmissionRole = userRole === 'Admission Manager' || userRole === 'Admission Executive';
 
-  const fetchLeads = useCallback(async (
-    { cursor, isNewSearch, range }: { cursor?: string | null; isNewSearch?: boolean; range?: DateRange } = {}
-  ) => {
-    if (cursor) {
-        setIsFetchingMore(true);
-    } else {
-        setLoading(true);
-    }
-
-    const filters: { cursor?: string; startDate?: Date, endDate?: Date, assignedTo?: string } = {};
-    if (cursor) filters.cursor = cursor;
-    if (range?.from) filters.startDate = range.from;
-    if (range?.to) filters.endDate = range.to;
-    if (isAdmissionRole) filters.assignedTo = params.encryptedUserId;
-    
-
-    const { leads: fetchedLeads, meta, error } = await getLeads(filters);
-    
-    if(error){
-        if (error.status !== 401 && error.status !== 403) {
+  const fetchLeadsAndAgents = useCallback(async () => {
+    setLoading(true);
+    try {
+        const [leadsResponse, agentsData] = await Promise.all([
+            getLeads({ 
+                assignedTo: isAdmissionRole ? params.encryptedUserId : undefined 
+            }),
+            getUsers()
+        ]);
+        
+        if (leadsResponse.error) {
             toast({
                 variant: "destructive",
                 title: "Failed to fetch leads",
-                description: error.message || "Could not retrieve lead data from the server.",
+                description: leadsResponse.error.message || "Could not retrieve lead data.",
             });
+        } else {
+            setLeads(leadsResponse.leads);
+            setNextCursor(leadsResponse.meta?.cursor || null);
         }
+        
+        setAgents(agentsData);
+
+    } catch (err: any) {
+        toast({
+            variant: "destructive",
+            title: "Failed to load page data",
+            description: err.message,
+        });
+    } finally {
+        setLoading(false);
+    }
+  }, [toast, isAdmissionRole, params.encryptedUserId]);
+
+  useEffect(() => {
+    fetchLeadsAndAgents();
+  }, [fetchLeadsAndAgents]);
+
+  const handleSearch = useCallback(async () => {
+    setLoading(true);
+    const filters: {
+        startDate?: Date,
+        endDate?: Date,
+        assignedTo?: string[],
+        status?: string[]
+    } = {};
+
+    if (dateRange?.from) filters.startDate = dateRange.from;
+    if (dateRange?.to) filters.endDate = dateRange.to;
+    if (ownerFilter.size > 0) filters.assignedTo = Array.from(ownerFilter);
+    if (statusFilter.size > 0) filters.status = Array.from(statusFilter);
+
+    if(isAdmissionRole && !filters.assignedTo) {
+        filters.assignedTo = [params.encryptedUserId];
+    }
+    
+    const { leads: fetchedLeads, meta, error } = await getLeads(filters);
+    
+    if(error){
+        toast({
+            variant: "destructive",
+            title: "Failed to fetch leads",
+            description: error.message || "Could not retrieve lead data.",
+        });
     } else {
-      setLeads(prev => (cursor && !isNewSearch) ? [...prev, ...fetchedLeads] : fetchedLeads);
+      setLeads(fetchedLeads);
       setNextCursor(meta?.cursor || null);
     }
     setLoading(false);
-    setIsFetchingMore(false);
-  }, [toast, isAdmissionRole, params.encryptedUserId]);
-  
-  useEffect(() => {
-    let isMounted = true;
-    
-    async function loadLeads() {
-        if (!isMounted) return;
-        setLoading(true);
+  }, [dateRange, ownerFilter, statusFilter, toast, isAdmissionRole, params.encryptedUserId]);
 
-        const filters: { startDate?: Date, endDate?: Date, assignedTo?: string } = {};
-        if (dateRange?.from) filters.startDate = dateRange.from;
-        if (dateRange?.to) filters.endDate = dateRange.to;
-        if (isAdmissionRole) filters.assignedTo = params.encryptedUserId;
+  const handleLeadUpdate = () => {
+    handleSearch();
+  };
 
-        const { leads: fetchedLeads, meta, error } = await getLeads(filters);
-
-        if (!isMounted) return;
-
-        if (error) {
-            if (error.status !== 401 && error.status !== 403) {
-                toast({
-                    variant: "destructive",
-                    title: "Failed to fetch leads",
-                    description: error.message || "Could not retrieve lead data from the server.",
-                });
-            }
+  const toggleStatusFilter = (status: LeadStatus) => {
+    setStatusFilter(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(status)) {
+            newSet.delete(status);
         } else {
-            setLeads(fetchedLeads);
-            setNextCursor(meta?.cursor || null);
+            newSet.add(status);
         }
-        setLoading(false);
-    }
-
-    loadLeads();
-
-    return () => {
-        isMounted = false;
-    };
-  }, [dateRange, isAdmissionRole, params.encryptedUserId, toast]);
-
-  const handleDateRangeChange = (newDateRange?: DateRange) => {
-    setDateRange(newDateRange);
+        return newSet;
+    });
   }
 
-  const handleSearch = () => {
-    fetchLeads({ isNewSearch: true, range: dateRange });
+  const toggleOwnerFilter = (agentId: string) => {
+    setOwnerFilter(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(agentId)) {
+            newSet.delete(agentId);
+        } else {
+            newSet.add(agentId);
+        }
+        return newSet;
+    });
   }
-
+  
   return (
     <div className="flex flex-col gap-4">
         <Breadcrumbs>
@@ -139,6 +169,57 @@ export default function LeadsPage() {
             <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
         </Breadcrumbs>
        <PageHeader title="Leads" description="Manage and track all your prospective students." />
+
+        <div className="flex flex-wrap items-center gap-2 pb-4 border-b">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm"><UserIcon className="mr-2 h-4 w-4" /> Contact Owner</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>Filter by Owner</DropdownMenuLabel>
+                     <DropdownMenuSeparator />
+                    {agents.map(agent => (
+                        <DropdownMenuCheckboxItem key={agent.id} checked={ownerFilter.has(agent.id)} onCheckedChange={() => toggleOwnerFilter(agent.id)}>
+                            {agent.name}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm"><CalendarIcon className="mr-2 h-4 w-4" /> Create Date</Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={2}
+                    />
+                </PopoverContent>
+            </Popover>
+
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm"><Filter className="mr-2 h-4 w-4" /> Lead Status</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {leadStatuses.map(status => (
+                        <DropdownMenuCheckboxItem key={status} checked={statusFilter.has(status)} onCheckedChange={() => toggleStatusFilter(status)}>
+                            {status}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" onClick={handleSearch} className="bg-primary/90 hover:bg-primary">Apply Filters</Button>
+        </div>
+
+
         <Card>
             <CardContent className="p-0">
                 <Tabs defaultValue="table" className="flex flex-col">
@@ -151,15 +232,11 @@ export default function LeadsPage() {
                             columns={leadColumns}
                             data={leads}
                             loading={loading}
-                            refreshData={handleSearch}
-                            dateRange={dateRange}
-                            setDateRange={handleDateRangeChange}
-                            searchKey="name"
-                            searchPlaceholder="Filter leads by name..."
+                            refreshData={handleLeadUpdate}
                         />
                     </TabsContent>
                     <TabsContent value="board" className="mt-0 p-4 flex-grow">
-                        <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={handleSearch} />
+                        <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={handleLeadUpdate} />
                     </TabsContent>
                 </Tabs>
             </CardContent>

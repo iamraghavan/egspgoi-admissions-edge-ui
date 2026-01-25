@@ -61,13 +61,30 @@ type ApiPaginatedResponse = {
 }
 
 export const getLeads = async (
-    filters: { cursor?: string | null, startDate?: Date, endDate?: Date, assignedTo?: string } = {}
+    filters: { 
+        cursor?: string | null, 
+        startDate?: Date, 
+        endDate?: Date, 
+        assignedTo?: string | string[],
+        status?: string[]
+    } = {}
 ): Promise<{ leads: Lead[], meta: { cursor: string | null, count: number } | null, error: any }> => {
-    const params = new URLSearchParams({ limit: '20' });
+    const params = new URLSearchParams({ limit: '50' });
     if (filters.cursor) params.append('cursor', filters.cursor);
     if (filters.startDate) params.append('startDate', format(filters.startDate, 'yyyy-MM-dd'));
     if (filters.endDate) params.append('endDate', format(filters.endDate, 'yyyy-MM-dd'));
-    if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
+    
+    if (filters.assignedTo) {
+        if (Array.isArray(filters.assignedTo)) {
+            filters.assignedTo.forEach(id => params.append('assigned_to[]', id));
+        } else {
+            params.append('assigned_to', filters.assignedTo);
+        }
+    }
+    
+    if (filters.status) {
+        filters.status.forEach(s => params.append('status[]', s));
+    }
 
     const url = `/api/v1/leads?${params.toString()}`;
     
@@ -851,3 +868,19 @@ export const deletePage = async (pageId: string): Promise<{error: any}> => {
     });
     return { error };
 };
+
+export const getLiveCalls = async (): Promise<any[]> => {
+  return [
+    /*
+    {
+      "call_id": "1720499638.963",
+      "state": "Ringing",
+      "direction": 2,
+      "customer_number": "9944480464",
+      "agent_name": "RAGHAVAN",
+      "call_time": "00:00:15",
+      "created_at": "09/Jul/2024 10:03:58"
+    },
+    */
+  ]
+}

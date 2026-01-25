@@ -49,9 +49,7 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void
   canLoadMore?: boolean
   isFetchingMore?: boolean
-  refreshData?: (filters?: { dateRange?: DateRange }) => void;
-  dateRange?: DateRange;
-  setDateRange?: (dateRange?: DateRange) => void;
+  refreshData?: () => void;
   meta?: any;
 }
 
@@ -65,8 +63,6 @@ export default function DataTable<TData, TValue>({
   canLoadMore,
   isFetchingMore,
   refreshData,
-  dateRange,
-  setDateRange,
   meta,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
@@ -296,9 +292,7 @@ export default function DataTable<TData, TValue>({
             onCreateLead={refreshData ? () => setCreateDialogOpen(true) : undefined}
             onUploadLeads={refreshData ? () => setUploadDialogOpen(true) : undefined}
             onBulkTransfer={refreshData ? () => setBulkTransferOpen(true) : undefined}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            onSearch={refreshData ? () => refreshData({ dateRange }) : undefined}
+            hideFilters={!searchKey}
           />
       </div>
       <div className="rounded-md border">
