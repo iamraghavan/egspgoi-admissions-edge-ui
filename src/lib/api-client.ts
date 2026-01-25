@@ -38,7 +38,9 @@ export async function apiClient<T>(
                 title: 'Session Expired',
                 description: 'Your session has expired. Please log in again.',
             });
-            return { data: null, error: { message: 'Your session has expired. Please log in again.', status: 401 } };
+            logout();
+            // Return a promise that never resolves to prevent further processing
+            return new Promise(() => {});
         }
         
         if (response.status === 204 || response.headers.get('content-length') === '0') {

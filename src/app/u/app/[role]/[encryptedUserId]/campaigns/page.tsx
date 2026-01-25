@@ -27,8 +27,7 @@ export default function CampaignsPage() {
 
     const handleLogout = useCallback(() => {
         logout();
-        router.push('/');
-    }, [router]);
+    }, []);
 
     const fetchCampaigns = useCallback(async () => {
         setLoading(true);

@@ -201,4 +201,5 @@ export function logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userProfile');
+    window.location.href = '/';
 }

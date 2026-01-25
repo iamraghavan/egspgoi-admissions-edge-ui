@@ -41,7 +41,6 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
 
   const handleLogout = () => {
     logout();
-    router.push('/');
   };
 
   useEffect(() => {
