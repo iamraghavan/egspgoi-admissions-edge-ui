@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -18,10 +19,16 @@ export function ThemeInitializer() {
       console.error("Failed to apply theme from localStorage, defaulting to system.", error);
     }
     
-    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+    } else if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else { // 'system'
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     }
 
   }, []);
