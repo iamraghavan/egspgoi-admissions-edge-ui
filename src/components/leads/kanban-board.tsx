@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -13,12 +12,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Lead, LeadStatus } from '@/lib/types';
 import { updateLeadStatus } from '@/lib/data';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface KanbanBoardClientProps {
   leads: Lead[];
@@ -101,23 +101,23 @@ export default function KanbanBoardClient({ leads, isLoading, onLeadUpdate }: Ka
 
   const getStatusIndicatorColor = (status: LeadStatus) => {
     switch (status) {
-        case 'New': return 'bg-blue-500';
-        case 'Contacted': return 'bg-yellow-500';
-        case 'Interested': return 'bg-orange-500';
-        case 'Enrolled': return 'bg-green-500';
-        case 'Failed': return 'bg-red-500';
-        default: return 'bg-gray-500';
+        case 'New': return 'border-blue-500';
+        case 'Contacted': return 'border-yellow-500';
+        case 'Interested': return 'border-orange-500';
+        case 'Enrolled': return 'border-green-500';
+        case 'Failed': return 'border-red-500';
+        default: return 'border-gray-500';
     }
   }
 
   if (isLoading) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="flex gap-6 p-1">
             {Object.keys(columns).map(status => (
-                <div key={status} className="flex flex-col gap-4">
+                <div key={status} className="w-[300px] flex-shrink-0 space-y-2">
                     <Skeleton className="h-8 w-1/2" />
-                    <Skeleton className="h-32 w-full" />
                     <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-32 w-full" />
                 </div>
             ))}
         </div>
@@ -125,32 +125,48 @@ export default function KanbanBoardClient({ leads, isLoading, onLeadUpdate }: Ka
   }
 
   return (
-    <ScrollArea className="w-full whitespace-nowrap">
+    <ScrollArea className="w-full whitespace-nowrap bg-muted/20 rounded-lg border">
       <Kanban value={columns} onValueChange={setColumns} getItemValue={(item) => item.id} onMove={handleMove}>
-        <KanbanBoard className="md:w-full">
+        <KanbanBoard className="p-1">
           {Object.entries(columns).map(([status, leads]) => (
-            <KanbanColumn key={status} value={status}>
-                <div className='flex items-center gap-2 mb-2 p-2'>
-                    <span className={cn('w-3 h-3 rounded-full', getStatusIndicatorColor(status as LeadStatus))} />
-                    <h3 className="font-semibold">{status}</h3>
-                    <Badge variant="secondary" className='ml-1'>{leads.length}</Badge>
+            <KanbanColumn key={status} value={status} className="w-[300px] flex-shrink-0 border-r last:border-r-0">
+                <div className={cn(
+                    'flex items-center justify-between p-2 mx-2 border-t-2',
+                    getStatusIndicatorColor(status as LeadStatus)
+                )}>
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sm">{status}</h3>
+                        <Badge variant="secondary" className='rounded-full px-1.5 text-xs h-5'>{leads.length}</Badge>
+                    </div>
                 </div>
-              <KanbanColumnContent value={status} className="h-full">
+              <KanbanColumnContent value={status} className="h-full min-h-[100px] p-2 rounded-b-md">
                 {leads.map((lead) => (
                   <KanbanItem key={lead.id} value={lead.id}>
-                    <Card className="relative overflow-hidden">
-                        <span className={cn("absolute left-0 top-0 h-full w-1.5", getStatusIndicatorColor(lead.status as LeadStatus))} />
-                      <CardContent className="p-3 pl-4">
-                        <p className="font-semibold mb-2">{lead.name}</p>
-                        <p className="text-sm text-muted-foreground">{lead.course}</p>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(lead.last_contacted_at), { addSuffix: true })}
-                          </span>
-                          <Avatar className="h-6 w-6">
-                            {lead.assigned_user?.avatarUrl && <AvatarImage src={lead.assigned_user.avatarUrl} />}
-                            <AvatarFallback>{lead.assigned_user?.name?.charAt(0) ?? 'U'}</AvatarFallback>
-                          </Avatar>
+                    <Card className="shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-3 space-y-2">
+                        <p className="font-semibold text-sm">{lead.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                            Last contacted: {format(new Date(lead.last_contacted_at), 'P')}
+                        </p>
+                        {lead.source_website && (
+                            <p className="text-xs text-muted-foreground capitalize">
+                                Source: {lead.source_website.replace(/_/g, ' ')}
+                            </p>
+                        )}
+                        <div className="flex items-center justify-end mt-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <Avatar className="h-6 w-6">
+                                            {lead.assigned_user?.avatarUrl && <AvatarImage src={lead.assigned_user.avatarUrl} />}
+                                            <AvatarFallback className="text-xs">{lead.assigned_user?.name?.charAt(0) ?? 'U'}</AvatarFallback>
+                                        </Avatar>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{lead.assigned_user?.name ?? "Unassigned"}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                       </CardContent>
                     </Card>

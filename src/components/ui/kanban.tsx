@@ -255,7 +255,7 @@ function KanbanBoard({ children, className }: KanbanBoardProps) {
 
   return (
     <SortableContext items={columnIds} strategy={rectSortingStrategy}>
-      <div data-slot="kanban-board" className={cn('grid auto-rows-fr sm:grid-cols-3 gap-4', className)}>
+      <div data-slot="kanban-board" className={cn('flex items-start', className)}>
         {children}
       </div>
     </SortableContext>
