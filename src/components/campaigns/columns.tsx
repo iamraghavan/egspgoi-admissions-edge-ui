@@ -36,7 +36,16 @@ export const campaignColumns: ColumnDef<Campaign>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+    cell: ({ row }) => {
+        const campaign = row.original;
+        const params = useParams() as { role: string; encryptedUserId: string };
+        const campaignUrl = `/u/app/${params.role}/${params.encryptedUserId}/campaigns/${campaign.id}`;
+        return (
+            <Link href={campaignUrl} className="font-medium text-primary hover:underline">
+                {campaign.name}
+            </Link>
+        )
+    },
   },
   {
     accessorKey: "status",

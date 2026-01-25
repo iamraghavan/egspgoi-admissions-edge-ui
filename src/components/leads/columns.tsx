@@ -74,13 +74,30 @@ export const leadColumns: ColumnDef<Lead>[] = [
     },
     cell: ({ row }) => {
         const lead = row.original;
+        const params = useParams() as { role: string; encryptedUserId: string };
+        const leadUrl = `/u/app/${params.role}/${params.encryptedUserId}/leads/${lead.id}`;
         return (
-            <div className="flex flex-col">
-                <span className="font-medium">{lead.name}</span>
-                <span className="text-sm text-muted-foreground">{lead.email}</span>
-            </div>
+            <Link href={leadUrl} className="font-medium text-primary hover:underline">
+                {lead.name}
+            </Link>
         )
     },
+  },
+   {
+    accessorKey: "email",
+    header: "Email",
+     cell: ({ row }) => {
+        const email = row.getValue("email") as string;
+        return (
+            <a href={`mailto:${email}`} className="text-muted-foreground hover:text-primary">
+                {email}
+            </a>
+        )
+    }
+  },
+  {
+      accessorKey: "phone",
+      header: "Phone"
   },
   {
     accessorKey: "status",
@@ -93,10 +110,6 @@ export const leadColumns: ColumnDef<Lead>[] = [
     accessorKey: "assigned_user",
     header: "Assigned To",
     cell: AssignedToCell,
-  },
-    {
-    accessorKey: "district",
-    header: "District",
   },
   {
     accessorKey: "last_contacted_at",
@@ -235,7 +248,7 @@ export const leadColumns: ColumnDef<Lead>[] = [
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
                             <DropdownMenuItem onClick={() => handleDelete('soft')}>
-                                Soft Delete
+                                Deactivate User (Soft)
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete('hard')} className="text-destructive">
                                 Hard Delete (Permanent)

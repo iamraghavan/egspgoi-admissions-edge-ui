@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -13,7 +12,7 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
   const isExpanded = isManuallyToggled || isHovering;
   
   return (
-    <div className="bg-muted/40 min-h-screen w-full">
+    <div className="bg-slate-50 dark:bg-zinc-900 min-h-screen w-full">
       <AppSidebar />
       <div className={cn(
         "flex flex-col h-screen transition-all duration-300 ease-in-out",

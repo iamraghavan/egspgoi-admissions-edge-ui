@@ -21,6 +21,7 @@ import { DateRangePicker } from 'react-date-range';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 const DataTable = dynamic(() => import('@/components/leads/data-table'), {
     loading: () => <div className="space-y-4">
@@ -111,95 +112,97 @@ export default function CallHistoryPage() {
         <div className="flex flex-col gap-8">
             <PageHeader title="Call History" description="Review and filter through past call records." />
             
-            <div className="flex flex-wrap items-end gap-4 mb-6 p-4 border rounded-lg bg-card">
-                <div className="grid w-full max-w-xs items-center gap-1.5">
-                    <Label className="text-sm font-medium">Date Range</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                id="date"
-                                variant={"outline"}
-                                className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !dateRange && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange?.from ? (
-                                dateRange.to ? (
-                                    <>
-                                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                                    {format(dateRange.to, "LLL dd, y")}
-                                    </>
-                                ) : (
-                                    format(dateRange.from, "LLL dd, y")
-                                )
-                                ) : (
-                                <span>Pick a date</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <DateRangePicker
-                                onChange={handleDateChange}
-                                showSelectionPreview={true}
-                                moveRangeOnFirstSelection={false}
-                                months={2}
-                                ranges={[{
-                                    startDate: dateRange?.from,
-                                    endDate: dateRange?.to,
-                                    key: 'selection'
-                                }]}
-                                direction="horizontal"
-                            />
-                        </PopoverContent>
-                    </Popover>
+            <Card className="p-4">
+                <div className="flex flex-wrap items-end gap-4 mb-6">
+                    <div className="grid w-full max-w-xs items-center gap-1.5">
+                        <Label className="text-sm font-medium">Date Range</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    id="date"
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !dateRange && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                                        {format(dateRange.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "LLL dd, y")
+                                    )
+                                    ) : (
+                                    <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <DateRangePicker
+                                    onChange={handleDateChange}
+                                    showSelectionPreview={true}
+                                    moveRangeOnFirstSelection={false}
+                                    months={2}
+                                    ranges={[{
+                                        startDate: dateRange?.from,
+                                        endDate: dateRange?.to,
+                                        key: 'selection'
+                                    }]}
+                                    direction="horizontal"
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="grid w-full max-w-[180px] items-center gap-1.5">
+                        <Label className="text-sm font-medium">Call Direction</Label>
+                        <Select onValueChange={(val: any) => setDirection(val)} value={direction}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Directions" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="inbound">Inbound</SelectItem>
+                                <SelectItem value="outbound">Outbound</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid w-full max-w-xs items-center gap-1.5">
+                        <Label className="text-sm font-medium">Agent</Label>
+                        <Select onValueChange={setAgent} value={agent}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Agents" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={handleSearch} disabled={loading && page === 1}>
+                            {loading && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                            Search
+                        </Button>
+                    </div>
                 </div>
-                <div className="grid w-full max-w-[180px] items-center gap-1.5">
-                    <Label className="text-sm font-medium">Call Direction</Label>
-                    <Select onValueChange={(val: any) => setDirection(val)} value={direction}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="All Directions" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="inbound">Inbound</SelectItem>
-                            <SelectItem value="outbound">Outbound</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid w-full max-w-xs items-center gap-1.5">
-                    <Label className="text-sm font-medium">Agent</Label>
-                    <Select onValueChange={setAgent} value={agent}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="All Agents" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={handleSearch} disabled={loading && page === 1}>
-                        {loading && page === 1 && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-                        Search
-                    </Button>
-                </div>
-            </div>
-            <DataTable 
-                columns={callRecordsColumns} 
-                data={records}
-                loading={loading && records.length === 0}
-                searchKey="call_id" 
-                searchPlaceholder="Filter by ID..."
-                onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
-                canLoadMore={canLoadMore}
-                isFetchingMore={loading && page > 1}
-                meta={{
-                    setPlayingRecording,
-                }}
-            />
+                <DataTable 
+                    columns={callRecordsColumns} 
+                    data={records}
+                    loading={loading && records.length === 0}
+                    searchKey="call_id" 
+                    searchPlaceholder="Filter by ID..."
+                    onLoadMore={canLoadMore ? () => fetchRecords() : undefined}
+                    canLoadMore={canLoadMore}
+                    isFetchingMore={loading && page > 1}
+                    meta={{
+                        setPlayingRecording,
+                    }}
+                />
+            </Card>
             {playingRecording && (
               <AudioPlayerDialog
                 recordingUrl={playingRecording}

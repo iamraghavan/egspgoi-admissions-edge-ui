@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BudgetRequest } from "@/lib/types";
 import { useToast } from '@/hooks/use-toast';
 import { getProfile } from '@/lib/auth';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function BudgetApprovalsPage() {
     const [allRequests, setAllRequests] = useState<BudgetRequest[]>([]);
@@ -65,44 +66,46 @@ export default function BudgetApprovalsPage() {
     return (
         <div className="flex flex-col gap-8">
             <PageHeader title="Budget Approvals" description="Review and approve campaign budgets." />
-            <Tabs defaultValue="pending">
-                <TabsList>
-                    <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
-                    <TabsTrigger value="my-requests">My Requests</TabsTrigger>
-                    <TabsTrigger value="all">All Requests</TabsTrigger>
-                </TabsList>
-                <TabsContent value="pending" className="mt-6">
-                    <DataTable 
-                        columns={budgetColumns} 
-                        data={pendingRequests as BudgetRequest[]} 
-                        loading={loading}
-                        searchKey="campaign_name"
-                        searchPlaceholder="Filter by campaign..."
-                        meta={{
-                            onApprove: (id: string) => handleStatusUpdate(id, 'approved'),
-                            onReject: (id: string) => handleStatusUpdate(id, 'rejected'),
-                        }}
-                    />
-                </TabsContent>
-                <TabsContent value="my-requests" className="mt-6">
-                    <DataTable 
-                        columns={budgetColumns} 
-                        data={myRequests as BudgetRequest[]}
-                        loading={loading}
-                        searchKey="campaign_name"
-                        searchPlaceholder="Filter by campaign..."
-                    />
-                </TabsContent>
-                <TabsContent value="all" className="mt-6">
-                    <DataTable 
-                        columns={budgetColumns} 
-                        data={allRequests as BudgetRequest[]}
-                        loading={loading}
-                        searchKey="campaign_name"
-                        searchPlaceholder="Filter by campaign..."
-                    />
-                </TabsContent>
-            </Tabs>
+            <Card>
+                <Tabs defaultValue="pending">
+                    <TabsList className="p-1.5 bg-transparent border-b rounded-none w-full justify-start">
+                        <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
+                        <TabsTrigger value="my-requests">My Requests</TabsTrigger>
+                        <TabsTrigger value="all">All Requests</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="pending" className="mt-0 p-4">
+                        <DataTable 
+                            columns={budgetColumns} 
+                            data={pendingRequests as BudgetRequest[]} 
+                            loading={loading}
+                            searchKey="campaign_name"
+                            searchPlaceholder="Filter by campaign..."
+                            meta={{
+                                onApprove: (id: string) => handleStatusUpdate(id, 'approved'),
+                                onReject: (id: string) => handleStatusUpdate(id, 'rejected'),
+                            }}
+                        />
+                    </TabsContent>
+                    <TabsContent value="my-requests" className="mt-0 p-4">
+                        <DataTable 
+                            columns={budgetColumns} 
+                            data={myRequests as BudgetRequest[]}
+                            loading={loading}
+                            searchKey="campaign_name"
+                            searchPlaceholder="Filter by campaign..."
+                        />
+                    </TabsContent>
+                    <TabsContent value="all" className="mt-0 p-4">
+                        <DataTable 
+                            columns={budgetColumns} 
+                            data={allRequests as BudgetRequest[]}
+                            loading={loading}
+                            searchKey="campaign_name"
+                            searchPlaceholder="Filter by campaign..."
+                        />
+                    </TabsContent>
+                </Tabs>
+            </Card>
         </div>
     );
 }

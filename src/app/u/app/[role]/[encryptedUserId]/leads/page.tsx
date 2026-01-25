@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 
 const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
   ssr: false,
@@ -138,29 +139,31 @@ export default function LeadsPage() {
             <BreadcrumbItem isCurrent>Leads</BreadcrumbItem>
         </Breadcrumbs>
        <PageHeader title="Leads" description="Manage and track all your prospective students." />
-        <div className="flex-grow">
-             <Tabs defaultValue="table" className="flex flex-col">
-                <TabsList>
-                    <TabsTrigger value="table">Data Table</TabsTrigger>
-                    <TabsTrigger value="board">Kanban Board</TabsTrigger>
-                </TabsList>
-                <TabsContent value="table" className="flex-grow">
-                    <LeadsDataTable
-                        columns={leadColumns}
-                        data={leads}
-                        loading={loading}
-                        refreshData={handleSearch}
-                        dateRange={dateRange}
-                        setDateRange={handleDateRangeChange}
-                        searchKey="name"
-                        searchPlaceholder="Filter leads by name..."
-                    />
-                </TabsContent>
-                <TabsContent value="board" className="mt-6 flex-grow">
-                  <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={handleSearch} />
-                </TabsContent>
-            </Tabs>
-        </div>
+        <Card>
+            <CardContent className="p-0">
+                <Tabs defaultValue="table" className="flex flex-col">
+                    <TabsList className="p-1.5 bg-transparent border-b rounded-none">
+                        <TabsTrigger value="table">Data Table</TabsTrigger>
+                        <TabsTrigger value="board">Kanban Board</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="table" className="flex-grow p-4">
+                        <LeadsDataTable
+                            columns={leadColumns}
+                            data={leads}
+                            loading={loading}
+                            refreshData={handleSearch}
+                            dateRange={dateRange}
+                            setDateRange={handleDateRangeChange}
+                            searchKey="name"
+                            searchPlaceholder="Filter leads by name..."
+                        />
+                    </TabsContent>
+                    <TabsContent value="board" className="mt-0 p-4 flex-grow">
+                        <KanbanBoard leads={leads} isLoading={loading} onLeadUpdate={handleSearch} />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
     </div>
   );
 }

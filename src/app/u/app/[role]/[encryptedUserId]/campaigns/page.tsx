@@ -14,6 +14,7 @@ import Link from 'next/link';
 import DataTable from '@/components/leads/data-table';
 import { campaignColumns } from '@/components/campaigns/columns';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Card } from '@/components/ui/card';
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -100,15 +101,17 @@ export default function CampaignsPage() {
                     </Link>
                 </Button>
             </PageHeader>
-            <DataTable 
-                columns={campaignColumns}
-                data={campaigns}
-                searchKey="name"
-                searchPlaceholder="Filter campaigns by name..."
-                meta={{
-                    onDelete: handleDeleteClick
-                }}
-            />
+            <Card>
+                <DataTable 
+                    columns={campaignColumns}
+                    data={campaigns}
+                    searchKey="name"
+                    searchPlaceholder="Filter campaigns by name..."
+                    meta={{
+                        onDelete: handleDeleteClick
+                    }}
+                />
+            </Card>
             {campaignToDelete && (
                  <ConfirmationDialog
                     isOpen={!!campaignToDelete}

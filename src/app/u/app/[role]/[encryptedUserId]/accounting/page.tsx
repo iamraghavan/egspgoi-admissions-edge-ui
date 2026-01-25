@@ -12,6 +12,7 @@ import { PlusCircle } from 'lucide-react';
 import type { PaymentRecord, AdSpend } from '@/lib/types';
 import { AddPaymentForm } from '@/components/accounting/add-payment-form';
 import { AddAdSpendForm } from '@/components/accounting/add-ad-spend-form';
+import { Card } from '@/components/ui/card';
 
 export default function AccountingPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -61,30 +62,32 @@ export default function AccountingPage() {
           </DropdownMenuContent>
         </DropdownMenu>
       </PageHeader>
-      <Tabs defaultValue="payments">
-        <TabsList>
-          <TabsTrigger value="payments">Payment Records</TabsTrigger>
-          <TabsTrigger value="adspends">Ad Spends</TabsTrigger>
-        </TabsList>
-        <TabsContent value="payments" className="mt-6">
-          <DataTable
-            columns={paymentsColumns}
-            data={payments}
-            loading={loading}
-            searchKey="purpose"
-            searchPlaceholder="Filter by purpose..."
-          />
-        </TabsContent>
-        <TabsContent value="adspends" className="mt-6">
-          <DataTable
-            columns={adSpendsColumns}
-            data={adSpends}
-            loading={loading}
-            searchKey="campaign_name"
-            searchPlaceholder="Filter by campaign..."
-          />
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <Tabs defaultValue="payments">
+          <TabsList className="p-1.5 bg-transparent border-b rounded-none w-full justify-start">
+            <TabsTrigger value="payments">Payment Records</TabsTrigger>
+            <TabsTrigger value="adspends">Ad Spends</TabsTrigger>
+          </TabsList>
+          <TabsContent value="payments" className="mt-0 p-4">
+            <DataTable
+              columns={paymentsColumns}
+              data={payments}
+              loading={loading}
+              searchKey="purpose"
+              searchPlaceholder="Filter by purpose..."
+            />
+          </TabsContent>
+          <TabsContent value="adspends" className="mt-0 p-4">
+            <DataTable
+              columns={adSpendsColumns}
+              data={adSpends}
+              loading={loading}
+              searchKey="campaign_name"
+              searchPlaceholder="Filter by campaign..."
+            />
+          </TabsContent>
+        </Tabs>
+      </Card>
       <AddPaymentForm
         isOpen={isPaymentFormOpen}
         onOpenChange={setPaymentFormOpen}

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserFormDialog } from '@/components/users/user-form-dialog';
 import dynamic from 'next/dynamic';
+import { Card } from '@/components/ui/card';
 
 const DataTable = dynamic(() => import('@/components/leads/data-table'), {
     loading: () => <Skeleton className="h-96 w-full" />,
@@ -101,17 +102,19 @@ export default function UserManagementPage() {
                     Create User
                 </Button>
             </PageHeader>
-            <DataTable 
-                columns={userColumns} 
-                data={users}
-                loading={loading}
-                searchKey="name"
-                searchPlaceholder="Filter by name or email..."
-                meta={{
-                    onEdit: handleEdit,
-                    onDelete: handleDelete,
-                }}
-            />
+            <Card>
+                <DataTable 
+                    columns={userColumns} 
+                    data={users}
+                    loading={loading}
+                    searchKey="name"
+                    searchPlaceholder="Filter by name or email..."
+                    meta={{
+                        onEdit: handleEdit,
+                        onDelete: handleDelete,
+                    }}
+                />
+            </Card>
             <UserFormDialog
                 isOpen={isFormOpen}
                 onOpenChange={setFormOpen}
