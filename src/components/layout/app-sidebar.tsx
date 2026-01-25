@@ -28,19 +28,19 @@ export default function AppSidebar() {
               <AppLogo className="h-8 w-8 shrink-0" />
               <span className={cn("truncate", !isExpanded && "sr-only")}>Admissions Edge</span>
             </Link>
-            <Button
-                variant="ghost"
-                size="icon"
-                className={cn("rounded-full h-8 w-8 ml-auto text-white hover:bg-white/10 hover:text-white", !isExpanded && "hidden")}
-                onClick={() => setManuallyToggled(!isManuallyToggled)}
-            >
-                <PanelLeft className="h-5 w-5" />
-            </Button>
           </div>
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <Nav />
           </div>
           <div className="mt-auto flex flex-col items-center gap-4 px-2 py-2">
+             <Button
+                variant="ghost"
+                size="icon"
+                className={cn("rounded-full h-8 w-8 text-white hover:bg-white/10 hover:text-white", !isExpanded && "hidden")}
+                onClick={() => setManuallyToggled(!isManuallyToggled)}
+            >
+                <PanelLeft className="h-5 w-5" />
+            </Button>
              <Button
                 variant="ghost"
                 size="icon"
