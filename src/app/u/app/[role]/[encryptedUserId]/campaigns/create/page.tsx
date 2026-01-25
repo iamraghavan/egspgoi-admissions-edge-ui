@@ -59,6 +59,9 @@ export default function CreateCampaignPage() {
             institution: formData.get('institution') as string,
             objective: formData.get('objective') as string,
             kpi: formData.get('kpi') as string,
+            settings: {
+                budget_daily: parseFloat(formData.get('budget') as string)
+            },
             target_audience: {
                 age: formData.get('target_audience_age') as string,
                 location: formData.get('target_audience_location') as string,
@@ -97,6 +100,12 @@ export default function CreateCampaignPage() {
                                     <Input id="name" name="name" placeholder="e.g., Summer Admissions 2026" required />
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="budget">Daily Budget</Label>
+                                    <Input id="budget" name="budget" type="number" step="0.01" placeholder="e.g., 10000" required />
+                                </div>
+                            </div>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                 <div className="space-y-2">
                                     <Label>Date Range</Label>
                                      <Popover>
                                         <PopoverTrigger asChild>
@@ -135,8 +144,6 @@ export default function CreateCampaignPage() {
                                         </PopoverContent>
                                     </Popover>
                                 </div>
-                            </div>
-                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="type">Campaign Type</Label>
                                     <Select name="type" required>
@@ -149,6 +156,8 @@ export default function CreateCampaignPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            </div>
+                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="platform">Platform</Label>
                                      <Select name="platform" required>
@@ -162,18 +171,17 @@ export default function CreateCampaignPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="institution">Institution</Label>
+                                    <Select name="institution" required>
+                                        <SelectTrigger><SelectValue placeholder="Select an institution" /></SelectTrigger>
+                                        <SelectContent>
+                                            {colleges.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             
-                            <div className="space-y-2">
-                                <Label htmlFor="institution">Institution</Label>
-                                 <Select name="institution" required>
-                                    <SelectTrigger><SelectValue placeholder="Select an institution" /></SelectTrigger>
-                                    <SelectContent>
-                                        {colleges.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
                              <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="objective">Objective</Label>

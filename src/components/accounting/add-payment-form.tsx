@@ -16,6 +16,7 @@ import { addPaymentRecord } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
   date: z.date({
@@ -26,6 +27,7 @@ const formSchema = z.object({
   payment_method: z.string().min(1, "Payment method is required."),
   transaction_id: z.string().min(1, "Transaction ID is required."),
   purpose: z.string().min(1, "Purpose is required."),
+  remarks: z.string().optional(),
 });
 
 interface AddPaymentFormProps {
@@ -44,6 +46,7 @@ export function AddPaymentForm({ isOpen, onOpenChange, onSuccess }: AddPaymentFo
         payment_method: '',
         transaction_id: '',
         purpose: '',
+        remarks: '',
     }
   });
 
@@ -132,6 +135,9 @@ export function AddPaymentForm({ isOpen, onOpenChange, onSuccess }: AddPaymentFo
             )}/>
              <FormField control={form.control} name="purpose" render={({ field }) => (
                 <FormItem><FormLabel>Purpose</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )}/>
+             <FormField control={form.control} name="remarks" render={({ field }) => (
+                <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )}/>
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

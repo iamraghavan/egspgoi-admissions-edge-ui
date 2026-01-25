@@ -155,6 +155,7 @@ export type PaymentRecord = {
     payment_method: string;
     transaction_id: string;
     purpose: string;
+    remarks?: string;
     leadId?: string;
     leadName?: string;
     status?: 'Completed' | 'Pending' | 'Failed';
@@ -168,6 +169,7 @@ export type AdSpend = {
     actual_spend: number;
     campaign_id: string;
     campaign_name?: string;
+    remarks?: string;
 };
 
 export type NavItem = {

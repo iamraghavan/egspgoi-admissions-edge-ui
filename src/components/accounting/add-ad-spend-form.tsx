@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
+import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
   date: z.date({
@@ -27,6 +28,7 @@ const formSchema = z.object({
   budget_allocated: z.coerce.number().min(0),
   actual_spend: z.coerce.number().min(0),
   campaign_id: z.string().min(1, "Campaign is required."),
+  remarks: z.string().optional(),
 });
 
 interface AddAdSpendFormProps {
@@ -158,6 +160,9 @@ export function AddAdSpendForm({ isOpen, onOpenChange, onSuccess }: AddAdSpendFo
             )}/>
             <FormField control={form.control} name="actual_spend" render={({ field }) => (
                 <FormItem><FormLabel>Actual Spend</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+            )}/>
+             <FormField control={form.control} name="remarks" render={({ field }) => (
+                <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )}/>
            
             <DialogFooter className="pt-4">

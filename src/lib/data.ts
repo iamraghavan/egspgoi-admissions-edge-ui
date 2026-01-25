@@ -354,6 +354,19 @@ export const createCampaign = async (campaignData: Partial<Campaign>): Promise<C
     };
 };
 
+export const updateCampaign = async (id: string, campaignData: Partial<Campaign>): Promise<Campaign> => {
+    const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(campaignData),
+    });
+    if (error) throw new Error(error.message);
+    const campaign = data.data;
+    return {
+        ...campaign,
+        budget: campaign.settings?.budget_daily || 0,
+    };
+};
+
 export const updateCampaignStatus = async (id: string, status: CampaignStatus): Promise<Campaign> => {
     const { data, error } = await apiClient<any>(`/api/v1/campaigns/${id}/status`, {
         method: 'PATCH',
@@ -371,6 +384,15 @@ export const deleteCampaign = async (id: string): Promise<void> => {
     if (error) throw new Error(error.message);
 };
 
+export const getAssets = async (campaignId: string): Promise<Asset[]> => {
+    const { data, error } = await apiClient<any>(`/api/v1/assets?campaign_id=${campaignId}`);
+    if (error) throw new Error(error.message);
+    return (data?.data || []).map((asset: any) => ({
+        ...asset,
+        created_at: parseCustomDate(asset.created_at),
+    }));
+};
+
 export const uploadAsset = async (assetData: { campaign_id: string; name: string; file: File }): Promise<Asset> => {
     const formData = new FormData();
     formData.append('campaign_id', assetData.campaign_id);
@@ -382,6 +404,18 @@ export const uploadAsset = async (assetData: { campaign_id: string; name: string
     });
     if (error) throw new Error(error.message);
     return data.data;
+};
+
+export const approveAsset = async (assetId: string, status: 'approved' | 'rejected'): Promise<Asset> => {
+    const { data, error } = await apiClient<any>(`/api/v1/assets/${assetId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    });
+    if (error) throw new Error(error.message);
+    return {
+        ...data.data,
+        created_at: parseCustomDate(data.data.created_at),
+    };
 };
 
 export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
