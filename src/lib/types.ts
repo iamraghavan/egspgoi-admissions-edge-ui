@@ -172,10 +172,11 @@ export type AdSpend = {
 
 export type NavItem = {
   title: string;
-  href: (role: string, encryptedUserId: string) => string;
-  icon: React.ElementType;
+  href?: (role: string, encryptedUserId: string) => string;
+  icon?: React.ElementType;
   roles: Role[];
-  subItems?: Omit<NavItem, 'roles' | 'icon' | 'subItems'>[];
+  subItems?: Omit<NavItem, 'roles' | 'icon' | 'subItems' | 'type'>[];
+  type?: 'heading';
 };
 
 export type InventoryResource = {

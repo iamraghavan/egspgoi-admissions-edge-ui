@@ -16,10 +16,13 @@ import {
 import { useEffect, useState } from "react"
 import { getProfile, logout } from "@/lib/auth"
 import { Skeleton } from "../ui/skeleton"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
+import Link from 'next/link'
+import { MoreHorizontal } from "lucide-react"
 
 interface UserProfile {
+  id: string;
   name: string;
   email: string;
 }
@@ -30,7 +33,11 @@ interface UserNavProps {
 
 export function UserNav({ isCollapsed = false }: UserNavProps) {
   const router = useRouter();
+  const params = useParams();
   const [user, setUser] = useState<UserProfile | null>(null);
+
+  const { role, encryptedUserId } = params as { role: string; encryptedUserId: string };
+  const settingsUrl = `/u/app/${role}/${encryptedUserId}/settings`;
 
   const handleLogout = () => {
     logout();
@@ -42,7 +49,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
       try {
         const profile = await getProfile();
         if (profile) {
-            setUser(profile);
+            setUser(profile as UserProfile);
         }
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -50,32 +57,91 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
     }
     fetchProfile();
   }, []);
+  
+  if (isCollapsed) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-12 w-12 rounded-full p-0 mx-auto">
+              <Avatar className="h-9 w-9">
+                {user ? (
+                    <AvatarFallback className="bg-white/20">
+                    {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                ) : (
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                )}
+              </Avatar>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+            {/* Dropdown content is the same for both states */}
+            {user ? (
+            <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user.name}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                </p>
+                </div>
+            </DropdownMenuLabel>
+            ) : (
+            <div className="p-2 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+            </div>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link href={settingsUrl}>Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href={settingsUrl}>Settings</Link>
+                </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            Log out
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={cn("relative h-10 rounded-full w-full justify-center p-0", !isCollapsed && "justify-start gap-2 px-2")}>
-          <Avatar className="h-8 w-8">
-            {user ? (
-                <AvatarFallback>
-                {user.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-            ) : (
-                <Skeleton className="h-8 w-8 rounded-full" />
-            )}
-          </Avatar>
-           {!isCollapsed && user && (
-                <div className="flex flex-col space-y-1 items-start truncate">
-                    <p className="text-sm font-medium leading-none truncate">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground truncate">
-                        {user.email}
-                    </p>
-                </div>
-            )}
+        <Button variant="ghost" className="w-full flex justify-between items-center h-auto p-2 hover:bg-white/10">
+            <div className="flex items-center gap-2 truncate">
+                <Avatar className="h-9 w-9">
+                    {user ? (
+                        <AvatarFallback className="bg-white/20">
+                        {user.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    ) : (
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                    )}
+                </Avatar>
+                {user ? (
+                    <div className="flex flex-col items-start truncate">
+                        <p className="text-sm font-medium leading-none text-white truncate">{user.name}</p>
+                        <p className="text-xs leading-none text-gray-400 truncate">
+                            {user.email}
+                        </p>
+                    </div>
+                ) : (
+                     <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-32" />
+                    </div>
+                )}
+            </div>
+            <MoreHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        {user ? (
+         {user ? (
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -92,14 +158,11 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
+          <DropdownMenuItem asChild>
+            <Link href={settingsUrl}>Profile</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
+           <DropdownMenuItem asChild>
+            <Link href={settingsUrl}>Settings</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

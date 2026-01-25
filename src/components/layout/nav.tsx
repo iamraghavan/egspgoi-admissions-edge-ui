@@ -11,7 +11,7 @@ import {
   Phone,
   History,
   Settings,
-  Landmark,
+  Calculator,
   UserCog,
   Bell,
   BookText,
@@ -37,6 +37,11 @@ import { ChevronRight } from 'lucide-react';
 
 const navItems: NavItem[] = [
   {
+    title: 'CORE',
+    type: 'heading',
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
+  },
+  {
     title: 'Dashboard',
     href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/dashboard`,
     icon: LayoutDashboard,
@@ -55,6 +60,28 @@ const navItems: NavItem[] = [
     roles: ['Super Admin', 'Marketing Manager'],
   },
   {
+    title: 'OPERATIONS',
+    type: 'heading',
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
+  },
+  {
+    title: 'Call Monitoring',
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-monitoring`,
+    icon: Phone,
+    roles: ['Super Admin', 'Admission Manager'],
+  },
+  {
+    title: 'Call History',
+    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-history`,
+    icon: History,
+    roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
+  },
+  {
+    title: 'FINANCE',
+    type: 'heading',
+    roles: ['Super Admin', 'Marketing Manager', 'Finance'],
+  },
+  {
     title: 'Budget Approvals',
     href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/budget-approvals`,
     icon: CircleDollarSign,
@@ -63,8 +90,13 @@ const navItems: NavItem[] = [
   {
     title: 'Accounting',
     href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/accounting`,
-    icon: Landmark,
+    icon: Calculator,
     roles: ['Super Admin', 'Finance', 'Marketing Manager'],
+  },
+  {
+    title: 'ADMIN',
+    type: 'heading',
+    roles: ['Super Admin'],
   },
   {
     title: 'CMS',
@@ -86,15 +118,8 @@ const navItems: NavItem[] = [
     roles: ['Super Admin'],
   },
   {
-    title: 'Call Monitoring',
-    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-monitoring`,
-    icon: Phone,
-    roles: ['Super Admin', 'Admission Manager'],
-  },
-  {
-    title: 'Call History',
-    href: (role, encryptedUserId) => `/u/app/${role}/${encryptedUserId}/call-history`,
-    icon: History,
+    title: 'PERSONAL',
+    type: 'heading',
     roles: ['Super Admin', 'Marketing Manager', 'Admission Manager', 'Finance', 'Admission Executive'],
   },
    {
@@ -146,14 +171,27 @@ export default function Nav() {
     setOpenCollapsibles(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
   }
 
+  const renderHeading = (item: NavItem) => {
+    if (!isExpanded) {
+        return <div className="h-8"></div>;
+    }
+    return (
+        <div key={item.title} className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {item.title}
+        </div>
+    )
+  }
 
   const renderLink = (item: NavItem) => {
+    if (!item.href || !item.icon) return null;
     const href = item.href(roleSlug, encryptedUserId);
     const isActive = pathname.startsWith(href) && (href.split('/').length === pathname.split('/').length || (item.title === "Dashboard" && pathname.endsWith('/dashboard')));
 
     const commonClasses = cn(
-      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-muted/50",
-      isActive ? "bg-primary/90 text-white" : "hover:text-white"
+      "flex items-center gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
+      isActive
+        ? "bg-white/5 text-white font-semibold"
+        : "text-gray-300 hover:bg-white/10 hover:text-white"
     );
 
     if (!isExpanded) {
@@ -161,8 +199,9 @@ export default function Nav() {
              <TooltipProvider key={item.title} delayDuration={100}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-12 w-12 p-0 flex items-center justify-center mx-auto")}>
-                            <item.icon className="h-6 w-6" />
+                         <Link href={href} className={cn(commonClasses, "h-11 w-11 p-0 flex items-center justify-center mx-auto")}>
+                            {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white"></div>}
+                            <item.icon className="h-5 w-5" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -174,24 +213,27 @@ export default function Nav() {
     }
 
     return (
-      <Link key={item.title} href={href} className={cn(commonClasses, "h-12")}>
-        {item.icon && <item.icon className="h-6 w-6 shrink-0" />}
+      <Link key={item.title} href={href} className={cn(commonClasses, "h-11")}>
+        {isActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
+        <item.icon className="h-5 w-5 shrink-0 ml-1" />
         <span className="truncate">{item.title}</span>
       </Link>
     );
   }
 
   const renderCollapsible = (item: NavItem) => {
+      if (!item.icon) return null;
       const isOpen = openCollapsibles.includes(item.title);
       const isAnySubItemActive = item.subItems?.some(sub => pathname.startsWith(sub.href(roleSlug, encryptedUserId)));
 
       const TriggerContent = () => (
          <div className={cn(
-                "flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all",
-                (isAnySubItemActive || isOpen) ? "text-white" : "hover:text-white hover:bg-muted/50"
+                "flex items-center justify-between w-full gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
+                (isAnySubItemActive || isOpen) ? "text-white" : "text-gray-300 hover:bg-white/10 hover:text-white"
             )}>
-            <div className="flex items-center gap-3">
-                <item.icon className="h-6 w-6 shrink-0" />
+            <div className="flex items-center gap-x-3">
+                 {isAnySubItemActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
+                <item.icon className="h-5 w-5 shrink-0 ml-1" />
                 <span className={cn("truncate", !isExpanded && "sr-only")}>{item.title}</span>
             </div>
             <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
@@ -202,18 +244,19 @@ export default function Nav() {
         return (
             <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleCollapsible(item.title)}>
                 <CollapsibleTrigger asChild>
-                    <button className="w-full h-12">
+                    <button className="w-full h-11">
                         <TriggerContent />
                     </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-1 py-1 pl-7">
                 {item.subItems?.map(subItem => {
+                    if (!subItem.href) return null;
                     const href = subItem.href(roleSlug, encryptedUserId);
                     const isActive = pathname.startsWith(href);
                     return (
                         <Link key={subItem.title} href={href} className={cn(
-                                "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-white",
-                                isActive ? "text-white" : "",
+                                "flex items-center gap-3 rounded-md py-2 transition-all",
+                                isActive ? "text-white font-semibold" : "text-gray-300 hover:text-white",
                                 "pl-7 pr-3" 
                             )}>
                                 <span className="truncate">{subItem.title}</span>
@@ -229,19 +272,15 @@ export default function Nav() {
         <TooltipProvider key={item.title} delayDuration={100}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <div
-                      className={cn(
-                          "flex h-12 w-12 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-white hover:bg-muted/50 cursor-pointer mx-auto",
-                          isAnySubItemActive && "bg-primary/90 text-white"
-                      )}
-                      onClick={() => isExpanded ? toggleCollapsible(item.title) : {}}
-                    >
-                         <item.icon className="h-6 w-6" />
+                    <div className={cn("flex h-11 w-11 p-0 items-center justify-center rounded-md transition-all cursor-pointer mx-auto relative",
+                        isAnySubItemActive ? "bg-white/5 text-white" : "text-gray-300 hover:bg-white/10 hover:text-white"
+                    )}>
+                        {isAnySubItemActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white"></div>}
+                         <item.icon className="h-5 w-5" />
                     </div>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                     <p>{item.title}</p>
-                    {item.subItems?.map(sub => <div key={sub.title}>{sub.title}</div>)}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
@@ -249,6 +288,9 @@ export default function Nav() {
   }
 
   const renderNavItem = (item: NavItem) => {
+    if(item.type === 'heading') {
+        return renderHeading(item);
+    }
     if (item.subItems) {
         return renderCollapsible(item);
     }
@@ -256,11 +298,8 @@ export default function Nav() {
   }
 
   return (
-    <nav className={cn("grid gap-2 text-sm font-medium p-2 py-4")}>
-      {visibleNavItems.map(item => renderNavItem(item))}
+    <nav className={cn("grid gap-1 text-sm font-medium p-2 py-4")}>
+      {visibleNavItems.map((item, index) => <div key={item.title + index}>{renderNavItem(item)}</div>)}
     </nav>
   );
 }
-
-
-
