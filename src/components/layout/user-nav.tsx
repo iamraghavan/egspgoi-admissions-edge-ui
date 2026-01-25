@@ -122,9 +122,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
                 )}
             </Avatar>
             {user ? (
-                <div className={cn("flex-col items-start truncate", isCollapsed && "hidden")}>
-                    <p className="text-sm font-medium leading-none text-white truncate">{user.name}</p>
-                </div>
+                <span className={cn("text-sm font-medium text-white truncate", isCollapsed && "hidden")}>{user.name}</span>
             ) : (
                  <div className={cn("space-y-1", isCollapsed && "hidden")}>
                     <Skeleton className="h-4 w-24" />

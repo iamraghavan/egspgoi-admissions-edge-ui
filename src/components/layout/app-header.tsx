@@ -123,7 +123,7 @@ export default function AppHeader() {
 
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b-0 bg-[#57002f] px-4 sm:px-6 text-white">
+    <header className="flex items-center gap-4 border-b-0 bg-[#57002f] px-6 sm:px-8 py-3 text-white">
         <Button size="icon" variant="ghost" className="sm:hidden text-white hover:bg-white/10" onClick={() => setManuallyToggled(true)}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
