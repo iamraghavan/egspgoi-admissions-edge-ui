@@ -15,6 +15,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  getGlobalFilteredRowModel,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -51,6 +52,7 @@ interface DataTableProps<TData, TValue> {
   isFetchingMore?: boolean
   refreshData?: () => void;
   meta?: any;
+  searchQuery?: string;
 }
 
 export default function DataTable<TData, TValue>({
@@ -64,6 +66,7 @@ export default function DataTable<TData, TValue>({
   isFetchingMore,
   refreshData,
   meta,
+  searchQuery,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -264,6 +267,7 @@ export default function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       columnFilters,
+      globalFilter: searchQuery,
     },
     meta: {
         refreshData: refreshData ? () => refreshData() : undefined,
@@ -280,6 +284,7 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    getGlobalFilteredRowModel: getGlobalFilteredRowModel(),
   })
 
   return (
@@ -292,7 +297,7 @@ export default function DataTable<TData, TValue>({
             onCreateLead={refreshData ? () => setCreateDialogOpen(true) : undefined}
             onUploadLeads={refreshData ? () => setUploadDialogOpen(true) : undefined}
             onBulkTransfer={refreshData ? () => setBulkTransferOpen(true) : undefined}
-            hideFilters={!searchKey}
+            hideFilters={!refreshData}
           />
       </div>
       <div className="rounded-md border">

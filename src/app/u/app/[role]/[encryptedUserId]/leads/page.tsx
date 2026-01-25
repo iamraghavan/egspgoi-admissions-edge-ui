@@ -18,9 +18,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DateRangePicker } from 'react-date-range';
-import { Filter, User as UserIcon, Calendar as CalendarIcon, MoreHorizontal } from 'lucide-react';
+import { Filter, User as UserIcon, Calendar as CalendarIcon, MoreHorizontal, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 
 const KanbanBoard = dynamic(() => import('@/components/leads/kanban-board'), {
@@ -51,7 +52,7 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const params = useParams() as { role: string; encryptedUserId: string; };
-
+  const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -133,6 +134,14 @@ export default function LeadsPage() {
     setLoading(false);
   }, [dateRange, ownerFilter, statusFilter, toast, isAdmissionRole, params.encryptedUserId]);
 
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+        handleSearch();
+    }, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [dateRange, ownerFilter, statusFilter, handleSearch]);
+
+
   const handleLeadUpdate = () => {
     handleSearch();
   };
@@ -176,6 +185,16 @@ export default function LeadsPage() {
        <PageHeader title="Leads" description="Manage and track all your prospective students." />
 
         <div className="flex flex-wrap items-center gap-2 pb-4 border-b">
+            <div className="relative flex-grow sm:flex-grow-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search by name, email..."
+                    className="h-9 pl-9 w-full sm:w-64"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm"><UserIcon className="mr-2 h-4 w-4" /> Contact Owner</Button>
@@ -247,7 +266,6 @@ export default function LeadsPage() {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" onClick={handleSearch} className="bg-primary/90 hover:bg-primary">Apply Filters</Button>
         </div>
 
 
@@ -264,6 +282,7 @@ export default function LeadsPage() {
                             data={leads}
                             loading={loading}
                             refreshData={handleLeadUpdate}
+                            searchQuery={searchQuery}
                         />
                     </TabsContent>
                     <TabsContent value="board" className="mt-0 p-4 flex-grow">
