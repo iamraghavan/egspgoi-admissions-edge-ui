@@ -187,10 +187,10 @@ export default function Nav() {
     const isActive = pathname.startsWith(href) && (href.split('/').length === pathname.split('/').length || (item.title === "Dashboard" && pathname.endsWith('/dashboard')));
 
     const commonClasses = cn(
-      "flex items-center gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
+      "flex items-center gap-x-3 rounded-md px-3 py-2.5 text-white transition-all relative",
       isActive
-        ? "bg-black/20 font-semibold text-white"
-        : "text-white/80 hover:bg-black/10 hover:text-white"
+        ? "bg-black/20 font-semibold"
+        : "hover:bg-black/10"
     );
 
     if (!isExpanded) {
@@ -198,7 +198,7 @@ export default function Nav() {
              <TooltipProvider key={item.title} delayDuration={100}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-11 w-11 p-0 flex items-center justify-center mx-auto")}>
+                         <Link href={href} className={cn("h-11 w-11 p-0 flex items-center justify-center mx-auto rounded-md", commonClasses)}>
                             {isActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
                             <item.icon className="h-5 w-5" />
                         </Link>
@@ -227,8 +227,7 @@ export default function Nav() {
 
       const TriggerContent = () => (
          <div className={cn(
-                "flex items-center justify-between w-full gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
-                (isAnySubItemActive || isOpen) ? "text-white" : "text-white/80 hover:bg-black/10 hover:text-white"
+                "flex items-center justify-between w-full gap-x-3 rounded-md px-3 py-2.5 text-white transition-all relative hover:bg-black/10"
             )}>
             <div className="flex items-center gap-x-3">
                  {isAnySubItemActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
@@ -254,9 +253,8 @@ export default function Nav() {
                     const isActive = pathname.startsWith(href);
                     return (
                         <Link key={subItem.title} href={href} className={cn(
-                                "flex items-center gap-3 rounded-md py-2 transition-all",
-                                isActive ? "text-white font-semibold" : "text-white/80 hover:text-white",
-                                "pl-7 pr-3" 
+                                "flex items-center gap-3 rounded-md py-2 px-3 transition-all text-white hover:bg-black/10",
+                                isActive ? "font-semibold bg-black/10" : ""
                             )}>
                                 <span className="truncate">{subItem.title}</span>
                         </Link>
@@ -272,7 +270,7 @@ export default function Nav() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div className={cn("flex h-11 w-11 p-0 items-center justify-center rounded-md transition-all cursor-pointer mx-auto relative",
-                        isAnySubItemActive ? "bg-black/5 text-white" : "text-white/80 hover:bg-black/10 hover:text-white"
+                        isAnySubItemActive ? "bg-black/5 text-white" : "text-white hover:bg-black/10"
                     )}>
                         {isAnySubItemActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white"></div>}
                          <item.icon className="h-5 w-5" />
