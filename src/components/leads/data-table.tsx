@@ -15,7 +15,6 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  getGlobalFilteredRowModel,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -284,7 +283,6 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getGlobalFilteredRowModel: getGlobalFilteredRowModel(),
   })
 
   return (
