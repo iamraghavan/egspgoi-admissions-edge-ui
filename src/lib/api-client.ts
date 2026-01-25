@@ -1,6 +1,7 @@
 
-import { getAuthHeaders, logout } from './auth';
-import { toast } from '@/hooks/use-toast';
+
+import { getAuthHeaders } from './auth';
+import { sessionEmitter } from './session-emitter';
 
 const API_BASE_URL = "https://cms-egspgoi.vercel.app";
 
@@ -37,12 +38,7 @@ export async function apiClient<T>(
         if ((response.status === 401 || response.status === 403) && !isPublic) {
             if (!isLoggingOut) {
                 isLoggingOut = true;
-                toast({
-                    variant: 'destructive',
-                    title: 'Session Expired',
-                    description: 'Your session has expired. Please log in again.',
-                });
-                logout();
+                sessionEmitter.emit('expired');
             }
             // Return a promise that never resolves to prevent further processing
             return new Promise(() => {});

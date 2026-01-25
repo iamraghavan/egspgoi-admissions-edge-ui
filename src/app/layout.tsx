@@ -4,6 +4,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
 import { ThemeInitializer } from '@/components/theme-initializer';
+import { SessionManager } from '@/components/session-manager';
 
 export const metadata: Metadata = {
   title: 'Admissions Edge',
@@ -29,6 +30,7 @@ export default function RootLayout({
         />
         <FirebaseClientProvider>
             <ThemeInitializer />
+            <SessionManager />
             {children}
         </FirebaseClientProvider>
         <Toaster />
