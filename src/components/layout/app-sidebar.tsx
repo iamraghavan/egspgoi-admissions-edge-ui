@@ -23,7 +23,7 @@ export default function AppSidebar() {
   return (
     <aside 
         className={cn(
-            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r bg-[#2a004f] text-white transition-all duration-300 ease-in-out sm:flex",
+            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r bg-[#57002f] text-white transition-all duration-300 ease-in-out sm:flex",
             isExpanded ? "w-56" : "w-20"
         )}
         onMouseEnter={() => setHovering(true)}
@@ -60,5 +60,6 @@ export default function AppSidebar() {
     </aside>
   );
 }
+
 
 
