@@ -117,7 +117,7 @@ export default function AppHeader() {
 
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-[#57002f] border-white/10 text-gray-300 px-4 sm:px-6">
+    <header className="flex h-14 items-center gap-4 border-b bg-[#57002f] border-black/20 text-gray-300 px-4 sm:px-6">
         <Button size="icon" variant="ghost" className="sm:hidden text-white hover:bg-white/10" onClick={() => setManuallyToggled(true)}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
