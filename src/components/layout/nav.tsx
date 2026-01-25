@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from 'next/link';
@@ -191,8 +189,8 @@ export default function Nav() {
     const commonClasses = cn(
       "flex items-center gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
       isActive
-        ? "bg-white/10 text-white font-semibold"
-        : "text-gray-300 hover:bg-white/10 hover:text-white"
+        ? "bg-black/20 font-semibold text-white"
+        : "text-white/80 hover:bg-black/10 hover:text-white"
     );
 
     if (!isExpanded) {
@@ -230,7 +228,7 @@ export default function Nav() {
       const TriggerContent = () => (
          <div className={cn(
                 "flex items-center justify-between w-full gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
-                (isAnySubItemActive || isOpen) ? "text-white" : "text-gray-300 hover:bg-white/10 hover:text-white"
+                (isAnySubItemActive || isOpen) ? "text-white" : "text-white/80 hover:bg-black/10 hover:text-white"
             )}>
             <div className="flex items-center gap-x-3">
                  {isAnySubItemActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
@@ -257,7 +255,7 @@ export default function Nav() {
                     return (
                         <Link key={subItem.title} href={href} className={cn(
                                 "flex items-center gap-3 rounded-md py-2 transition-all",
-                                isActive ? "text-white font-semibold" : "text-gray-300 hover:text-white",
+                                isActive ? "text-white font-semibold" : "text-white/80 hover:text-white",
                                 "pl-7 pr-3" 
                             )}>
                                 <span className="truncate">{subItem.title}</span>
@@ -274,7 +272,7 @@ export default function Nav() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div className={cn("flex h-11 w-11 p-0 items-center justify-center rounded-md transition-all cursor-pointer mx-auto relative",
-                        isAnySubItemActive ? "bg-white/5 text-white" : "text-gray-300 hover:bg-white/10 hover:text-white"
+                        isAnySubItemActive ? "bg-black/5 text-white" : "text-white/80 hover:bg-black/10 hover:text-white"
                     )}>
                         {isAnySubItemActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white"></div>}
                          <item.icon className="h-5 w-5" />
