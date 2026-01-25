@@ -23,21 +23,21 @@ export default function AppSidebar() {
   return (
     <aside 
         className={cn(
-            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r bg-background transition-all duration-300 ease-in-out sm:flex",
-            isExpanded ? "w-56" : "w-14"
+            "fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r bg-[#2a004f] text-white transition-all duration-300 ease-in-out sm:flex",
+            isExpanded ? "w-56" : "w-20"
         )}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
     >
-       <div className={cn("flex h-14 items-center border-b px-4", !isExpanded && "justify-center")}>
+       <div className={cn("flex h-16 items-center border-b border-white/10 px-4", !isExpanded && "justify-center")}>
             <Link href="/" className={cn("flex items-center gap-2 font-semibold", !isExpanded ? "w-full justify-center" : "")}>
-              <AppLogo className="h-6 w-6 text-primary shrink-0" />
+              <AppLogo className="h-8 w-8 text-white shrink-0" />
               <span className={cn("truncate", !isExpanded && "sr-only")}>Admissions Edge</span>
             </Link>
             <Button
                 variant="ghost"
                 size="icon"
-                className={cn("rounded-full h-8 w-8 ml-auto", !isExpanded && "hidden")}
+                className={cn("rounded-full h-8 w-8 ml-auto text-white hover:bg-white/10 hover:text-white", !isExpanded && "hidden")}
                 onClick={() => setManuallyToggled(!isManuallyToggled)}
             >
                 <PanelLeft className="h-5 w-5" />
@@ -46,11 +46,11 @@ export default function AppSidebar() {
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <Nav />
           </div>
-          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-4 border-t">
+          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-4 border-t border-white/10">
              <Button
                 variant="ghost"
                 size="icon"
-                className={cn("rounded-full h-8 w-8", isExpanded && "hidden")}
+                className={cn("rounded-full h-8 w-8 text-white hover:bg-white/10 hover:text-white", isExpanded && "hidden")}
                 onClick={() => setManuallyToggled(!isManuallyToggled)}
             >
                 <PanelRight className="h-5 w-5" />
@@ -60,4 +60,5 @@ export default function AppSidebar() {
     </aside>
   );
 }
+
 

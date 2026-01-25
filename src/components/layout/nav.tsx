@@ -152,8 +152,8 @@ export default function Nav() {
     const isActive = pathname.startsWith(href) && (href.split('/').length === pathname.split('/').length || (item.title === "Dashboard" && pathname.endsWith('/dashboard')));
 
     const commonClasses = cn(
-        "flex items-center rounded-lg text-muted-foreground transition-colors hover:text-primary",
-        isActive && "bg-muted text-primary"
+      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-muted/50",
+      isActive ? "bg-primary/90 text-white" : "hover:text-white"
     );
 
     if (!isExpanded) {
@@ -161,8 +161,8 @@ export default function Nav() {
              <TooltipProvider key={item.title} delayDuration={100}>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Link href={href} className={cn(commonClasses, "h-9 w-9 p-0 flex items-center justify-center mx-auto")}>
-                            <item.icon className="h-5 w-5" />
+                         <Link href={href} className={cn(commonClasses, "h-12 w-12 p-0 flex items-center justify-center mx-auto")}>
+                            <item.icon className="h-6 w-6" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -174,8 +174,8 @@ export default function Nav() {
     }
 
     return (
-      <Link key={item.title} href={href} className={cn(commonClasses, "gap-3 px-3 py-2")}>
-        {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+      <Link key={item.title} href={href} className={cn(commonClasses, "h-12")}>
+        {item.icon && <item.icon className="h-6 w-6 shrink-0" />}
         <span className="truncate">{item.title}</span>
       </Link>
     );
@@ -187,11 +187,11 @@ export default function Nav() {
 
       const TriggerContent = () => (
          <div className={cn(
-                "flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                (isAnySubItemActive || isOpen) && "text-primary"
+                "flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all",
+                (isAnySubItemActive || isOpen) ? "text-white" : "hover:text-white hover:bg-muted/50"
             )}>
             <div className="flex items-center gap-3">
-                <item.icon className="h-5 w-5 shrink-0" />
+                <item.icon className="h-6 w-6 shrink-0" />
                 <span className={cn("truncate", !isExpanded && "sr-only")}>{item.title}</span>
             </div>
             <ChevronRight className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90", !isExpanded && "hidden")} />
@@ -202,7 +202,7 @@ export default function Nav() {
         return (
             <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleCollapsible(item.title)}>
                 <CollapsibleTrigger asChild>
-                    <button className="w-full">
+                    <button className="w-full h-12">
                         <TriggerContent />
                     </button>
                 </CollapsibleTrigger>
@@ -212,9 +212,9 @@ export default function Nav() {
                     const isActive = pathname.startsWith(href);
                     return (
                         <Link key={subItem.title} href={href} className={cn(
-                                "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-primary",
-                                isActive ? "text-primary" : "",
-                                "pl-4 pr-3" 
+                                "flex items-center gap-3 rounded-lg py-2 text-muted-foreground transition-all hover:text-white",
+                                isActive ? "text-white" : "",
+                                "pl-7 pr-3" 
                             )}>
                                 <span className="truncate">{subItem.title}</span>
                         </Link>
@@ -231,12 +231,12 @@ export default function Nav() {
                 <TooltipTrigger asChild>
                     <div
                       className={cn(
-                          "flex h-9 w-9 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-primary cursor-pointer mx-auto",
-                          isAnySubItemActive && "bg-muted text-primary"
+                          "flex h-12 w-12 p-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-white hover:bg-muted/50 cursor-pointer mx-auto",
+                          isAnySubItemActive && "bg-primary/90 text-white"
                       )}
                       onClick={() => isExpanded ? toggleCollapsible(item.title) : {}}
                     >
-                         <item.icon className="h-5 w-5" />
+                         <item.icon className="h-6 w-6" />
                     </div>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -256,9 +256,11 @@ export default function Nav() {
   }
 
   return (
-    <nav className={cn("grid gap-1 text-sm font-medium p-2 py-4")}>
+    <nav className={cn("grid gap-2 text-sm font-medium p-2 py-4")}>
       {visibleNavItems.map(item => renderNavItem(item))}
     </nav>
   );
 }
+
+
 
