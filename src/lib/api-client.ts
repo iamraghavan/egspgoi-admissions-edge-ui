@@ -9,6 +9,8 @@ type ApiResult<T> = {
     error: { message: string, status: number, [key: string]: any } | null;
 }
 
+let isLoggingOut = false;
+
 export async function apiClient<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -32,13 +34,16 @@ export async function apiClient<T>(
 
         const response = await fetch(url, finalOptions);
         
-        if (response.status === 401 && !isPublic) {
-            toast({
-                variant: 'destructive',
-                title: 'Session Expired',
-                description: 'Your session has expired. Please log in again.',
-            });
-            logout();
+        if ((response.status === 401 || response.status === 403) && !isPublic) {
+            if (!isLoggingOut) {
+                isLoggingOut = true;
+                toast({
+                    variant: 'destructive',
+                    title: 'Session Expired',
+                    description: 'Your session has expired. Please log in again.',
+                });
+                logout();
+            }
             // Return a promise that never resolves to prevent further processing
             return new Promise(() => {});
         }
