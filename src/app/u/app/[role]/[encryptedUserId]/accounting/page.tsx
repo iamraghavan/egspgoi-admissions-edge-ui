@@ -1,4 +1,6 @@
 'use client';
+import 'react-date-range/dist/styles.css'; 
+import 'react-date-range/dist/theme/default.css'; 
 import { useState, useEffect, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';

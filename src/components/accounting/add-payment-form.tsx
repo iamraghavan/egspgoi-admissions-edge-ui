@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as DateRangeCalendar } from 'react-date-range';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { addPaymentRecord } from '@/lib/data';
@@ -106,14 +106,11 @@ export function AddPaymentForm({ isOpen, onOpenChange, onSuccess }: AddPaymentFo
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
+                      <DateRangeCalendar
+                        date={field.value}
+                        onChange={field.onChange}
+                        color="hsl(var(--primary))"
+                        maxDate={new Date()}
                       />
                     </PopoverContent>
                   </Popover>
