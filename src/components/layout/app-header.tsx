@@ -51,8 +51,32 @@ export default function AppHeader() {
   
   const [isNotifOpen, setNotifOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const { setManuallyToggled } = useContext(SidebarContext);
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, []);
+
+  const formatDateTime = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = String(hours % 12 || 12).padStart(2, '0');
+    
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    return `${day}/${month}/${year} - ${formattedHours}:${minutes}:${seconds} ${ampm} - ${weekday}`;
+  };
 
   const checkUnread = useCallback(async () => {
     try {
@@ -130,7 +154,7 @@ export default function AppHeader() {
         </Button>
 
       {/* Search Bar */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
           <PopoverTrigger asChild>
             <form className="w-full">
@@ -179,21 +203,13 @@ export default function AppHeader() {
             </Command>
           </PopoverContent>
         </Popover>
-         <TooltipProvider delayDuration={100}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full text-white/80 hover:bg-black/10 hover:text-white">
-                        <Plus className="h-5 w-5" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-black/80 text-white border-none">
-                    <p>Quick Create</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
       </div>
 
-      <div className="flex-grow" />
+      <div className="flex-grow hidden lg:flex items-center justify-center">
+        <div className="text-sm font-medium text-white/90">
+            {formatDateTime(currentDate)}
+        </div>
+      </div>
 
         <div className="flex items-center gap-1">
            <TooltipProvider delayDuration={100}>
