@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -8,8 +7,6 @@ import AppSidebar from '@/components/layout/app-sidebar';
 import AppHeader from '@/components/layout/app-header';
 import { SidebarProvider, SidebarContext } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import InfoMarquee from '@/components/layout/info-marquee';
-
 
 function CrmLayoutContent({ children }: { children: ReactNode }) {
   const { isManuallyToggled, isHovering } = useContext(SidebarContext);
@@ -20,10 +17,9 @@ function CrmLayoutContent({ children }: { children: ReactNode }) {
       <AppSidebar />
       <div className={cn(
         "flex flex-col h-screen transition-all duration-300 ease-in-out",
-        "sm:pl-14", // Default collapsed width
+        "sm:pl-20", // Default collapsed width
         isExpanded && "sm:pl-56" // Expanded width
       )}>
-        <InfoMarquee />
         <div className="flex-shrink-0">
             <AppHeader />
         </div>
