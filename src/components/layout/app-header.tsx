@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { UserNav } from './user-nav';
@@ -118,8 +117,8 @@ export default function AppHeader() {
 
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-        <Button size="icon" variant="outline" className="sm:hidden" onClick={() => setManuallyToggled(true)}>
+    <header className="flex h-14 items-center gap-4 border-b bg-[#57002f] border-white/10 text-gray-300 px-4 sm:px-6">
+        <Button size="icon" variant="ghost" className="sm:hidden text-white hover:bg-white/10" onClick={() => setManuallyToggled(true)}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
         </Button>
@@ -130,13 +129,13 @@ export default function AppHeader() {
           <PopoverTrigger asChild>
             <form className="w-full">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
                   placeholder="Search leads, campaigns..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+                  className="w-full appearance-none bg-white/10 text-white placeholder:text-gray-400 rounded-md pl-8 shadow-none md:w-2/3 lg:w-1/3"
                 />
               </div>
             </form>
@@ -179,7 +178,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
            <Popover open={isNotifOpen} onOpenChange={handleNotifOpenChange}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10 hover:text-white">
                     <Bell className="h-5 w-5" />
                     {hasUnread && <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />}
                     <span className="sr-only">Notifications</span>
@@ -189,10 +188,9 @@ export default function AppHeader() {
                 <NotificationCenter onOpenChange={setNotifOpen} />
             </PopoverContent>
           </Popover>
-          <Separator orientation='vertical' className='h-8 mx-2' />
+          <Separator orientation='vertical' className='h-8 mx-2 bg-white/20' />
           <UserNav />
         </div>
     </header>
   );
 }
-
