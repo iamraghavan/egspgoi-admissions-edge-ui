@@ -319,3 +319,81 @@ export interface AdminDashboardData {
     charts: AdminDashboardCharts;
     recentActivity: AdminDashboardRecentActivity[];
 }
+
+
+// For Admission Manager
+export interface Kpi {
+    value: number | string;
+    label: string;
+}
+
+export interface AdmissionManagerKpis {
+    total_leads_period: Kpi;
+    unassigned_leads: Kpi;
+    conversions_period: Kpi;
+    conversion_rate: Kpi;
+}
+
+export interface LeaderboardEntry {
+    id: string;
+    name: string;
+    leads: number;
+    conversions: number;
+    conversionRate: number;
+}
+
+export interface ChartPoint {
+    date: string;
+    value: number;
+}
+
+export interface AdmissionManagerCharts {
+    daily_leads: ChartPoint[];
+    daily_conversions: ChartPoint[];
+}
+
+export interface AdmissionManagerDashboardData {
+    meta: {
+        startDate: string;
+        endDate: string;
+    };
+    kpi: AdmissionManagerKpis;
+    leaderboard: LeaderboardEntry[];
+    source_breakdown: Record<string, number>;
+    charts: AdmissionManagerCharts;
+}
+
+// For Admission Executive
+export interface AdmissionExecutiveKpis {
+    total_leads: Kpi;
+    my_conversions: Kpi;
+    performance_target?: Kpi; // The guide mentions this as '5/10 achieved'
+    conversion_rate: Kpi; // Not in guide but useful, and exists in current code
+    pending_followups: Kpi;
+}
+
+export interface AdmissionExecutiveTask {
+    lead: {
+        id: string;
+        name: string;
+        phone: string;
+    };
+    task_description: string;
+    due_date: string;
+    isOverdue: boolean;
+}
+
+export interface AdmissionExecutiveCharts {
+    daily_leads: ChartPoint[];
+    daily_conversions: ChartPoint[];
+}
+
+export interface AdmissionExecutiveDashboardData {
+     meta: {
+        startDate: string;
+        endDate: string;
+    };
+    kpi: AdmissionExecutiveKpis;
+    tasks: AdmissionExecutiveTask[];
+    charts: AdmissionExecutiveCharts;
+}

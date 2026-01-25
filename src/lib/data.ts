@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page, AdminDashboardData } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page, AdminDashboardData, AdmissionManagerDashboardData, AdmissionExecutiveDashboardData } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -545,18 +545,32 @@ export const getDashboardStats = async (range?: string | number, startDate?: str
     return data!;
 };
 
-export const getExecutiveStats = async (range?: string | number, startDate?: string, endDate?: string) => {
+export const getAdmissionManagerStats = async (range?: string | number, startDate?: string, endDate?: string): Promise<AdmissionManagerDashboardData> => {
     const params = new URLSearchParams();
     if (range) params.append('range', String(range));
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const { data, error } = await apiClient<any>(`/api/v1/analytics/executive?${params.toString()}`);
+    const { data, error } = await apiClient<AdmissionManagerDashboardData>(`/api/v1/analytics/admission?${params.toString()}`);
+    if (error) {
+        console.error("Failed to fetch admission manager stats", error.message);
+        throw new Error(error.message || 'Failed to fetch admission manager stats');
+    }
+    return data!;
+};
+
+export const getExecutiveStats = async (range?: string | number, startDate?: string, endDate?: string): Promise<AdmissionExecutiveDashboardData> => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const { data, error } = await apiClient<AdmissionExecutiveDashboardData>(`/api/v1/analytics/executive?${params.toString()}`);
     if (error) {
         console.error("Failed to fetch executive stats", error.message);
         throw new Error(error.message || 'Failed to fetch executive stats');
     }
-    return data;
+    return data!;
 };
 
 

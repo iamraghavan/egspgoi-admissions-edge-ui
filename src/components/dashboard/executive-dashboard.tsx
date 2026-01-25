@@ -20,6 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Bar, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartTooltipContent, ChartContainer } from '@/components/ui/chart';
+import type { AdmissionExecutiveDashboardData, AdmissionExecutiveTask } from '@/lib/types';
 
 const StatCard = ({ title, value, icon: Icon, loading }: { title: string, value?: number | string, icon: React.ElementType, loading: boolean }) => (
     <Card>
@@ -39,9 +40,7 @@ const StatCard = ({ title, value, icon: Icon, loading }: { title: string, value?
 
 
 export default function ExecutiveDashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [charts, setCharts] = useState<any>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [stats, setStats] = useState<AdmissionExecutiveDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const params = useParams();
@@ -60,9 +59,7 @@ export default function ExecutiveDashboard() {
         const response = await getExecutiveStats(undefined, startDate, endDate);
         
         if (response) {
-            setStats(response.kpi);
-            setCharts(response.charts);
-            setTasks(response.tasks || []);
+            setStats(response);
         }
 
       } catch (err: any) {
@@ -84,9 +81,13 @@ export default function ExecutiveDashboard() {
   const handleSearch = () => {
       fetchExecutiveData(dateRange);
   }
+  
+  const kpis = stats?.kpi;
+  const tasks = stats?.tasks || [];
+  const charts = stats?.charts;
 
-  const chartData = charts ? charts.daily_leads.map((leadItem: any) => {
-    const conversionItem = charts.daily_conversions.find((convItem: any) => convItem.date === leadItem.date);
+  const chartData = charts ? charts.daily_leads.map((leadItem) => {
+    const conversionItem = charts.daily_conversions.find((convItem) => convItem.date === leadItem.date);
     return {
         date: leadItem.date,
         leads: leadItem.value,
@@ -148,25 +149,25 @@ export default function ExecutiveDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="My Leads (Period)"
-          value={stats?.total_leads}
+          value={kpis?.total_leads?.value}
           icon={Users}
           loading={loading}
         />
         <StatCard
           title="My Conversions"
-          value={stats?.my_conversions}
+          value={kpis?.my_conversions?.value}
           icon={CheckCircle}
           loading={loading}
         />
         <StatCard
           title="Success Rate"
-          value={stats ? `${stats.conversion_rate}%` : '...'}
+          value={kpis ? `${kpis.conversion_rate.value}%` : '...'}
           icon={Percent}
           loading={loading}
         />
         <StatCard
           title="Pending Tasks (Live)"
-          value={stats?.pending_followups}
+          value={kpis?.pending_followups?.value}
           icon={ListTodo}
           loading={loading}
         />
@@ -229,7 +230,7 @@ export default function ExecutiveDashboard() {
                                 </TableRow>
                             ))
                         ) : tasks.length > 0 ? (
-                            tasks.map((task) => (
+                            tasks.map((task: AdmissionExecutiveTask) => (
                                 <TableRow key={task.lead.id} className={cn(task.isOverdue && 'bg-destructive/10')}>
                                     <TableCell>
                                         <div className="font-medium">{task.lead.name}</div>
