@@ -8,7 +8,6 @@ import { SidebarContext } from '../ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { PanelLeft, PanelRight } from 'lucide-react';
-import { UserNav } from './user-nav';
 
 export default function AppSidebar() {
   const { isManuallyToggled, isHovering, setManuallyToggled, setHovering } = useContext(SidebarContext);
@@ -23,7 +22,7 @@ export default function AppSidebar() {
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
     >
-       <div className={cn("flex h-16 items-center px-4", !isExpanded && "justify-center")}>
+       <div className={cn("flex h-16 items-center border-b border-black/20 px-4", !isExpanded && "justify-center")}>
             <Link href="/" className={cn("flex items-center gap-2 font-semibold text-white", !isExpanded ? "w-full justify-center" : "")}>
               <AppLogo className="h-8 w-8 shrink-0" />
               <span className={cn("truncate", !isExpanded && "sr-only")}>Admissions Edge</span>
@@ -32,7 +31,7 @@ export default function AppSidebar() {
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <Nav />
           </div>
-          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-2">
+          <div className="mt-auto flex flex-col items-center gap-4 px-2 py-2 border-t border-black/20">
              <Button
                 variant="ghost"
                 size="icon"
@@ -49,8 +48,8 @@ export default function AppSidebar() {
             >
                 <PanelRight className="h-5 w-5" />
             </Button>
-            <div className="w-full">
-                <UserNav isCollapsed={!isExpanded}/>
+             <div className={cn('w-full text-center text-xs text-gray-400 pb-2', !isExpanded && 'hidden')}>
+                Version 0.1.0
             </div>
           </div>
     </aside>
