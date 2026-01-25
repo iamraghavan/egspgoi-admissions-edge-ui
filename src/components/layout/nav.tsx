@@ -33,6 +33,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronRight } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 
 const navItems: NavItem[] = [
@@ -173,10 +174,10 @@ export default function Nav() {
 
   const renderHeading = (item: NavItem) => {
     if (!isExpanded) {
-        return <div className="h-8"></div>;
+        return <Separator className="my-3 bg-white/20" />;
     }
     return (
-        <div key={item.title} className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <div key={item.title} className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-white">
             {item.title}
         </div>
     )
@@ -190,7 +191,7 @@ export default function Nav() {
     const commonClasses = cn(
       "flex items-center gap-x-3 rounded-md px-3 py-2.5 transition-all relative",
       isActive
-        ? "bg-white/5 text-white font-semibold"
+        ? "bg-white/10 text-white font-semibold"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
     );
 
@@ -200,7 +201,7 @@ export default function Nav() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                          <Link href={href} className={cn(commonClasses, "h-11 w-11 p-0 flex items-center justify-center mx-auto")}>
-                            {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white"></div>}
+                            {isActive && <div className="absolute left-0 h-full w-1 rounded-r-full bg-white"></div>}
                             <item.icon className="h-5 w-5" />
                         </Link>
                     </TooltipTrigger>
