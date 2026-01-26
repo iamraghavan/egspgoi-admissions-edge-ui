@@ -1,15 +1,16 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getCampaignById, updateCampaignStatus, uploadAsset } from '@/lib/data';
-import type { Campaign, CampaignStatus, Asset } from '@/lib/types';
+import { getCampaignById, updateCampaignStatus, uploadAsset, getBudgetRequests } from '@/lib/data';
+import type { Campaign, CampaignStatus, Asset, BudgetRequest } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Play, Pause, Power, Upload } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Power, Upload, CircleDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RequestBudgetDialog } from '@/components/budgets/request-budget-dialog';
+import DataTable from '@/components/leads/data-table';
+import { campaignBudgetColumns } from '@/components/budgets/campaign-budget-columns';
 
 const DetailItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
     <div>
@@ -124,8 +128,11 @@ export default function CampaignDetailPage() {
     
     const [campaign, setCampaign] = useState<Campaign | null>(null);
     const [loading, setLoading] = useState(true);
+    const [budgetRequests, setBudgetRequests] = useState<BudgetRequest[]>([]);
+    const [loadingBudgets, setLoadingBudgets] = useState(true);
+    const [isRequestBudgetOpen, setRequestBudgetOpen] = useState(false);
 
-    const fetchCampaign = useCallback(async () => {
+    const fetchCampaignData = useCallback(async () => {
         setLoading(true);
         try {
             const fetchedCampaign = await getCampaignById(params.campaignId);
@@ -142,9 +149,22 @@ export default function CampaignDetailPage() {
         }
     }, [params.campaignId, router, toast]);
 
+     const fetchBudgets = useCallback(async () => {
+        setLoadingBudgets(true);
+        try {
+            const requests = await getBudgetRequests({ campaignId: params.campaignId });
+            setBudgetRequests(requests);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Failed to fetch budget history', description: error.message });
+        } finally {
+            setLoadingBudgets(false);
+        }
+    }, [params.campaignId, toast]);
+
     useEffect(() => {
-        fetchCampaign();
-    }, [fetchCampaign]);
+        fetchCampaignData();
+        fetchBudgets();
+    }, [fetchCampaignData, fetchBudgets]);
 
     const handleStatusChange = async (newStatus: CampaignStatus) => {
         if (!campaign) return;
@@ -180,7 +200,9 @@ export default function CampaignDetailPage() {
                             <ArrowLeft className="mr-2 h-4 w-4" /> Back
                         </Link>
                     </Button>
-                    <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
+                     <Button size="sm" variant="outline" onClick={() => setRequestBudgetOpen(true)}>
+                        <CircleDollarSign className="mr-2 h-4 w-4" /> Request Budget
+                    </Button>
                     {campaign.status === 'paused' || campaign.status === 'draft' ? (
                         <Button size="sm" variant="success" onClick={() => handleStatusChange('active')}>
                             <Play className="mr-2 h-4 w-4" /> Activate
@@ -221,10 +243,11 @@ export default function CampaignDetailPage() {
                 <div className="flex items-center justify-between">
                     <TabsList>
                         <TabsTrigger value="assets">Assets</TabsTrigger>
+                        <TabsTrigger value="budget">Budget History</TabsTrigger>
                         <TabsTrigger value="performance">Performance</TabsTrigger>
                     </TabsList>
                     <div className="flex items-center gap-2">
-                        <UploadAssetDialog campaignId={campaign.id} onUploadSuccess={fetchCampaign} />
+                        <UploadAssetDialog campaignId={campaign.id} onUploadSuccess={fetchCampaignData} />
                     </div>
                 </div>
                 <TabsContent value="assets" className="mt-6">
@@ -239,6 +262,23 @@ export default function CampaignDetailPage() {
                         </div>
                     )}
                 </TabsContent>
+                <TabsContent value="budget" className="mt-6">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Budget Request History</CardTitle>
+                            <CardDescription>A log of all budget requests for this campaign.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <DataTable
+                                columns={campaignBudgetColumns}
+                                data={budgetRequests}
+                                loading={loadingBudgets}
+                                searchKey="status"
+                                searchPlaceholder="Filter by status..."
+                            />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
                  <TabsContent value="performance" className="mt-6">
                      <div className="flex flex-col items-center justify-center text-center border-2 border-dashed rounded-lg p-12 h-64">
                         <h3 className="text-xl font-semibold">Performance Tracking Coming Soon</h3>
@@ -246,6 +286,12 @@ export default function CampaignDetailPage() {
                     </div>
                 </TabsContent>
             </Tabs>
+             <RequestBudgetDialog 
+                isOpen={isRequestBudgetOpen}
+                onOpenChange={setRequestBudgetOpen}
+                campaignId={campaign.id}
+                onSuccess={fetchBudgets}
+            />
         </div>
     )
 }

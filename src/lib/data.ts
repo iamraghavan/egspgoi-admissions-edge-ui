@@ -1,6 +1,6 @@
 
 
-import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page, AdminDashboardData, AdmissionManagerDashboardData, AdmissionExecutiveDashboardData } from './types';
+import { User, Role, Lead, LeadStatus, Campaign, Call, BudgetRequest, BudgetRequestStatus, LiveCall, PaymentRecord, AdSpend, InventoryResource, Note, CallLog, Asset, CampaignStatus, AppNotification, Site, Category, Page, AdminDashboardData, AdmissionManagerDashboardData, AdmissionExecutiveDashboardData } from './types';
 import { subDays, subHours, format } from 'date-fns';
 import { getProfile } from './auth';
 import { apiClient } from './api-client';
@@ -414,8 +414,12 @@ export const approveAsset = async (assetId: string, status: 'approved' | 'reject
     };
 };
 
-export const getBudgetRequests = async (): Promise<BudgetRequest[]> => {
-    const { data, error } = await apiClient<any>('/api/v1/budgets');
+export const getBudgetRequests = async (filters: { campaignId?: string, status?: BudgetRequestStatus } = {}): Promise<BudgetRequest[]> => {
+    const params = new URLSearchParams();
+    if (filters.campaignId) params.append('campaign_id', filters.campaignId);
+    if (filters.status) params.append('status', filters.status);
+    
+    const { data, error } = await apiClient<any>(`/api/v1/budgets?${params.toString()}`);
     if (error) throw new Error(error.message);
 
     const requests = await Promise.all(
