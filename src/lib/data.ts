@@ -458,6 +458,23 @@ export const updateBudgetStatus = async (budgetId: string, status: 'approved' | 
     return data.data;
 };
 
+export const uploadProofOfPayment = async (budgetId: string, transactionRef: string, file: File): Promise<any> => {
+  const formData = new FormData();
+  formData.append('budget_id', budgetId);
+  formData.append('transaction_ref', transactionRef);
+  formData.append('file', file);
+
+  const { data, error } = await apiClient('/api/v1/proofs', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+};
+
 export const addPaymentRecord = async (paymentData: Partial<PaymentRecord>): Promise<PaymentRecord> => {
     const { data, error } = await apiClient<any>('/api/v1/accounting/payments', {
         method: 'POST',

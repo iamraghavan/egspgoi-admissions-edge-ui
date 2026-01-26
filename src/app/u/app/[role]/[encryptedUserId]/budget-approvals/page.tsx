@@ -10,12 +10,14 @@ import type { BudgetRequest } from "@/lib/types";
 import { useToast } from '@/hooks/use-toast';
 import { getProfile } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
+import { ProofOfPaymentDialog } from '@/components/budgets/proof-of-payment-dialog';
 
 export default function BudgetApprovalsPage() {
     const [allRequests, setAllRequests] = useState<BudgetRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const { toast } = useToast();
+    const [budgetForProof, setBudgetForProof] = useState<BudgetRequest | null>(null);
 
     useEffect(() => {
       getProfile().then(profile => {
@@ -60,6 +62,10 @@ export default function BudgetApprovalsPage() {
         }
     }
 
+    const handleUploadProof = (request: BudgetRequest) => {
+        setBudgetForProof(request);
+    };
+
     const pendingRequests = allRequests.filter(req => req.status === "pending");
     const myRequests = userId ? allRequests.filter(req => req.submitted_by === userId) : [];
 
@@ -83,6 +89,7 @@ export default function BudgetApprovalsPage() {
                             meta={{
                                 onApprove: (id: string) => handleStatusUpdate(id, 'approved'),
                                 onReject: (id: string) => handleStatusUpdate(id, 'rejected'),
+                                onUploadProof: handleUploadProof,
                             }}
                         />
                     </TabsContent>
@@ -93,6 +100,7 @@ export default function BudgetApprovalsPage() {
                             loading={loading}
                             searchKey="campaign_name"
                             searchPlaceholder="Filter by campaign..."
+                             meta={{ onUploadProof: handleUploadProof }}
                         />
                     </TabsContent>
                     <TabsContent value="all" className="mt-0 p-4">
@@ -102,10 +110,17 @@ export default function BudgetApprovalsPage() {
                             loading={loading}
                             searchKey="campaign_name"
                             searchPlaceholder="Filter by campaign..."
+                             meta={{ onUploadProof: handleUploadProof }}
                         />
                     </TabsContent>
                 </Tabs>
             </Card>
+             <ProofOfPaymentDialog
+                isOpen={!!budgetForProof}
+                onOpenChange={(isOpen) => !isOpen && setBudgetForProof(null)}
+                budgetRequest={budgetForProof}
+                onSuccess={fetchBudgets}
+            />
         </div>
     );
 }

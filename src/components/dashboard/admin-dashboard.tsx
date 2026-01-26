@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,6 +23,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import LeadsChart from '@/components/dashboard/leads-chart';
+import AdSpendChart from '@/components/dashboard/ad-spend-chart';
 
 export default function AdminDashboard() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
@@ -62,11 +64,13 @@ export default function AdminDashboard() {
   }, [toast]);
 
   return (
-    <>
+    <div className="space-y-6">
       <StatsGrid kpis={dashboardData?.kpi ?? null} loading={loading} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LeadsChart data={dashboardData?.charts?.leads_trend || []} loading={loading} />
-        <Card>
+        <AdSpendChart />
+      </div>
+       <Card>
             <CardHeader className="flex flex-row items-center">
                 <div className="grid gap-2">
                     <CardTitle>Recent Leads</CardTitle>
@@ -121,7 +125,6 @@ export default function AdminDashboard() {
                 </Table>
             </CardContent>
         </Card>
-      </div>
-    </>
+    </div>
   );
 }

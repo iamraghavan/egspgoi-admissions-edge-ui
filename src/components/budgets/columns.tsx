@@ -1,11 +1,12 @@
 
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
 import { BudgetRequest } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, CheckCircle, XCircle } from "lucide-react"
+import { ArrowUpDown, CheckCircle, XCircle, Upload } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -81,34 +82,54 @@ export const budgetColumns: ColumnDef<BudgetRequest>[] = [
       const request = row.original
       const meta = table.options.meta as any;
 
-      if (request.status !== "pending" || !meta?.onApprove) return null;
-
-      return (
-        <TooltipProvider>
-            <div className="flex items-center gap-2">
+      if (request.status === 'approved' && meta?.onUploadProof) {
+        return (
+            <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => meta.onApprove(request.id)}>
-                            <CheckCircle className="h-4 w-4" />
+                         <Button variant="outline" size="sm" onClick={() => meta.onUploadProof(request)}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload Proof
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Approve</p>
+                        <p>Upload Proof of Payment</p>
                     </TooltipContent>
                 </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => meta.onReject(request.id)}>
-                            <XCircle className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Reject</p>
-                    </TooltipContent>
-                </Tooltip>
-            </div>
-        </TooltipProvider>
-      )
+            </TooltipProvider>
+        )
+      }
+
+      if (request.status === "pending" && meta?.onApprove) {
+        return (
+            <TooltipProvider>
+                <div className="flex items-center gap-2">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => meta.onApprove(request.id)}>
+                                <CheckCircle className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Approve</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => meta.onReject(request.id)}>
+                                <XCircle className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Reject</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </TooltipProvider>
+        )
+      }
+      
+      return null;
     },
   },
 ]
