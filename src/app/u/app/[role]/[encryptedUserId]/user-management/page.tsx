@@ -7,17 +7,11 @@ import { userColumns } from '@/components/users/columns';
 import { getUsers, createUser, updateUser, deleteUser } from '@/lib/data';
 import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserFormDialog } from '@/components/users/user-form-dialog';
-import dynamic from 'next/dynamic';
+import DataTable from '@/components/leads/data-table';
 import { Card } from '@/components/ui/card';
-
-const DataTable = dynamic(() => import('@/components/leads/data-table'), {
-    loading: () => <Skeleton className="h-96 w-full" />,
-    ssr: false
-});
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<User[]>([]);
