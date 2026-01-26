@@ -53,15 +53,12 @@ export default function CreateCampaignPage() {
             name: formData.get('name') as string,
             type: formData.get('type') as string,
             platform: formData.get('platform') as string,
-            status: 'draft',
             start_date: format(date.from, 'yyyy-MM-dd'),
             end_date: format(date.to, 'yyyy-MM-dd'),
             institution: formData.get('institution') as string,
             objective: formData.get('objective') as string,
             kpi: formData.get('kpi') as string,
-            settings: {
-                budget_daily: parseFloat(formData.get('budget') as string)
-            },
+            budget_estimate: parseFloat(formData.get('budget_estimate') as string),
             target_audience: {
                 age: formData.get('target_audience_age') as string,
                 location: formData.get('target_audience_location') as string,
@@ -100,8 +97,8 @@ export default function CreateCampaignPage() {
                                     <Input id="name" name="name" placeholder="e.g., Summer Admissions 2026" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="budget">Daily Budget</Label>
-                                    <Input id="budget" name="budget" type="number" step="0.01" placeholder="e.g., 10000" required />
+                                    <Label htmlFor="budget_estimate">Budget Estimate</Label>
+                                    <Input id="budget_estimate" name="budget_estimate" type="number" step="0.01" placeholder="e.g., 500000" required />
                                 </div>
                             </div>
                              <div className="grid md:grid-cols-2 gap-6">

@@ -393,14 +393,10 @@ export const getAssets = async (campaignId: string): Promise<Asset[]> => {
     }));
 };
 
-export const uploadAsset = async (assetData: { campaign_id: string; name: string; file: File }): Promise<Asset> => {
-    const formData = new FormData();
-    formData.append('campaign_id', assetData.campaign_id);
-    formData.append('name', assetData.name);
-    formData.append('file', assetData.file);
+export const uploadAsset = async (assetData: { campaign_id: string; name: string; storage_url: string; file_type: string; }): Promise<Asset> => {
     const { data, error } = await apiClient<any>('/api/v1/assets', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(assetData),
     });
     if (error) throw new Error(error.message);
     return data.data;

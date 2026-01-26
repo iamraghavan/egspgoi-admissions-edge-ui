@@ -55,23 +55,25 @@ function AssetCard({ asset }: { asset: Asset }) {
 function UploadAssetDialog({ campaignId, onUploadSuccess }: { campaignId: string, onUploadSuccess: () => void }) {
     const [isOpen, setOpen] = useState(false);
     const [isSubmitting, setSubmitting] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
     const [name, setName] = useState('');
+    const [storageUrl, setStorageUrl] = useState('');
+    const [fileType, setFileType] = useState('image/png');
     const { toast } = useToast();
 
     const handleUpload = async () => {
-        if (!file || !name) {
-            toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please provide a name and select a file.' });
+        if (!storageUrl || !name || !fileType) {
+            toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please provide a name, URL, and file type.' });
             return;
         }
         setSubmitting(true);
         try {
-            await uploadAsset({ campaign_id: campaignId, name, file });
+            await uploadAsset({ campaign_id: campaignId, name, storage_url: storageUrl, file_type: fileType });
             toast({ title: 'Asset Uploaded', description: `${name} has been uploaded for review.` });
             onUploadSuccess();
             setOpen(false);
-            setFile(null);
             setName('');
+            setStorageUrl('');
+            setFileType('image/png');
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
         } finally {
@@ -90,7 +92,7 @@ function UploadAssetDialog({ campaignId, onUploadSuccess }: { campaignId: string
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Upload New Asset</DialogTitle>
-                    <DialogDescription>Select an image or video file to add to this campaign.</DialogDescription>
+                    <DialogDescription>Provide a URL to an image or video file to add to this campaign.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
@@ -98,8 +100,12 @@ function UploadAssetDialog({ campaignId, onUploadSuccess }: { campaignId: string
                         <Input id="asset-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Main Banner V1" />
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="asset-file">File</Label>
-                        <Input id="asset-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                        <Label htmlFor="asset-url">Storage URL</Label>
+                        <Input id="asset-url" value={storageUrl} onChange={(e) => setStorageUrl(e.target.value)} placeholder="https://example.com/asset.png" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="asset-file-type">File Type</Label>
+                        <Input id="asset-file-type" value={fileType} onChange={(e) => setFileType(e.target.value)} placeholder="e.g., image/png" />
                     </div>
                 </div>
                 <DialogFooter>
